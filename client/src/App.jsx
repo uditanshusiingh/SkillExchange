@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowDown, ArrowLeftRight, ArrowUp, ArrowUpRight, Award, Bell, Bookmark, BriefcaseBusiness, CalendarDays, Check, CheckCircle2, ChevronDown, Clock3, Eye, EyeOff, Languages, Menu, MessageCircle, Moon, Search, Settings, Share2, ShieldCheck, Sparkles, Star, Sun, Target, Repeat2, UserRound, UsersRound, Video, X, XCircle } from 'lucide-react';
-import { blockUser, changePassword, createProfile, createVideoRoom, deleteAccount, forgotPassword, getGroups, getLeaderboard, getMessages, getNotifications, getPeople, getPublicProfile, getRecommendations, getSkillMatches, getSkills, joinGroup, loginProfile, markMessageRead, markNotificationsRead, reportUser, resetPassword, scheduleExchange, sendMessage, sendVerification, updatePortfolio, updateProfile, verifyEmail } from './api';
+import { blockUser, changePassword, createProfile, createVideoRoom, deleteAccount, forgotPassword, getExchanges, getGroups, getLeaderboard, getMessages, getNotifications, getPeople, getPublicProfile, getRecommendations, getSkillMatches, getSkills, joinGroup, loginProfile, markMessageRead, markNotificationsRead, reportUser, resetPassword, scheduleExchange, sendMessage, sendVerification, updateExchange, updatePortfolio, updateProfile, verifyEmail } from './api';
 import { connectChat } from './socket';
 
 const categories = ['All', 'Technology', 'Creative', 'Food & home', 'Wellbeing'];
