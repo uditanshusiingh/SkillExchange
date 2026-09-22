@@ -838,6 +838,15 @@ html[data-theme='dark'] .skill-picker-search input::placeholder { color: #9fb7a5
 html[data-theme='dark'] .skill-picker-search-input { border-color: #466050; background: #102019; color: #eef4ed; }
 html[data-theme='dark'] .skill-picker-search-input::placeholder { color: #9fb7a5; }
 html[data-theme='dark'] .skill-picker-search button { background: #d9ed67; color: #19352a; }
+html[data-theme='dark'] .skill-picker-label { color: #718076 !important; }
+html[data-theme='dark'] .skill-picker-search,
+html[data-theme='dark'] .skill-picker-search-input,
+html[data-theme='dark'] .skill-picker select { background: #fffdf9 !important; border-color: #d7e0d5 !important; color: #19352a !important; }
+html[data-theme='dark'] .skill-picker-search input,
+html[data-theme='dark'] .skill-picker-search-input { color: #19352a !important; }
+html[data-theme='dark'] .skill-picker-search input::placeholder,
+html[data-theme='dark'] .skill-picker-search-input::placeholder { color: #718076 !important; }
+html[data-theme='dark'] .skill-picker-search button { background: #19352a; color: #fbf8f1; }
 .advanced-panel > p { max-width: 560px; }
 .advanced-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 24px 0 12px; }
 .advanced-card { display: grid; gap: 10px; padding: 16px; border: 1px solid #d7e0d5; border-radius: 8px; background: #fffdf9; }
