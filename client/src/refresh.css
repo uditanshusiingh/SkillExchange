@@ -639,6 +639,9 @@ html[data-theme='dark'] .messages-sidebar, html[data-theme='dark'] .chat-details
 html[data-theme='dark'] .messages-sidebar h2, html[data-theme='dark'] .chat-header strong, html[data-theme='dark'] .chat-profile h3 { color: #eef4ed; }
 html[data-theme='dark'] .message-search { background: #102019; border-color: #466050; color: #aebdb1; }
 html[data-theme='dark'] .message-search input, html[data-theme='dark'] .message-composer input { color: #eef4ed; }
+.app-shell.dark-mode .modal-panel.messages-workspace .message-search { background: #102019 !important; border-color: #466050 !important; color: #aebdb1 !important; }
+.app-shell.dark-mode .modal-panel.messages-workspace .message-search input { background: transparent !important; color: #eef4ed !important; caret-color: #d9ed67; }
+.app-shell.dark-mode .modal-panel.messages-workspace .message-search input::placeholder { color: #9fb7a5 !important; opacity: 1; }
 html[data-theme='dark'] .message-filters button, html[data-theme='dark'] .conversation-copy small, html[data-theme='dark'] .conversation-copy em, html[data-theme='dark'] .chat-header small, html[data-theme='dark'] .chat-profile small, html[data-theme='dark'] .chat-detail-block span, html[data-theme='dark'] .typing-indicator { color: #aebdb1; }
 html[data-theme='dark'] .conversation-list > button.active, html[data-theme='dark'] .conversation-list > button:hover { background: #2b493c; }
 html[data-theme='dark'] .chat-header, html[data-theme='dark'] .message-composer, html[data-theme='dark'] .chat-detail-block { border-color: rgba(184, 203, 185, .25); }
