@@ -152,6 +152,11 @@ function App() {
   useEffect(() => { if (!currentUser?.email) return undefined; getMessages(currentUser.email).then((items) => setUnreadMessages(items.filter((item) => !item.read && item.recipientEmail === currentUser.email).length)).catch(() => setUnreadMessages(0)); getNotifications(currentUser.email).then(setNotificationHistory).catch(() => setNotificationHistory([])); return undefined; }, [currentUser?.email]);
   useEffect(() => { if (!toast) return undefined; const timer = window.setTimeout(() => setToast(''), 2800); return () => window.clearTimeout(timer); }, [toast]);
   useEffect(() => {
+    const openExchangeMessages = (event) => { setMessageRecipient(event.detail); setActiveModal('account-messages'); };
+    window.addEventListener('skillswap-open-messages', openExchangeMessages);
+    return () => window.removeEventListener('skillswap-open-messages', openExchangeMessages);
+  }, []);
+  useEffect(() => {
     if (!accountOpen) return undefined;
     const closeAccountMenu = (event) => {
       if (!event.target.closest('.user-menu')) setAccountOpen(false);
@@ -354,11 +359,34 @@ function EditProfilePanelEnhanced({ user, onClose, onSaved }) {
 }
 
 function ExchangesPanel({ user, onClose }) {
+  return <RealExchangesPanel user={user} onClose={onClose} />;
   const [tab, setTab] = useState('active');
   const [pending, setPending] = useState(true);
   const [active, setActive] = useState(true);
   const [scheduleOpen, setScheduleOpen] = useState(false);
   return <div className="modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}><div className="modal-panel exchanges-panel"><button className="modal-close" onClick={onClose} aria-label="Close"><X size={19} /></button><div className="eyebrow">your exchange desk</div><h2>My exchanges.</h2><p>Keep every skill swap moving in the right direction.</p><div className="exchange-tabs">{[['active', 'Active', 1], ['pending', 'Pending', pending ? 1 : 0], ['completed', 'Completed', 0]].map(([value, label, count]) => <button key={value} className={tab === value ? 'active' : ''} onClick={() => setTab(value)}>{label}<span>{count}</span></button>)}</div>{tab === 'active' && active && <div className="exchange-item"><div className="exchange-item-top"><span className="status-pill status-active"><CheckCircle2 size={13} /> In progress</span><span className="exchange-date">Next: Sat, 7:00 PM</span></div><div className="exchange-match"><div className="exchange-person exchange-you"><span>{user?.name?.slice(0, 2).toUpperCase()}</span><strong>{user?.teaches?.[0] || 'Your skill'}</strong><small>You teach</small></div><div className="exchange-line"><Repeat2 size={19} /><small>good trade</small></div><div className="exchange-person"><span className="exchange-avatar-blue">AM</span><strong>Python</strong><small>Arjun teaches</small></div></div><div className="exchange-actions"><button onClick={() => {}}><MessageCircle size={15} /> Open chat</button><button onClick={() => setActive(false)}><Check size={15} /> Mark complete</button></div></div>}{tab === 'pending' && pending && <div className="exchange-item"><div className="exchange-item-top"><span className="status-pill status-pending"><Clock3 size={13} /> Awaiting response</span><span className="exchange-date">Received today</span></div><div className="pending-copy"><strong>Maya wants to learn {user?.teaches?.[0] || 'your skill'}</strong><p>She can trade conversational Spanish in return.</p></div><div className="exchange-actions"><button className="accept-action" onClick={() => { setPending(false); setTab('active'); }}><Check size={15} /> Accept request</button><button onClick={() => setPending(false)}><XCircle size={15} /> Decline</button></div></div>}{tab === 'completed' && <div className="empty-exchanges"><CheckCircle2 size={30} /><strong>No completed exchanges yet</strong><p>Your finished swaps and ratings will appear here.</p></div>}{tab === 'active' && !active && <div className="empty-exchanges"><CheckCircle2 size={30} /><strong>Exchange completed</strong><p>Nice work. Add a rating from your exchange history soon.</p><button className="button button-dark">Rate exchange <Star size={15} /></button></div>}</div></div>;
+}
+
+function RealExchangesPanel({ user, onClose }) {
+  const [tab, setTab] = useState('active');
+  const [exchanges, setExchanges] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  useEffect(() => {
+    if (!user?.email) return undefined;
+    let cancelled = false;
+    setLoading(true);
+    getExchanges(user.email).then((items) => { if (!cancelled) setExchanges(Array.isArray(items) ? items : []); }).catch((requestError) => { if (!cancelled) setError(requestError.message || 'Could not load exchanges.'); }).finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [user?.email]);
+  const normalizedEmail = user?.email?.toLowerCase();
+  const rows = exchanges.map((exchange) => {
+    const isRequester = exchange.requesterEmail?.toLowerCase() === normalizedEmail;
+    return { ...exchange, participantName: isRequester ? exchange.ownerName : exchange.requesterName, participantEmail: isRequester ? exchange.ownerEmail : exchange.requesterEmail, ownSkill: isRequester ? exchange.requesterSkill : exchange.ownerSkill, participantSkill: isRequester ? exchange.ownerSkill : exchange.requesterSkill };
+  });
+  const visible = rows.filter((exchange) => tab === 'active' ? ['active', 'accepted', 'in-progress', 'in_progress'].includes(exchange.status) : tab === 'pending' ? exchange.status === 'pending' : ['completed', 'complete'].includes(exchange.status));
+  const openChat = (exchange) => { if (!exchange.participantEmail) return; window.dispatchEvent(new CustomEvent('skillswap-open-messages', { detail: { name: exchange.participantName || exchange.participantEmail, email: exchange.participantEmail } })); };
+  return <div className="modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}><div className="modal-panel exchanges-panel"><button className="modal-close" onClick={onClose} aria-label="Close"><X size={19} /></button><div className="eyebrow">your exchange desk</div><h2>My exchanges.</h2><p>Keep every skill swap moving in the right direction.</p><div className="exchange-tabs">{[['active', 'Active'], ['pending', 'Pending'], ['completed', 'Completed']].map(([value, label]) => <button key={value} className={tab === value ? 'active' : ''} onClick={() => setTab(value)}>{label}<span>{rows.filter((exchange) => value === 'active' ? ['active', 'accepted', 'in-progress', 'in_progress'].includes(exchange.status) : value === 'pending' ? exchange.status === 'pending' : ['completed', 'complete'].includes(exchange.status)).length}</span></button>)}</div>{loading ? <div className="empty-exchanges"><strong>Loading exchanges...</strong></div> : error ? <div className="empty-exchanges"><strong>{error}</strong></div> : visible.length ? visible.map((exchange) => <div className="exchange-item" key={exchange._id}><div className="exchange-item-top"><span className={`status-pill ${exchange.status === 'pending' ? 'status-pending' : 'status-active'}`}><CheckCircle2 size={13} /> {exchange.status}</span>{exchange.scheduledAt && <span className="exchange-date">{new Date(exchange.scheduledAt).toLocaleString()}</span>}</div><div className="exchange-match"><div className="exchange-person exchange-you"><span>{user?.name?.slice(0, 2).toUpperCase()}</span><strong>{exchange.ownSkill || 'Skill exchange'}</strong><small>You offer</small></div><div className="exchange-line"><Repeat2 size={19} /><small>good trade</small></div><div className="exchange-person"><span className="exchange-avatar-blue">{exchange.participantName?.slice(0, 2).toUpperCase() || '--'}</span><strong>{exchange.participantSkill || 'Skill exchange'}</strong><small>{exchange.participantName || exchange.participantEmail}</small></div></div><div className="exchange-actions"><button onClick={() => openChat(exchange)}><MessageCircle size={15} /> Open chat</button>{!['completed', 'complete'].includes(exchange.status) && <button onClick={() => updateExchange(exchange._id, 'completed').then((updated) => setExchanges((items) => items.map((item) => item._id === updated._id ? updated : item))).catch(() => setError('Could not update this exchange.'))}><Check size={15} /> Mark complete</button>}</div></div>) : <div className="empty-exchanges"><CheckCircle2 size={30} /><strong>No {tab} exchanges yet</strong><p>Verified member exchanges will appear here once they are created.</p></div>}<button className="button button-dark" onClick={onClose}>Done <Check size={16} /></button></div></div>;
 }
 
 function SavedSkillsPanel({ skills, savedSkills, onToggle, onConnect, onClose }) {
