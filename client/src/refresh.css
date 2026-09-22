@@ -1009,10 +1009,10 @@ html[data-theme='dark'] .login-link { color: #c5d1c7; }
 html[data-theme='dark'] .login-link:hover { background: #294438; color: #eef4ed; }
 html[data-theme='dark'] .user-menu-trigger { color: #c5d1c7; }
 html[data-theme='dark'] .user-menu-trigger:hover, html[data-theme='dark'] .user-menu-trigger[aria-expanded='true'] { background: #294438; color: #eef4ed; }
-html[data-theme='dark'] .user-dropdown { background: #eff3ed; border-color: #466050; }
-html[data-theme='dark'] .main-nav .user-dropdown button { color: #19352a; }
-html[data-theme='dark'] .main-nav .user-dropdown .logout-item { color: #9f503b; }
-html[data-theme='dark'] .user-dropdown button:hover { background: #dfe9df; }
+html[data-theme='dark'] .user-dropdown { background: #182c24; border-color: #466050; box-shadow: 0 14px 30px rgba(4, 12, 8, .45); }
+html[data-theme='dark'] .main-nav .user-dropdown button { color: #eef4ed; }
+html[data-theme='dark'] .main-nav .user-dropdown .logout-item { color: #f0a989; }
+html[data-theme='dark'] .user-dropdown button:hover { background: #2b493c; color: #eef4ed; }
 
 /* Keep tall account forms below the fixed navbar and scroll them independently. */
 .modal-backdrop { align-items: flex-start; padding: 96px 20px 24px; overflow-y: auto; }
