@@ -76,11 +76,11 @@ function publicProfile(profile) {
 }
 
 function isDiscoverableProfile(profile) {
-  return profile.email !== 'demo@gmail.com' && profile.emailVerified && profile.profileVisible !== false;
+  return profile.email !== 'demo@gmail.com' && profile.profileVisible !== false;
 }
 
 function discoverableProfileQuery() {
-  return { emailVerified: true, profileVisible: { $ne: false }, email: { $ne: 'demo@gmail.com' } };
+  return { profileVisible: { $ne: false }, email: { $ne: 'demo@gmail.com' } };
 }
 
 async function discoverableEmails() {
