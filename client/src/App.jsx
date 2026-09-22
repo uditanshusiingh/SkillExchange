@@ -575,7 +575,7 @@ function AuthGate({ onLogin }) {
   };
   const submit = async (event) => {
     event.preventDefault();
-    setError('');
+    setError(''); 
     setNotice('');
     setLoading(true);
     try {
@@ -594,23 +594,7 @@ function AuthGate({ onLogin }) {
       setLoading(false);
     }
   };
-  useEffect(() => {
-    if (mode !== 'signup') return undefined;
-    const inputs = [...document.querySelectorAll('.auth-card form input')].filter((input) => input.placeholder === 'What can you teach?' || input.placeholder === 'What do you want to learn?');
-    const cleanups = inputs.map((input) => {
-      const wrapper = document.createElement('label');
-      wrapper.className = 'skill-picker';
-      const label = document.createElement('span'); label.className = 'skill-picker-label'; label.textContent = input.placeholder;
-      const search = document.createElement('input'); search.type = 'search'; search.placeholder = input.placeholder === 'What can you teach?' ? 'Search or choose a skill to teach' : 'Search or choose a skill to learn'; search.className = 'skill-picker-search-input'; search.required = true;
-      const listId = `skill-options-${input.placeholder.includes('teach') ? 'teach' : 'learn'}`;
-      const options = document.createElement('datalist'); options.id = listId;
-      skillOptions.forEach((skill) => options.append(new Option(skill, skill)));
-      const validateSkill = () => { const valid = skillOptions.includes(search.value); search.setCustomValidity(valid ? '' : 'Choose a skill from the dropdown list.'); input.value = valid ? search.value : ''; input.setCustomValidity(valid ? '' : 'Choose a skill from the dropdown list.'); input.dispatchEvent(new Event('input', { bubbles: true })); };
-      search.setAttribute('list', listId); search.value = input.value; search.addEventListener('input', validateSkill); search.addEventListener('change', validateSkill); input.required = false; input.hidden = true; input.parentElement.insertBefore(wrapper, input); wrapper.append(label, search, options);
-      return () => { search.removeEventListener('input', validateSkill); search.removeEventListener('change', validateSkill); input.hidden = false; wrapper.remove(); };
-    });
-    return () => cleanups.forEach((cleanup) => cleanup());
-  }, [mode]);
+  useEffect(() => { const signupTab = document.querySelector('.auth-tabs button:nth-child(2)'); if (signupTab) signupTab.textContent = 'Sign up'; }, [mode]);
   return <><div className="auth-gate"><div className="auth-panel"><div className="auth-brand"><span className="brand-mark"><ArrowLeftRight size={17} strokeWidth={2.4} /></span><strong>skillswap</strong></div><div className="auth-layout"><div className="auth-intro"><div className="eyebrow"><Sparkles size={14} /> skills worth sharing</div><h1>Trade what you know.<br /><em>Grow together.</em></h1><p>Join a community where every useful skill can become someone else’s next chapter.</p><div className="auth-proof"><span>2,400+</span><small>good exchanges already moving</small></div></div><div className="auth-card"><div className="auth-tabs"><button type="button" className={mode === 'login' ? 'active' : ''} onClick={() => switchMode('login')}>Log in</button><button type="button" className={mode === 'signup' ? 'active' : ''} onClick={() => switchMode('signup')}>Sign in</button></div><div className="eyebrow">{mode === 'login' ? 'welcome back' : 'make your move'}</div><h2>{mode === 'login' ? 'Log in to SkillSwap.' : 'Create your profile.'}</h2><p>{mode === 'login' ? 'Pick up where your next good exchange left off.' : 'Put one skill on the table and meet your next exchange partner.'}</p><form onSubmit={submit}>{mode === 'signup' && <input required placeholder="Your name" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />}<input required type="email" placeholder="Email address" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} /><PasswordInput required minLength={mode === 'signup' ? 8 : undefined} placeholder={mode === 'signup' ? 'Password (8+ characters)' : 'Password'} value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} />{mode === 'signup' && <><input placeholder="What can you teach?" value={form.teaches} onChange={(event) => setForm({ ...form, teaches: event.target.value })} /><input placeholder="What do you want to learn?" value={form.wants} onChange={(event) => setForm({ ...form, wants: event.target.value })} /></>}{error && <p className="auth-error" role="alert">{error}</p>}{notice && <p className="auth-notice" role="status">{notice}</p>}<button className="button button-dark auth-submit" type="submit" disabled={loading}>{loading ? 'Please wait...' : mode === 'login' ? 'Log in' : 'Create profile'} <ArrowUpRight size={16} /></button></form>{mode === 'login' && <button type="button" className="forgot-password-link" onClick={() => { setResetEmail(form.email); setResetOpen(true); setError(''); }} disabled={loading}>Forgot password?</button>}<small className="auth-privacy">Your profile stays yours. No money, no pressure, just useful exchanges.</small></div></div></div></div>{resetOpen && <div className="modal-backdrop reset-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setResetOpen(false)} onClick={(event) => event.stopPropagation()}><div className="modal-panel reset-panel" role="dialog" aria-modal="true" aria-labelledby="reset-password-title" onClick={(event) => event.stopPropagation()}><button className="modal-close" type="button" onClick={() => setResetOpen(false)} aria-label="Close"><X size={19} /></button><div className="eyebrow">account recovery</div><h2 id="reset-password-title">Reset your password.</h2><p>Enter your account email and we will send a secure reset link.</p>{resetStatus && <p className="reset-result" role="alert">{resetStatus}</p>}<form onSubmit={(event) => { event.preventDefault(); requestReset(); }}><input required type="email" autoFocus placeholder="Email address" value={resetEmail} onChange={(event) => setResetEmail(event.target.value)} /><button className="button button-dark" type="submit" disabled={resetLoading}>{resetLoading ? 'Sending...' : 'Send reset link'} <ArrowUpRight size={16} /></button></form></div></div>}</>;
 }
 
@@ -703,7 +687,14 @@ function RealExchangesPanel({ user, onClose, onOpenMessages }) {
     getExchanges(user.email).then((items) => { if (!cancelled) setExchanges(Array.isArray(items) ? items : []); }).catch((requestError) => { if (!cancelled) setError(requestError.message || 'Could not load exchanges.'); }).finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, [user?.email]);
-  const normalizedEmail = user?.email?.toLowerCase();
+    const [error, setError] = useState('');
+    const [notice, setNotice] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [resetLoading, setResetLoading] = useState(false);
+    const [resetOpen, setResetOpen] = useState(false);
+    const [resetEmail, setResetEmail] = useState('');
+    const [resetStatus, setResetStatus] = useState('');
+    const [resetLink, setResetLink] = useState('');
   const rows = exchanges.map((exchange) => {
     const isRequester = exchange.requesterEmail?.toLowerCase() === normalizedEmail;
     return { ...exchange, participantName: isRequester ? exchange.ownerName : exchange.requesterName, participantEmail: isRequester ? exchange.ownerEmail : exchange.requesterEmail, ownSkill: isRequester ? exchange.requesterSkill : exchange.ownerSkill, participantSkill: isRequester ? exchange.ownerSkill : exchange.requesterSkill };
