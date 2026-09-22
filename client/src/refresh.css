@@ -48,6 +48,11 @@ html[data-theme='dark'] .skill-detail-facts span { background: #e0e9df; }
 .people-directory-summary { margin: 18px 0; color: #718076; font: 10px 'DM Mono', monospace; text-transform: uppercase; }
 .people-directory-summary span { margin: 0 6px; color: var(--peach); }
 .people-directory-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+.people-pagination { display: flex; justify-content: center; gap: 7px; margin-top: 24px; }
+.people-pagination button { min-width: 34px; height: 34px; border: 1px solid #d7e0d5; border-radius: 5px; background: #fffdf9; color: var(--forest); font: 11px 'DM Mono', monospace; }
+.people-pagination button.active, .people-pagination button:hover { background: var(--forest); color: var(--cream); border-color: var(--forest); }
+html[data-theme='dark'] .people-pagination button { background: #182c24; border-color: #466050; color: #eef4ed; }
+html[data-theme='dark'] .people-pagination button.active, html[data-theme='dark'] .people-pagination button:hover { background: #d9ed67; color: #19352a; border-color: #d9ed67; }
 .person-directory-card { display: flex; flex-direction: column; min-width: 0; padding: 17px; border: 1px solid #d7e0d5; border-radius: 9px; background: #fffdf9; cursor: pointer; transition: transform .2s, box-shadow .2s; }
 .person-directory-card:hover { transform: translateY(-4px); box-shadow: 8px 8px 0 #dfeadf; }
 .person-directory-top { display: flex; align-items: flex-start; gap: 10px; }

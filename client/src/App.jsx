@@ -310,7 +310,484 @@ Academic Writing
 Mathematics
 Calculus
 Linear Algebra
-Research Methodology`.split('\n').map((skill) => skill.trim()).filter(Boolean))];
+Research Methodology
+Assembly
+Fetch API
+Object-Oriented Programming (OOP)
+Constructor
+Destructor
+Method Overloading
+Method Overriding
+Virtual Functions
+Pure Virtual Functions
+Interface
+Abstract Class
+Multiple Inheritance
+Friend Function
+Doubly Linked List
+Circular Linked List
+Circular Queue
+Deque
+Priority Queue
+AVL Tree
+Red-Black Tree
+B Tree
+B+ Tree
+Union-Find / Disjoint Set
+KMP Algorithm
+Rabin-Karp Algorithm
+Z Algorithm
+Bellman-Ford Algorithm
+Floyd-Warshall Algorithm
+Prim's Algorithm
+Kruskal's Algorithm
+Topological Sort
+Big Theta
+Big Omega
+ER Model
+Relational Model
+Database Keys
+Candidate Key
+Super Key
+Composite Key
+1NF
+2NF
+3NF
+BCNF
+Functional Dependency
+Multivalued Dependency
+SQL Joins
+Subqueries
+Views
+Stored Procedures
+Triggers
+DDL
+DML
+DCL
+TCL
+Concurrency Control
+Serializability
+Database Recovery
+Database Replication
+Database Sharding
+CAP Theorem
+OLTP
+OLAP
+ETL
+Data Lake
+FCFS
+SJF
+SRTF
+Round Robin
+Banker's Algorithm
+FIFO Page Replacement
+Optimal Page Replacement
+Inter-Process Communication
+Context Switching
+Shell Scripting
+RARP
+CIDR
+ARP
+RIP
+OSPF
+BGP
+VLAN
+CSMA/CD
+CSMA/CA
+ALOHA
+Network Address Translation
+Pipeline Hazards
+Branch Prediction
+Direct Mapping
+Associative Mapping
+Set Associative Mapping
+Multiplexers
+Demultiplexers
+Encoders
+Decoders
+Karnaugh Map
+Finite State Machines
+Predicate Logic
+Recurrence Relations
+Finite Automata
+DFA
+NFA
+Context-Free Grammar
+Pushdown Automata
+Turing Machine
+Chomsky Hierarchy
+Pumping Lemma
+Decidability
+Undecidability
+Halting Problem
+LL Parser
+LR Parser
+SLR Parser
+CLR Parser
+LALR Parser
+Three Address Code
+Register Allocation
+Waterfall Model
+Requirement Engineering
+Software Requirements Specification
+Use Case Diagram
+Class Diagram
+Sequence Diagram
+Activity Diagram
+Black Box Testing
+White Box Testing
+Test Driven Development
+Version Control
+Bitbucket
+High-Level Design
+Low-Level Design
+Fault Tolerance
+Horizontal Scaling
+Vertical Scaling
+Apache Kafka
+RabbitMQ
+Event-Driven Architecture
+Distributed Transactions
+Paxos
+Raft
+Consistency
+Eventual Consistency
+Artificial Intelligence (AI)
+Intelligent Agents
+Expert Systems
+Knowledge Representation
+A* Algorithm
+Alpha-Beta Pruning
+Planning
+Reasoning
+Natural Language Processing (NLP)
+Speech Recognition
+Robotics
+Semi-Supervised Learning
+Polynomial Regression
+Support Vector Machine
+K-Nearest Neighbors
+Naive Bayes
+Gradient Boosting
+XGBoost
+LightGBM
+CatBoost
+K-Means Clustering
+DBSCAN
+Principal Component Analysis (PCA)
+Anomaly Detection
+Feature Engineering
+Feature Selection
+Cross Validation
+Hyperparameter Optimization
+Regularization
+L1 Regularization
+L2 Regularization
+Bias-Variance Tradeoff
+Overfitting
+Underfitting
+Confusion Matrix
+Precision
+Recall
+F1 Score
+ROC Curve
+AUC
+Mean Squared Error
+Mean Absolute Error
+Artificial Neural Network
+Perceptron
+Multilayer Perceptron
+Convolutional Neural Network (CNN)
+Recurrent Neural Network (RNN)
+LSTM
+GRU
+Autoencoder
+Variational Autoencoder
+Generative Adversarial Network (GAN)
+Attention Mechanism
+Self-Attention
+Multi-Head Attention
+Backpropagation
+Gradient Descent
+Stochastic Gradient Descent
+Adam Optimizer
+Batch Normalization
+Dropout
+Activation Functions
+ReLU
+Sigmoid
+Tanh
+Transfer Learning
+Fine-Tuning
+Tokenization
+Stemming
+Lemmatization
+Stop Words
+Bag of Words
+TF-IDF
+Word Embeddings
+Word2Vec
+GloVe
+Named Entity Recognition
+Part-of-Speech Tagging
+Sentiment Analysis
+Text Classification
+Language Modeling
+Machine Translation
+Question Answering
+Text Summarization
+Information Extraction
+Large Language Models (LLMs)
+GPT
+Prompt Engineering
+Prompt Optimization
+Vector Databases
+Retrieval-Augmented Generation (RAG)
+LoRA
+PEFT
+Agentic AI
+Tool Calling
+Function Calling
+Multimodal AI
+LLM Evaluation
+AI Evaluation
+Hallucination Detection
+AI Guardrails
+LangGraph
+Hugging Face
+Ollama
+Pinecone
+Chroma
+Weaviate
+Image Processing
+Image Classification
+Image Segmentation
+Face Recognition
+Optical Character Recognition (OCR)
+YOLO
+R-CNN
+Faster R-CNN
+Vision Transformers
+Image Generation
+Image Captioning
+Hadoop
+HDFS
+MapReduce
+Apache Spark
+Spark SQL
+PySpark
+Apache Hive
+Apache HBase
+Data Pipeline
+Stream Processing
+Virtualization
+Containers
+Docker Compose
+Google Cloud
+Amazon EC2
+Amazon S3
+AWS Lambda
+Amazon RDS
+Amazon DynamoDB
+Amazon VPC
+AWS IAM
+Amazon CloudFront
+Amazon Route 53
+Amazon ECS
+Amazon EKS
+Serverless Computing
+Auto Scaling
+Infrastructure as Code
+Jenkins
+Ansible
+Prometheus
+Grafana
+Monitoring
+Logging
+Container Orchestration
+AES
+DES
+RSA
+SHA
+Digital Signature
+Digital Certificate
+Public Key Infrastructure (PKI)
+Ethical Hacking
+Penetration Testing
+Vulnerability Assessment
+Malware Analysis
+Digital Forensics
+Phishing
+Social Engineering
+SQL Injection
+Cross-Site Scripting (XSS)
+Cross-Site Request Forgery (CSRF)
+DDoS
+Zero Trust Security
+SIEM
+Security Operations Center (SOC)
+Intrusion Detection
+Intrusion Prevention
+Blockchain Technology
+Smart Contracts
+Cryptocurrency
+Proof of Work
+Proof of Stake
+Decentralized Applications (DApps)
+Distributed Ledger Technology
+Digital Wallet
+NFT
+DAO
+Web3.js
+Ethers.js
+Hardhat
+Internet of Things
+Sensors
+Actuators
+Arduino
+Raspberry Pi
+ESP32
+Embedded Systems
+MQTT
+IoT Security
+Edge Computing
+Fog Computing
+Smart Home
+Industrial IoT
+2D Graphics
+3D Graphics
+Rendering
+Rasterization
+Ray Tracing
+OpenGL
+DirectX
+Lighting
+Shading
+Texture Mapping
+Transformations
+Animation
+Unreal Engine
+CUDA
+OpenMP
+MPI
+Boolean Model
+Vector Space Model
+Probabilistic Model
+Relevance Feedback
+Search Engine
+Web Crawling
+PageRank
+Android Development
+iOS Development
+Mobile UI
+Mobile App Architecture
+Financial Management
+Corporate Finance
+Investment Management
+Portfolio Management
+Risk Management
+Financial Modelling
+Net Present Value (NPV)
+Internal Rate of Return (IRR)
+Weighted Average Cost of Capital (WACC)
+Derivatives
+Futures
+Options
+Hedging
+Investment Banking
+Search Engine Optimization (SEO)
+Search Engine Marketing (SEM)
+Email Marketing
+Affiliate Marketing
+Influencer Marketing
+Customer Relationship Management (CRM)
+Conversion Rate Optimization
+Human Resource Management
+Recruitment
+Talent Acquisition
+Talent Management
+Performance Management
+Compensation Management
+Training and Development
+Employee Engagement
+Workforce Planning
+HR Analytics
+Supply Chain Management
+Logistics
+Inventory Management
+Production Planning
+Quality Management
+Six Sigma
+Lean Management
+Procurement
+Business Intelligence
+Advanced Excel
+Power BI
+Tableau
+Predictive Analytics
+Prescriptive Analytics
+Dashboard Development
+Data Modelling
+Strategic Management
+Business Policy
+Competitive Strategy
+Corporate Strategy
+SWOT Analysis
+PESTLE Analysis
+Porter's Five Forces
+Business Model Canvas
+Strategic Planning
+Decision Making
+Innovation Management
+Entrepreneurship
+Startup Management
+Stakeholder Management
+Microeconomics
+Macroeconomics
+Managerial Economics
+Inflation
+GDP
+Fiscal Policy
+Monetary Policy
+International Trade
+Foreign Exchange
+Contract Law
+Company Law
+Corporate Law
+Intellectual Property Rights
+Patent
+Trademark
+Consumer Protection
+Data Protection
+Corporate Governance
+Nursing Fundamentals
+Anatomy
+Physiology
+Biochemistry
+Microbiology
+Pathology
+Pharmacology
+Nutrition
+First Aid
+Patient Care
+Health Assessment
+CPR
+Basic Life Support (BLS)
+Advanced Cardiovascular Life Support (ACLS)
+Research Design
+Literature Review
+Research Paper
+Citation
+Plagiarism
+Hypothesis
+Research Variables
+Sampling
+Qualitative Research
+Quantitative Research
+Experimental Research
+Evidence-Based Practice
+Technical Writing
+Academic Writing`.split('\n').map((skill) => skill.trim()).filter(Boolean))];
 
 function getInitialPage() {
   const page = new URLSearchParams(window.location.search).get('page');
@@ -475,7 +952,7 @@ function App() {
 
   const sortedSkills = [...skills].sort((first, second) => sort === 'rating' ? second.teacher.rating - first.teacher.rating : sort === 'newest' ? String(second._id).localeCompare(String(first._id)) : sort === 'nearby' && location ? Number(second.teacher.location.toLowerCase().includes(location.toLowerCase())) - Number(first.teacher.location.toLowerCase().includes(location.toLowerCase())) : 0);
   const recommendedSkills = currentUser?.wants?.length ? allSkills.filter((skill) => currentUser.wants.some((want) => `${skill.title} ${skill.category} ${skill.wants}`.toLowerCase().includes(want.toLowerCase()))).slice(0, 3) : [];
-  const similarPeople = currentUser?.teaches?.length ? peopleDirectory.filter((person) => currentUser.teaches.some((skill) => person.skills.toLowerCase().includes(skill.toLowerCase())) || currentUser.wants?.some((skill) => person.skills.toLowerCase().includes(skill.toLowerCase()))) : peopleDirectory;
+  const similarPeople = peopleDirectory;
 
   const scrollTo = (id) => {
     setActivePage(null);
@@ -503,7 +980,7 @@ function App() {
       </nav>
     </header>
 
-    {activePage && <DedicatedPage page={activePage} currentUser={currentUser} skills={sortedSkills} similarPeople={similarPeople} savedStories={savedStories} onSaveStory={(story) => setSavedStories((items) => items.some((item) => item.id === story.id) ? items.filter((item) => item.id !== story.id) : [story, ...items])} onStoryDetails={setSelectedStory} search={search} setSearch={setSearch} category={category} setCategory={setCategory} sort={sort} setSort={setSort} teachQuery={teachQuery} setTeachQuery={setTeachQuery} wantsQuery={wantsQuery} setWantsQuery={setWantsQuery} location={location} setLocation={setLocation} format={format} setFormat={setFormat} level={level} setLevel={setLevel} availability={availability} setAvailability={setAvailability} savedSkills={savedSkills} savedPeople={savedPeople} onSave={toggleSavedWithToast} onSavePerson={(person) => setSavedPeople((items) => items.some((item) => item.name === person.name) ? items.filter((item) => item.name !== person.name) : [person, ...items])} onDetails={setSelectedSkill} onPersonDetails={setSelectedPerson} onClose={() => setActivePage(null)} onConnect={openMessage} />}
+    {activePage && <DedicatedPage page={activePage} currentUser={currentUser} skills={sortedSkills} similarPeople={similarPeople} peopleDirectory={peopleDirectory} savedStories={savedStories} onSaveStory={(story) => setSavedStories((items) => items.some((item) => item.id === story.id) ? items.filter((item) => item.id !== story.id) : [story, ...items])} onStoryDetails={setSelectedStory} search={search} setSearch={setSearch} category={category} setCategory={setCategory} sort={sort} setSort={setSort} teachQuery={teachQuery} setTeachQuery={setTeachQuery} wantsQuery={wantsQuery} setWantsQuery={setWantsQuery} location={location} setLocation={setLocation} format={format} setFormat={setFormat} level={level} setLevel={setLevel} availability={availability} setAvailability={setAvailability} savedSkills={savedSkills} savedPeople={savedPeople} onSave={toggleSavedWithToast} onSavePerson={(person) => setSavedPeople((items) => items.some((item) => item.name === person.name) ? items.filter((item) => item.name !== person.name) : [person, ...items])} onDetails={setSelectedSkill} onPersonDetails={setSelectedPerson} onClose={() => setActivePage(null)} onConnect={openMessage} />}
     <main id="top" className={activePage ? 'home-content-hidden' : ''}>
       <section className="hero section-pad">
         <div className="hero-copy reveal"><div className="eyebrow"><Sparkles size={15} /> skills worth sharing</div><h1>Trade what you know.<br /><em>Grow together.</em></h1><p className="hero-text">A community where your skills become someone else’s next chapter — and theirs become yours.</p><div className="hero-actions"><button className="button button-dark" onClick={() => scrollTo('explore')}>Explore the exchange <ArrowUpRight size={17} /></button><button className="text-button" onClick={() => scrollTo('how')}>See how it works <span>↓</span></button></div><div className="proof"><div className="avatar-stack"><span>MC</span><span>LO</span><span>AM</span><span>+</span></div><div><strong>2,400+ exchanges</strong><small>made with good intentions</small></div></div></div>
@@ -850,6 +1327,7 @@ function SkillDetailPanel({ skill, currentUser, onClose, onConnect, onOffer }) {
 
 function PeopleDirectory({ people: sourcePeople, currentUser, search, setSearch, location, setLocation, format, setFormat, availability, setAvailability, level: initialLevel, sort, setSort, savedPeople, onDetails, onMessage, onSave }) {
   const [peopleLevel, setPeopleLevel] = useState(initialLevel || '');
+  const [peoplePage, setPeoplePage] = useState(1);
   const level = peopleLevel;
   const setLevel = setPeopleLevel;
   const normalizedSearch = search.toLowerCase().trim();
@@ -857,10 +1335,15 @@ function PeopleDirectory({ people: sourcePeople, currentUser, search, setSearch,
     const text = `${person.name} ${person.role} ${person.city} ${person.skills} ${person.wants}`.toLowerCase();
     return (!normalizedSearch || text.includes(normalizedSearch)) && (!location || person.city.toLowerCase().includes(location.toLowerCase())) && (!format || person.format === format) && (!availability || person.availability === availability) && (!peopleLevel || (person.experience || 'Intermediate') === peopleLevel);
   }).map((person) => ({ ...person, matchScore: Math.min(99, 70 + ((currentUser?.teaches || []).some((skill) => person.wants.toLowerCase().includes(skill.toLowerCase())) ? 15 : 0) + ((currentUser?.wants || []).some((skill) => person.skills.toLowerCase().includes(skill.toLowerCase())) ? 15 : 0)) })).sort((first, second) => sort === 'rating' ? second.rating - first.rating : sort === 'newest' ? second.name.localeCompare(first.name) : sort === 'nearby' && location ? Number(second.city.toLowerCase().includes(location.toLowerCase())) - Number(first.city.toLowerCase().includes(location.toLowerCase())) : sort === 'active' ? second.exchanges - first.exchanges : second.matchScore - first.matchScore);
+  const pageSize = 9;
+  const pageCount = Math.ceil(filtered.length / pageSize);
+  const visiblePeople = filtered.slice((peoplePage - 1) * pageSize, peoplePage * pageSize);
+  useEffect(() => { setPeoplePage(1); }, [normalizedSearch, location, format, availability, peopleLevel, sort]);
+  useEffect(() => { if (peoplePage > pageCount && pageCount > 0) setPeoplePage(pageCount); }, [peoplePage, pageCount]);
   return <div className="people-directory">
     <div className="people-directory-toolbar"><label className="search-box"><Search size={17} /><input aria-label="Search people, skills or roles" placeholder="Search people, skills or roles" value={search} onChange={(event) => setSearch(event.target.value)} /></label><input aria-label="People location" placeholder="Location" value={location} onChange={(event) => setLocation(event.target.value)} /><select aria-label="People format" value={format} onChange={(event) => setFormat(event.target.value)}><option value="">Online or in person</option><option>Online</option><option>Video call</option><option>In person</option></select><select aria-label="People availability" value={availability} onChange={(event) => setAvailability(event.target.value)}><option value="">Any availability</option><option>Weekdays</option><option>Weekends</option><option>Flexible</option></select><select aria-label="People experience" value={level} onChange={(event) => setLevel(event.target.value)}><option value="">Any experience</option><option>Beginner</option><option>Intermediate</option><option>Advanced</option></select><select aria-label="Sort people" value={sort} onChange={(event) => setSort(event.target.value)}><option value="relevance">Best match</option><option value="rating">Highest rated</option><option value="active">Most active</option><option value="newest">Newest members</option><option value="nearby">Nearest location</option></select></div>
     <div className="people-directory-summary">{filtered.length} people to meet <span>·</span> matched to your goals</div>
-    <div className="people-directory-grid">{filtered.length ? filtered.map((person) => { const saved = savedPeople.some((item) => item.name === person.name); return <article className="person-directory-card" key={person.name} onClick={(event) => { if (!event.target.closest('button')) onDetails(person); }}><div className="person-directory-top"><div className="person-avatar" style={{ background: person.color }}>{person.avatar ? <img src={person.avatar} alt="" /> : person.initials}</div><span className="match-score">{person.matchScore}% match</span><button className="person-save" onClick={() => onSave(person)} aria-label={saved ? `Remove ${person.name}` : `Save ${person.name}`}><Bookmark size={16} fill={saved ? 'currentColor' : 'none'} /></button></div><div className="person-directory-main"><h3>{person.name} {person.verified && <span className="verified-badge" title="Verified email">✓</span>}</h3><p>{person.role}</p><small>{person.city} · {person.lastActive}</small><div className="person-directory-skills">{person.skills.split(' · ').map((skill) => <span key={skill}>{skill}</span>)}</div><div className="person-directory-wants"><b>Wants to learn</b>{person.wants}</div><div className="person-directory-meta"><span><Star size={12} fill="currentColor" /> {person.rating}</span><span>{person.exchanges} exchanges</span><span>{person.responseTime}</span></div></div><div className="person-directory-actions"><button onClick={() => onMessage({ name: person.name, email: person.email || '' })}><MessageCircle size={14} /> Message</button><button onClick={() => onDetails(person)}>View profile <ArrowUpRight size={14} /></button></div></article>; }) : <EmptyState />}</div>
+    <div className="people-directory-grid">{filtered.length ? visiblePeople.map((person) => { const saved = savedPeople.some((item) => item.name === person.name); return <article className="person-directory-card" key={person.name} onClick={(event) => { if (!event.target.closest('button')) onDetails(person); }}><div className="person-directory-top"><div className="person-avatar" style={{ background: person.color }}>{person.avatar ? <img src={person.avatar} alt="" /> : person.initials}</div><span className="match-score">{person.matchScore}% match</span><button className="person-save" onClick={() => onSave(person)} aria-label={saved ? `Remove ${person.name}` : `Save ${person.name}`}><Bookmark size={16} fill={saved ? 'currentColor' : 'none'} /></button></div><div className="person-directory-main"><h3>{person.name} {person.verified && <span className="verified-badge" title="Verified email">✓</span>}</h3><p>{person.role}</p><small>{person.city} · {person.lastActive}</small><div className="person-directory-skills">{person.skills.split(' · ').map((skill) => <span key={skill}>{skill}</span>)}</div><div className="person-directory-wants"><b>Wants to learn</b>{person.wants}</div><div className="person-directory-meta"><span><Star size={12} fill="currentColor" /> {person.rating}</span><span>{person.exchanges} exchanges</span><span>{person.responseTime}</span></div></div><div className="person-directory-actions"><button onClick={() => onMessage({ name: person.name, email: person.email || '' })}><MessageCircle size={14} /> Message</button><button onClick={() => onDetails(person)}>View profile <ArrowUpRight size={14} /></button></div></article>; }) : <EmptyState />}</div>{pageCount > 1 && <nav className="people-pagination" aria-label="People pages">{Array.from({ length: pageCount }, (_, index) => index + 1).map((page) => <button key={page} className={peoplePage === page ? 'active' : ''} onClick={() => setPeoplePage(page)} aria-label={`Go to people page ${page}`}>{page}</button>)}</nav>}
   </div>;
 }
 
@@ -943,7 +1426,7 @@ function CommunityWorkspace({ currentUser, onConnect }) {
   </div>;
 }
 
-function DedicatedPage({ page, currentUser, skills, similarPeople, savedStories, onSaveStory, onStoryDetails, search, setSearch, category, setCategory, sort, setSort, teachQuery, setTeachQuery, wantsQuery, setWantsQuery, location, setLocation, format, setFormat, level, setLevel, availability, setAvailability, savedSkills, savedPeople, onSave, onSavePerson, onDetails, onPersonDetails, onClose, onConnect }) {
+function DedicatedPage({ page, currentUser, skills, similarPeople, peopleDirectory, savedStories, onSaveStory, onStoryDetails, search, setSearch, category, setCategory, sort, setSort, teachQuery, setTeachQuery, wantsQuery, setWantsQuery, location, setLocation, format, setFormat, level, setLevel, availability, setAvailability, savedSkills, savedPeople, onSave, onSavePerson, onDetails, onPersonDetails, onClose, onConnect }) {
   const pages = {
     explore: ['Explore skills', 'Find a skill exchange that fits the way you learn.'],
     people: ['Find people', 'Meet generous people with useful skills to share.'],
