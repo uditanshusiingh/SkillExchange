@@ -601,11 +601,12 @@ function AuthGate({ onLogin }) {
       const wrapper = document.createElement('label');
       wrapper.className = 'skill-picker';
       const label = document.createElement('span'); label.className = 'skill-picker-label'; label.textContent = input.placeholder;
-      const search = document.createElement('input'); search.type = 'search'; search.placeholder = 'Search skills'; search.className = 'skill-picker-search-input';
-      const select = document.createElement('select'); select.required = true;
-      const renderOptions = () => { select.replaceChildren(new Option(input.placeholder === 'What can you teach?' ? 'Choose a skill to teach' : 'Choose a skill to learn', ''), ...skillOptions.filter((skill) => !search.value.trim() || skill.toLowerCase().includes(search.value.toLowerCase().trim())).map((skill) => new Option(skill, skill))); };
-      renderOptions(); select.addEventListener('change', () => { input.value = select.value; input.dispatchEvent(new Event('input', { bubbles: true })); }); search.addEventListener('input', renderOptions); input.hidden = true; input.parentElement.insertBefore(wrapper, input); wrapper.append(label, search, select);
-      return () => { search.removeEventListener('input', renderOptions); input.hidden = false; wrapper.remove(); };
+      const search = document.createElement('input'); search.type = 'search'; search.placeholder = input.placeholder === 'What can you teach?' ? 'Search or choose a skill to teach' : 'Search or choose a skill to learn'; search.className = 'skill-picker-search-input'; search.required = true;
+      const listId = `skill-options-${input.placeholder.includes('teach') ? 'teach' : 'learn'}`;
+      const options = document.createElement('datalist'); options.id = listId;
+      skillOptions.forEach((skill) => options.append(new Option(skill, skill)));
+      search.setAttribute('list', listId); search.value = input.value; search.addEventListener('input', () => { input.value = search.value; input.dispatchEvent(new Event('input', { bubbles: true })); }); input.hidden = true; input.parentElement.insertBefore(wrapper, input); wrapper.append(label, search, options);
+      return () => { input.hidden = false; wrapper.remove(); };
     });
     return () => cleanups.forEach((cleanup) => cleanup());
   }, [mode]);
