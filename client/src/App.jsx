@@ -6,6 +6,309 @@ import { connectChat } from './socket';
 const categories = ['All', 'Technology', 'Creative', 'Food & home', 'Wellbeing'];
 const people = [];
 const persistentPages = ['explore', 'people', 'community', 'advanced'];
+const skillOptions = [...new Set(`C
+C++
+Java
+Python
+JavaScript
+TypeScript
+C#
+Go
+Rust
+Kotlin
+Swift
+Dart
+PHP
+Ruby
+R
+MATLAB
+Scala
+Solidity
+Lua
+Perl
+Bash
+PowerShell
+SQL
+HTML
+CSS
+Bootstrap
+Tailwind CSS
+Sass
+React
+Angular
+Vue.js
+Next.js
+Node.js
+Express.js
+Django
+Flask
+FastAPI
+Spring Boot
+ASP.NET
+Laravel
+REST API
+GraphQL
+WebSocket
+WebRTC
+JSON
+JWT
+OAuth
+Microservices
+Serverless Architecture
+Data Structures
+Algorithms
+Arrays
+Strings
+Linked List
+Stack
+Queue
+Hashing
+Hash Table
+Heap
+Binary Tree
+Binary Search Tree
+Trie
+Graph
+BFS
+DFS
+Dijkstra Algorithm
+Dynamic Programming
+Greedy Algorithms
+Backtracking
+Recursion
+Sliding Window
+Two Pointers
+Bit Manipulation
+Time Complexity
+Big O Notation
+Object Oriented Programming
+Class
+Object
+Encapsulation
+Abstraction
+Inheritance
+Polymorphism
+Exception Handling
+Templates
+Generics
+Pointers
+Memory Management
+DBMS
+Database Management System
+Relational Database
+ER Diagram
+Primary Key
+Foreign Key
+              {mode === 'signup' && <><SkillPicker label="What can you teach?" placeholder="Choose a skill to teach" value={form.teaches} onChange={(value) => setForm({ ...form, teaches: value })} /><SkillPicker label="What do you want to learn?" placeholder="Choose a skill to learn" value={form.wants} onChange={(value) => setForm({ ...form, wants: value })} /></>}
+Joins
+Transactions
+ACID Properties
+Indexing
+Query Optimization
+NoSQL
+MongoDB
+MySQL
+PostgreSQL
+Oracle
+SQL Server
+SQLite
+Redis
+Operating System
+Process
+Thread
+Multithreading
+Process Scheduling
+Mutex
+Semaphore
+Deadlock
+Memory Management
+Paging
+Virtual Memory
+File System
+Linux
+Unix
+Windows Internals
+Computer Networks
+OSI Model
+TCP/IP Model
+Ethernet
+IP Address
+IPv4
+IPv6
+Subnetting
+DNS
+HTTP
+HTTPS
+TCP
+UDP
+Routing
+Firewall
+VPN
+Socket Programming
+Computer Architecture
+CPU
+ALU
+Cache Memory
+RAM
+ROM
+Pipelining
+GPU Architecture
+Digital Logic
+Boolean Algebra
+Logic Gates
+Flip Flops
+Finite State Machines
+Discrete Mathematics
+Set Theory
+Relations
+Logic
+Graph Theory
+Combinatorics
+Number Theory
+Compiler Design
+Compiler
+Interpreter
+Lexical Analysis
+Parsing
+Syntax Analysis
+Code Optimization
+Software Engineering
+SDLC
+Agile
+Scrum
+Kanban
+UML
+Software Architecture
+Design Patterns
+MVC
+MVVM
+SOLID Principles
+Unit Testing
+Integration Testing
+Git
+GitHub
+CI/CD
+System Design
+High Level Design
+Low Level Design
+Scalability
+Availability
+Reliability
+Caching
+Database Scaling
+Message Queues
+Kafka
+RabbitMQ
+Distributed Systems
+Artificial Intelligence
+Machine Learning
+Supervised Learning
+Unsupervised Learning
+Reinforcement Learning
+Linear Regression
+Logistic Regression
+Decision Tree
+Random Forest
+Neural Networks
+Deep Learning
+CNN
+RNN
+LSTM
+Transformers
+Natural Language Processing
+Computer Vision
+OpenCV
+Object Detection
+OCR
+Generative AI
+Large Language Models
+LLM
+Prompt Engineering
+Embeddings
+Vector Database
+RAG
+AI Agents
+LangChain
+Data Science
+Data Analysis
+Data Cleaning
+Data Visualization
+Statistics
+Probability
+NumPy
+Pandas
+Matplotlib
+Scikit-learn
+Jupyter Notebook
+Big Data
+Hadoop
+Apache Spark
+PySpark
+Data Engineering
+Cloud Computing
+Docker
+Kubernetes
+AWS
+Microsoft Azure
+EC2
+S3
+Lambda
+Terraform
+DevOps
+Jenkins
+Ansible
+Prometheus
+Grafana
+Monitoring
+Cybersecurity
+Information Security
+Cryptography
+Encryption
+Authentication
+Authorization
+Ethical Hacking
+Penetration Testing
+SQL Injection
+XSS
+CSRF
+Blockchain
+Bitcoin
+Ethereum
+Smart Contracts
+Web3
+IoT
+Arduino
+Raspberry Pi
+Embedded Systems
+Computer Graphics
+3D Graphics
+OpenGL
+Game Development
+Unity
+Mobile Development
+Android Development
+iOS Development
+Flutter
+React Native
+Business Analytics
+Excel
+Advanced Excel
+Power BI
+Tableau
+Digital Marketing
+SEO
+Content Marketing
+Social Media Marketing
+Google Analytics
+Product Management
+Project Management
+Leadership
+Technical Writing
+Academic Writing
+Mathematics
+Calculus
+Linear Algebra
+Research Methodology`.split('\n').map((skill) => skill.trim()).filter(Boolean))];
 
 function getInitialPage() {
   const page = new URLSearchParams(window.location.search).get('page');
@@ -309,6 +612,13 @@ function ResetPasswordGate({ token }) {
 function PasswordInput({ value, onChange, ...props }) {
   const [visible, setVisible] = useState(false);
   return <span className="password-input-shell"><input {...props} type={visible ? 'text' : 'password'} value={value} onChange={onChange} /><button type="button" className="password-icon-button" aria-label={visible ? 'Hide password' : 'Show password'} title={visible ? 'Hide password' : 'Show password'} onClick={() => setVisible((current) => !current)}>{visible ? <EyeOff size={17} /> : <Eye size={17} />}</button></span>;
+}
+
+function SkillPicker({ value, onChange, label, placeholder }) {
+  const [query, setQuery] = useState('');
+  const searchRef = useRef(null);
+  const options = skillOptions.filter((skill) => !query.trim() || skill.toLowerCase().includes(query.toLowerCase().trim()));
+  return <label className="skill-picker"><span className="skill-picker-label">{label}</span><span className="skill-picker-search"><Search size={15} /><input ref={searchRef} type="search" value={query} placeholder="Search skills" aria-label={`Search ${label}`} onChange={(event) => setQuery(event.target.value)} /><button type="button" aria-label={`Focus search for ${label}`} title="Search skills" onClick={() => searchRef.current?.focus()}><ArrowUpRight size={14} /></button></span><select required value={value} aria-label={label} onChange={(event) => onChange(event.target.value)}><option value="">{placeholder}</option>{options.map((skill) => <option key={skill} value={skill}>{skill}</option>)}</select></label>;
 }
 
 function SkillCard({ skill, saved, onSave, onConnect, onDetails }) { const teacherAvatar = skill.teacher.avatar; return <article className="skill-card" onClick={(event) => { if (!event.target.closest('button')) onDetails?.(); }}><div className="card-top" style={{ background: skill.color }}><span className="card-category">{skill.category}</span><button className="save-skill-button" onClick={onSave} aria-label={saved ? `Remove ${skill.title} from saved skills` : `Save ${skill.title}`} title={saved ? 'Remove saved skill' : 'Save skill'}><Bookmark size={16} fill={saved ? 'currentColor' : 'none'} /></button><button className="round-arrow" onClick={onConnect} aria-label={`Connect with ${skill.teacher.name}`}><ArrowUpRight size={18} /></button><div className="skill-glyph">{skill.title.charAt(0)}</div></div><div className="card-body"><div className="card-title-row"><h3>{skill.title}</h3><div className="rating"><Star size={13} fill="currentColor" /> {skill.teacher.rating} <small>{skill.teacher.exchanges || 0} swaps</small></div></div><p>{skill.description}</p><div className="card-meta"><span>{skill.level}</span><span>{skill.format}</span></div><div className="trade-row"><div className="teacher"><span className="tiny-avatar">{teacherAvatar?.startsWith('data:image/') ? <img src={teacherAvatar} alt="" /> : teacherAvatar}</span><span><strong>{skill.teacher.name}</strong><small>{skill.teacher.role}</small><small className="teacher-location">{skill.teacher.location || 'Community member'}</small></span></div><span className="trade-icon">↔</span><span className="wants"><small>Wants to learn</small>{skill.wants}</span></div></div></article>; }

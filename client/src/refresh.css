@@ -822,6 +822,19 @@ html[data-theme='dark'] .saved-item { background: #eff3ed; border-color: #b8cbb9
 .password-toggle[aria-label='Hide password']::before { border-radius: 0; border-width: 0 0 1.7px; transform: rotate(-45deg); width: 19px; }
 .password-toggle[aria-label='Hide password']::after { width: 19px; height: 1.7px; border-radius: 0; transform: rotate(-45deg); background: currentColor; }
 .password-toggle:hover, .password-toggle:focus-visible { color: var(--forest); }
+.skill-picker { display: grid; gap: 6px; }
+.skill-picker-label { color: #718076; font: 10px 'DM Mono', monospace; text-transform: uppercase; letter-spacing: .05em; }
+.skill-picker-search { display: flex; align-items: center; gap: 7px; min-height: 36px; padding: 0 8px 0 11px; border: 1px solid #d7e0d5; border-radius: 5px; background: #fffdf9; color: #718076; }
+.skill-picker-search input { min-width: 0; flex: 1; padding: 8px 0; border: 0; outline: 0; background: transparent; color: var(--forest); font-size: 11px; }
+.skill-picker-search input::placeholder { color: #718076; }
+.skill-picker-search button { width: 25px; height: 25px; display: grid; place-items: center; border-radius: 4px; background: var(--forest); color: var(--cream); }
+.skill-picker select { width: 100%; border: 1px solid #d7e0d5; border-radius: 5px; padding: 10px 11px; background: #fffdf9; color: var(--forest); font-size: 11px; }
+html[data-theme='dark'] .skill-picker-label { color: #aebdb1; }
+html[data-theme='dark'] .skill-picker-search,
+html[data-theme='dark'] .skill-picker select { border-color: #466050; background: #102019; color: #eef4ed; }
+html[data-theme='dark'] .skill-picker-search input { color: #eef4ed; }
+html[data-theme='dark'] .skill-picker-search input::placeholder { color: #9fb7a5; }
+html[data-theme='dark'] .skill-picker-search button { background: #d9ed67; color: #19352a; }
 .advanced-panel > p { max-width: 560px; }
 .advanced-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 24px 0 12px; }
 .advanced-card { display: grid; gap: 10px; padding: 16px; border: 1px solid #d7e0d5; border-radius: 8px; background: #fffdf9; }
