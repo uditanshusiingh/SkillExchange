@@ -310,7 +310,484 @@ Academic Writing
 Mathematics
 Calculus
 Linear Algebra
-Research Methodology`.split('\n').map((skill) => skill.trim()).filter(Boolean))];
+Research Methodology
+Assembly
+Fetch API
+Object-Oriented Programming (OOP)
+Constructor
+Destructor
+Method Overloading
+Method Overriding
+Virtual Functions
+Pure Virtual Functions
+Interface
+Abstract Class
+Multiple Inheritance
+Friend Function
+Doubly Linked List
+Circular Linked List
+Circular Queue
+Deque
+Priority Queue
+AVL Tree
+Red-Black Tree
+B Tree
+B+ Tree
+Union-Find / Disjoint Set
+KMP Algorithm
+Rabin-Karp Algorithm
+Z Algorithm
+Bellman-Ford Algorithm
+Floyd-Warshall Algorithm
+Prim's Algorithm
+Kruskal's Algorithm
+Topological Sort
+Big Theta
+Big Omega
+ER Model
+Relational Model
+Database Keys
+Candidate Key
+Super Key
+Composite Key
+1NF
+2NF
+3NF
+BCNF
+Functional Dependency
+Multivalued Dependency
+SQL Joins
+Subqueries
+Views
+Stored Procedures
+Triggers
+DDL
+DML
+DCL
+TCL
+Concurrency Control
+Serializability
+Database Recovery
+Database Replication
+Database Sharding
+CAP Theorem
+OLTP
+OLAP
+ETL
+Data Lake
+FCFS
+SJF
+SRTF
+Round Robin
+Banker's Algorithm
+FIFO Page Replacement
+Optimal Page Replacement
+Inter-Process Communication
+Context Switching
+Shell Scripting
+RARP
+CIDR
+ARP
+RIP
+OSPF
+BGP
+VLAN
+CSMA/CD
+CSMA/CA
+ALOHA
+Network Address Translation
+Pipeline Hazards
+Branch Prediction
+Direct Mapping
+Associative Mapping
+Set Associative Mapping
+Multiplexers
+Demultiplexers
+Encoders
+Decoders
+Karnaugh Map
+Finite State Machines
+Predicate Logic
+Recurrence Relations
+Finite Automata
+DFA
+NFA
+Context-Free Grammar
+Pushdown Automata
+Turing Machine
+Chomsky Hierarchy
+Pumping Lemma
+Decidability
+Undecidability
+Halting Problem
+LL Parser
+LR Parser
+SLR Parser
+CLR Parser
+LALR Parser
+Three Address Code
+Register Allocation
+Waterfall Model
+Requirement Engineering
+Software Requirements Specification
+Use Case Diagram
+Class Diagram
+Sequence Diagram
+Activity Diagram
+Black Box Testing
+White Box Testing
+Test Driven Development
+Version Control
+Bitbucket
+High-Level Design
+Low-Level Design
+Fault Tolerance
+Horizontal Scaling
+Vertical Scaling
+Apache Kafka
+RabbitMQ
+Event-Driven Architecture
+Distributed Transactions
+Paxos
+Raft
+Consistency
+Eventual Consistency
+Artificial Intelligence (AI)
+Intelligent Agents
+Expert Systems
+Knowledge Representation
+A* Algorithm
+Alpha-Beta Pruning
+Planning
+Reasoning
+Natural Language Processing (NLP)
+Speech Recognition
+Robotics
+Semi-Supervised Learning
+Polynomial Regression
+Support Vector Machine
+K-Nearest Neighbors
+Naive Bayes
+Gradient Boosting
+XGBoost
+LightGBM
+CatBoost
+K-Means Clustering
+DBSCAN
+Principal Component Analysis (PCA)
+Anomaly Detection
+Feature Engineering
+Feature Selection
+Cross Validation
+Hyperparameter Optimization
+Regularization
+L1 Regularization
+L2 Regularization
+Bias-Variance Tradeoff
+Overfitting
+Underfitting
+Confusion Matrix
+Precision
+Recall
+F1 Score
+ROC Curve
+AUC
+Mean Squared Error
+Mean Absolute Error
+Artificial Neural Network
+Perceptron
+Multilayer Perceptron
+Convolutional Neural Network (CNN)
+Recurrent Neural Network (RNN)
+LSTM
+GRU
+Autoencoder
+Variational Autoencoder
+Generative Adversarial Network (GAN)
+Attention Mechanism
+Self-Attention
+Multi-Head Attention
+Backpropagation
+Gradient Descent
+Stochastic Gradient Descent
+Adam Optimizer
+Batch Normalization
+Dropout
+Activation Functions
+ReLU
+Sigmoid
+Tanh
+Transfer Learning
+Fine-Tuning
+Tokenization
+Stemming
+Lemmatization
+Stop Words
+Bag of Words
+TF-IDF
+Word Embeddings
+Word2Vec
+GloVe
+Named Entity Recognition
+Part-of-Speech Tagging
+Sentiment Analysis
+Text Classification
+Language Modeling
+Machine Translation
+Question Answering
+Text Summarization
+Information Extraction
+Large Language Models (LLMs)
+GPT
+Prompt Engineering
+Prompt Optimization
+Vector Databases
+Retrieval-Augmented Generation (RAG)
+LoRA
+PEFT
+Agentic AI
+Tool Calling
+Function Calling
+Multimodal AI
+LLM Evaluation
+AI Evaluation
+Hallucination Detection
+AI Guardrails
+LangGraph
+Hugging Face
+Ollama
+Pinecone
+Chroma
+Weaviate
+Image Processing
+Image Classification
+Image Segmentation
+Face Recognition
+Optical Character Recognition (OCR)
+YOLO
+R-CNN
+Faster R-CNN
+Vision Transformers
+Image Generation
+Image Captioning
+Hadoop
+HDFS
+MapReduce
+Apache Spark
+Spark SQL
+PySpark
+Apache Hive
+Apache HBase
+Data Pipeline
+Stream Processing
+Virtualization
+Containers
+Docker Compose
+Google Cloud
+Amazon EC2
+Amazon S3
+AWS Lambda
+Amazon RDS
+Amazon DynamoDB
+Amazon VPC
+AWS IAM
+Amazon CloudFront
+Amazon Route 53
+Amazon ECS
+Amazon EKS
+Serverless Computing
+Auto Scaling
+Infrastructure as Code
+Jenkins
+Ansible
+Prometheus
+Grafana
+Monitoring
+Logging
+Container Orchestration
+AES
+DES
+RSA
+SHA
+Digital Signature
+Digital Certificate
+Public Key Infrastructure (PKI)
+Ethical Hacking
+Penetration Testing
+Vulnerability Assessment
+Malware Analysis
+Digital Forensics
+Phishing
+Social Engineering
+SQL Injection
+Cross-Site Scripting (XSS)
+Cross-Site Request Forgery (CSRF)
+DDoS
+Zero Trust Security
+SIEM
+Security Operations Center (SOC)
+Intrusion Detection
+Intrusion Prevention
+Blockchain Technology
+Smart Contracts
+Cryptocurrency
+Proof of Work
+Proof of Stake
+Decentralized Applications (DApps)
+Distributed Ledger Technology
+Digital Wallet
+NFT
+DAO
+Web3.js
+Ethers.js
+Hardhat
+Internet of Things
+Sensors
+Actuators
+Arduino
+Raspberry Pi
+ESP32
+Embedded Systems
+MQTT
+IoT Security
+Edge Computing
+Fog Computing
+Smart Home
+Industrial IoT
+2D Graphics
+3D Graphics
+Rendering
+Rasterization
+Ray Tracing
+OpenGL
+DirectX
+Lighting
+Shading
+Texture Mapping
+Transformations
+Animation
+Unreal Engine
+CUDA
+OpenMP
+MPI
+Boolean Model
+Vector Space Model
+Probabilistic Model
+Relevance Feedback
+Search Engine
+Web Crawling
+PageRank
+Android Development
+iOS Development
+Mobile UI
+Mobile App Architecture
+Financial Management
+Corporate Finance
+Investment Management
+Portfolio Management
+Risk Management
+Financial Modelling
+Net Present Value (NPV)
+Internal Rate of Return (IRR)
+Weighted Average Cost of Capital (WACC)
+Derivatives
+Futures
+Options
+Hedging
+Investment Banking
+Search Engine Optimization (SEO)
+Search Engine Marketing (SEM)
+Email Marketing
+Affiliate Marketing
+Influencer Marketing
+Customer Relationship Management (CRM)
+Conversion Rate Optimization
+Human Resource Management
+Recruitment
+Talent Acquisition
+Talent Management
+Performance Management
+Compensation Management
+Training and Development
+Employee Engagement
+Workforce Planning
+HR Analytics
+Supply Chain Management
+Logistics
+Inventory Management
+Production Planning
+Quality Management
+Six Sigma
+Lean Management
+Procurement
+Business Intelligence
+Advanced Excel
+Power BI
+Tableau
+Predictive Analytics
+Prescriptive Analytics
+Dashboard Development
+Data Modelling
+Strategic Management
+Business Policy
+Competitive Strategy
+Corporate Strategy
+SWOT Analysis
+PESTLE Analysis
+Porter's Five Forces
+Business Model Canvas
+Strategic Planning
+Decision Making
+Innovation Management
+Entrepreneurship
+Startup Management
+Stakeholder Management
+Microeconomics
+Macroeconomics
+Managerial Economics
+Inflation
+GDP
+Fiscal Policy
+Monetary Policy
+International Trade
+Foreign Exchange
+Contract Law
+Company Law
+Corporate Law
+Intellectual Property Rights
+Patent
+Trademark
+Consumer Protection
+Data Protection
+Corporate Governance
+Nursing Fundamentals
+Anatomy
+Physiology
+Biochemistry
+Microbiology
+Pathology
+Pharmacology
+Nutrition
+First Aid
+Patient Care
+Health Assessment
+CPR
+Basic Life Support (BLS)
+Advanced Cardiovascular Life Support (ACLS)
+Research Design
+Literature Review
+Research Paper
+Citation
+Plagiarism
+Hypothesis
+Research Variables
+Sampling
+Qualitative Research
+Quantitative Research
+Experimental Research
+Evidence-Based Practice
+Technical Writing
+Academic Writing`.split('\n').map((skill) => skill.trim()).filter(Boolean))];
 
 function getInitialPage() {
   const page = new URLSearchParams(window.location.search).get('page');
