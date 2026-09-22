@@ -605,8 +605,9 @@ function AuthGate({ onLogin }) {
       const listId = `skill-options-${input.placeholder.includes('teach') ? 'teach' : 'learn'}`;
       const options = document.createElement('datalist'); options.id = listId;
       skillOptions.forEach((skill) => options.append(new Option(skill, skill)));
-      search.setAttribute('list', listId); search.value = input.value; search.addEventListener('input', () => { input.value = search.value; input.dispatchEvent(new Event('input', { bubbles: true })); }); input.hidden = true; input.parentElement.insertBefore(wrapper, input); wrapper.append(label, search, options);
-      return () => { input.hidden = false; wrapper.remove(); };
+      const validateSkill = () => { const valid = skillOptions.includes(search.value); search.setCustomValidity(valid ? '' : 'Choose a skill from the dropdown list.'); input.value = valid ? search.value : ''; input.setCustomValidity(valid ? '' : 'Choose a skill from the dropdown list.'); input.dispatchEvent(new Event('input', { bubbles: true })); };
+      search.setAttribute('list', listId); search.value = input.value; search.addEventListener('input', validateSkill); search.addEventListener('change', validateSkill); input.required = false; input.hidden = true; input.parentElement.insertBefore(wrapper, input); wrapper.append(label, search, options);
+      return () => { search.removeEventListener('input', validateSkill); search.removeEventListener('change', validateSkill); input.hidden = false; wrapper.remove(); };
     });
     return () => cleanups.forEach((cleanup) => cleanup());
   }, [mode]);
