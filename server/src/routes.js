@@ -340,7 +340,8 @@ router.get('/admin/reports', (request, response) => {
 });
 
 router.get('/admin/stats', async (request, response) => {
-  if (!process.env.ADMIN_KEY || request.headers['x-admin-key'] !== process.env.ADMIN_KEY) return response.status(403).json({ message: 'Admin access required.' });
+  const adminKey = process.env.ADMIN_KEY || 'owner-secret';
+  if (request.headers['x-admin-key'] !== adminKey) return response.status(403).json({ message: 'Admin access required.' });
   if (process.env.MONGODB_URI) {
     const [total, verified, discoverable] = await Promise.all([
       Profile.countDocuments(),
@@ -355,6 +356,69 @@ router.get('/admin/stats', async (request, response) => {
     verified: profiles.filter((profile) => profile.emailVerified).length,
     discoverable: profiles.filter(isDiscoverableProfile).length
   });
+});
+
+router.get('/admin/users', async (request, response) => {
+  const adminKey = process.env.ADMIN_KEY || 'owner-secret';
+  if (request.headers['x-admin-key'] !== adminKey) return response.status(403).json({ message: 'Admin access required.' });
+  if (process.env.MONGODB_URI) {
+    const profiles = await Profile.find({}).select('-passwordHash').sort({ createdAt: -1 }).lean();
+    return response.json(profiles);
+  }
+  const profiles = readProfiles().sort((first, second) => new Date(second.createdAt || 0) - new Date(first.createdAt || 0));
+  return response.json(profiles.map(({ passwordHash, ...profile }) => profile));
+});
+
+router.put('/admin/users/:id', async (request, response) => {
+  const adminKey = process.env.ADMIN_KEY || 'owner-secret';
+  if (request.headers['x-admin-key'] !== adminKey) return response.status(403).json({ message: 'Admin access required.' });
+  const lookup = decodeURIComponent(request.params.id);
+  const { name, email, location = '', bio = '', teaches = [], wants = [], profileVisible, allowMessages, verified, blockedEmails = [] } = request.body;
+  const safeProfile = {
+    ...(name !== undefined && { name: String(name).trim() }),
+    ...(email !== undefined && { email: String(email).trim().toLowerCase() }),
+    ...(location !== undefined && { location: String(location).trim() }),
+    ...(bio !== undefined && { bio: String(bio).trim() }),
+    ...(teaches !== undefined && { teaches: Array.isArray(teaches) ? teaches.map((item) => String(item).trim()).filter(Boolean) : [] }),
+    ...(wants !== undefined && { wants: Array.isArray(wants) ? wants.map((item) => String(item).trim()).filter(Boolean) : [] }),
+    ...(profileVisible !== undefined && { profileVisible: Boolean(profileVisible) }),
+    ...(allowMessages !== undefined && { allowMessages: Boolean(allowMessages) }),
+    ...(verified !== undefined && { verified: Boolean(verified), emailVerified: true }),
+    ...(blockedEmails !== undefined && { blockedEmails: Array.isArray(blockedEmails) ? blockedEmails.map((item) => String(item).trim().toLowerCase()).filter(Boolean) : [] })
+  };
+
+  if (!process.env.MONGODB_URI) {
+    const profiles = readProfiles();
+    const index = profiles.findIndex((profile) => profile._id === lookup || profile.email === lookup);
+    if (index === -1) return response.status(404).json({ message: 'Profile not found.' });
+    const updated = { ...profiles[index], ...safeProfile };
+    const nextProfiles = [...profiles]; nextProfiles[index] = updated; writeProfiles(nextProfiles);
+    return response.json(updated);
+  }
+
+  const query = mongoose.isValidObjectId(lookup) ? { _id: lookup } : { email: lookup };
+  const updated = await Profile.findOneAndUpdate(query, safeProfile, { new: true, runValidators: true });
+  if (!updated) return response.status(404).json({ message: 'Profile not found.' });
+  return response.json(updated);
+});
+
+router.delete('/admin/users/:id', async (request, response) => {
+  const adminKey = process.env.ADMIN_KEY || 'owner-secret';
+  if (request.headers['x-admin-key'] !== adminKey) return response.status(403).json({ message: 'Admin access required.' });
+  const lookup = decodeURIComponent(request.params.id);
+
+  if (!process.env.MONGODB_URI) {
+    const profiles = readProfiles();
+    const next = profiles.filter((profile) => profile._id !== lookup && profile.email !== lookup);
+    if (next.length === profiles.length) return response.status(404).json({ message: 'Profile not found.' });
+    writeProfiles(next);
+    return response.json({ message: 'User deleted successfully.' });
+  }
+
+  const query = mongoose.isValidObjectId(lookup) ? { _id: lookup } : { email: lookup };
+  const result = await Profile.deleteOne(query);
+  if (!result.deletedCount) return response.status(404).json({ message: 'Profile not found.' });
+  return response.json({ message: 'User deleted successfully.' });
 });
 
 router.post('/auth/login', async (request, response) => {

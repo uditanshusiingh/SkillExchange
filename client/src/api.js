@@ -17,6 +17,28 @@ export async function getSkills(filters = {}) {
 
 export async function getPeople(filters = {}) { const params = new URLSearchParams(filters); const response = await fetch(`${API_URL}/profiles?${params}`); return readResponse(response, 'Could not load people'); }
 
+export async function getAdminUsers(adminKey) {
+  const response = await fetch(`${API_URL}/admin/users`, { headers: { 'x-admin-key': adminKey || '' } });
+  return readResponse(response, 'Could not load admin users');
+}
+
+export async function updateAdminUser(adminKey, id, profile) {
+  const response = await fetch(`${API_URL}/admin/users/${encodeURIComponent(id)}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey || '' },
+    body: JSON.stringify(profile)
+  });
+  return readResponse(response, 'Could not update user');
+}
+
+export async function deleteAdminUser(adminKey, id) {
+  const response = await fetch(`${API_URL}/admin/users/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+    headers: { 'x-admin-key': adminKey || '' }
+  });
+  return readResponse(response, 'Could not delete user');
+}
+
 export async function createProfile(profile) {
   try {
     const response = await fetch(`${API_URL}/profiles`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(profile) });

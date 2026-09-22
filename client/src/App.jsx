@@ -1,793 +1,58 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowDown, ArrowLeftRight, ArrowUp, ArrowUpRight, Award, Bell, Bookmark, BriefcaseBusiness, CalendarDays, Check, CheckCircle2, ChevronDown, Clock3, Eye, EyeOff, Languages, Menu, MessageCircle, Moon, Search, Settings, Share2, ShieldCheck, Sparkles, Star, Sun, Target, Repeat2, UserRound, UsersRound, Video, X, XCircle } from 'lucide-react';
-import { blockUser, changePassword, createProfile, createVideoRoom, deleteAccount, forgotPassword, getExchanges, getGroups, getLeaderboard, getMessages, getNotifications, getPeople, getPublicProfile, getRecommendations, getSkillMatches, getSkills, joinGroup, loginProfile, markMessageRead, markNotificationsRead, reportUser, resetPassword, scheduleExchange, sendMessage, sendVerification, updateExchange, updatePortfolio, updateProfile, verifyEmail } from './api';
+import { blockUser, changePassword, createProfile, createVideoRoom, deleteAccount, forgotPassword, getAdminUsers, getExchanges, getGroups, getLeaderboard, getMessages, getNotifications, getPeople, getPublicProfile, getRecommendations, getSkillMatches, getSkills, joinGroup, loginProfile, markMessageRead, markNotificationsRead, reportUser, resetPassword, scheduleExchange, sendMessage, sendVerification, updateExchange, updatePortfolio, updateProfile, verifyEmail } from './api';
 import { connectChat } from './socket';
 
 const categories = ['All', 'Technology', 'Creative', 'Food & home', 'Wellbeing'];
 const people = [];
 const persistentPages = ['explore', 'people', 'community', 'advanced'];
-const skillOptions = [...new Set(`C
-C++
-Java
-Python
-JavaScript
-TypeScript
-C#
-Go
-Rust
-Kotlin
-Swift
-Dart
-PHP
-Ruby
-R
-MATLAB
-Scala
-Solidity
-Lua
-Perl
-Bash
-PowerShell
-SQL
-HTML
-CSS
-Bootstrap
-Tailwind CSS
-Sass
-React
-Angular
-Vue.js
-Next.js
-Node.js
-Express.js
-Django
-Flask
-FastAPI
-Spring Boot
-ASP.NET
-Laravel
-REST API
-GraphQL
-WebSocket
-WebRTC
-JSON
-JWT
-OAuth
-Microservices
-Serverless Architecture
-Data Structures
-Algorithms
-Arrays
-Strings
-Linked List
-Stack
-Queue
-Hashing
-Hash Table
-Heap
-Binary Tree
-Binary Search Tree
-Trie
-Graph
-BFS
-DFS
-Dijkstra Algorithm
-Dynamic Programming
-Greedy Algorithms
-Backtracking
-Recursion
-Sliding Window
-Two Pointers
-Bit Manipulation
-Time Complexity
-Big O Notation
-Object Oriented Programming
-Class
-Object
-Encapsulation
-Abstraction
-Inheritance
-Polymorphism
-Exception Handling
-Templates
-Generics
-Pointers
-Memory Management
-DBMS
-Database Management System
-Relational Database
-ER Diagram
-Primary Key
-Foreign Key
-Candidate Key
-Super Key
-Composite Key
-Joins
-Transactions
-ACID Properties
-Indexing
-Query Optimization
-NoSQL
-MongoDB
-MySQL
-PostgreSQL
-Oracle
-SQL Server
-SQLite
-Redis
-Operating System
-Process
-Thread
-Multithreading
-Process Scheduling
-Mutex
-Semaphore
-Deadlock
-Memory Management
-Paging
-Virtual Memory
-File System
-Linux
-Unix
-Windows Internals
-Computer Networks
-OSI Model
-TCP/IP Model
-Ethernet
-IP Address
-IPv4
-IPv6
-Subnetting
-DNS
-HTTP
-HTTPS
-TCP
-UDP
-Routing
-Firewall
-VPN
-Socket Programming
-Computer Architecture
-CPU
-ALU
-Cache Memory
-RAM
-ROM
-Pipelining
-GPU Architecture
-Digital Logic
-Boolean Algebra
-Logic Gates
-Flip Flops
-Finite State Machines
-Discrete Mathematics
-Set Theory
-Relations
-Logic
-Graph Theory
-Combinatorics
-Number Theory
-Compiler Design
-Compiler
-Interpreter
-Lexical Analysis
-Parsing
-Syntax Analysis
-Code Optimization
-Software Engineering
-SDLC
-Agile
-Scrum
-Kanban
-UML
-Software Architecture
-Design Patterns
-MVC
-MVVM
-SOLID Principles
-Unit Testing
-Integration Testing
-Git
-GitHub
-CI/CD
-System Design
-High Level Design
-Low Level Design
-Scalability
-Availability
-Reliability
-Caching
-Database Scaling
-Message Queues
-Kafka
-RabbitMQ
-Distributed Systems
-Artificial Intelligence
-Machine Learning
-Supervised Learning
-Unsupervised Learning
-Reinforcement Learning
-Linear Regression
-Logistic Regression
-Decision Tree
-Random Forest
-Neural Networks
-Deep Learning
-CNN
-RNN
-LSTM
-Transformers
-Natural Language Processing
-Computer Vision
-OpenCV
-Object Detection
-OCR
-Generative AI
-Large Language Models
-LLM
-Prompt Engineering
-Embeddings
-Vector Database
-RAG
-AI Agents
-LangChain
-Data Science
-Data Analysis
-Data Cleaning
-Data Visualization
-Statistics
-Probability
-NumPy
-Pandas
-Matplotlib
-Scikit-learn
-Jupyter Notebook
-Big Data
-Hadoop
-Apache Spark
-PySpark
-Data Engineering
-Cloud Computing
-Docker
-Kubernetes
-AWS
-Microsoft Azure
-EC2
-S3
-Lambda
-Terraform
-DevOps
-Jenkins
-Ansible
-Prometheus
-Grafana
-Monitoring
-Cybersecurity
-Information Security
-Cryptography
-Encryption
-Authentication
-Authorization
-Ethical Hacking
-Penetration Testing
-SQL Injection
-XSS
-CSRF
-Blockchain
-Bitcoin
-Ethereum
-Smart Contracts
-Web3
-IoT
-Arduino
-Raspberry Pi
-Embedded Systems
-Computer Graphics
-3D Graphics
-OpenGL
-Game Development
-Unity
-Mobile Development
-Android Development
-iOS Development
-Flutter
-React Native
-Business Analytics
-Excel
-Advanced Excel
-Power BI
-Tableau
-Digital Marketing
-SEO
-Content Marketing
-Social Media Marketing
-Google Analytics
-Product Management
-Project Management
-Leadership
-Technical Writing
-Academic Writing
-Mathematics
-Calculus
-Linear Algebra
-Research Methodology
-Assembly
-Fetch API
-Object-Oriented Programming (OOP)
-Constructor
-Destructor
-Method Overloading
-Method Overriding
-Virtual Functions
-Pure Virtual Functions
-Interface
-Abstract Class
-Multiple Inheritance
-Friend Function
-Doubly Linked List
-Circular Linked List
-Circular Queue
-Deque
-Priority Queue
-AVL Tree
-Red-Black Tree
-B Tree
-B+ Tree
-Union-Find / Disjoint Set
-KMP Algorithm
-Rabin-Karp Algorithm
-Z Algorithm
-Bellman-Ford Algorithm
-Floyd-Warshall Algorithm
-Prim's Algorithm
-Kruskal's Algorithm
-Topological Sort
-Big Theta
-Big Omega
-ER Model
-Relational Model
-Database Keys
-Candidate Key
-Super Key
-Composite Key
-1NF
-2NF
-3NF
-BCNF
-Functional Dependency
-Multivalued Dependency
-SQL Joins
-Subqueries
-Views
-Stored Procedures
-Triggers
-DDL
-DML
-DCL
-TCL
-Concurrency Control
-Serializability
-Database Recovery
-Database Replication
-Database Sharding
-CAP Theorem
-OLTP
-OLAP
-ETL
-Data Lake
-FCFS
-SJF
-SRTF
-Round Robin
-Banker's Algorithm
-FIFO Page Replacement
-Optimal Page Replacement
-Inter-Process Communication
-Context Switching
-Shell Scripting
-RARP
-CIDR
-ARP
-RIP
-OSPF
-BGP
-VLAN
-CSMA/CD
-CSMA/CA
-ALOHA
-Network Address Translation
-Pipeline Hazards
-Branch Prediction
-Direct Mapping
-Associative Mapping
-Set Associative Mapping
-Multiplexers
-Demultiplexers
-Encoders
-Decoders
-Karnaugh Map
-Finite State Machines
-Predicate Logic
-Recurrence Relations
-Finite Automata
-DFA
-NFA
-Context-Free Grammar
-Pushdown Automata
-Turing Machine
-Chomsky Hierarchy
-Pumping Lemma
-Decidability
-Undecidability
-Halting Problem
-LL Parser
-LR Parser
-SLR Parser
-CLR Parser
-LALR Parser
-Three Address Code
-Register Allocation
-Waterfall Model
-Requirement Engineering
-Software Requirements Specification
-Use Case Diagram
-Class Diagram
-Sequence Diagram
-Activity Diagram
-Black Box Testing
-White Box Testing
-Test Driven Development
-Version Control
-Bitbucket
-High-Level Design
-Low-Level Design
-Fault Tolerance
-Horizontal Scaling
-Vertical Scaling
-Apache Kafka
-RabbitMQ
-Event-Driven Architecture
-Distributed Transactions
-Paxos
-Raft
-Consistency
-Eventual Consistency
-Artificial Intelligence (AI)
-Intelligent Agents
-Expert Systems
-Knowledge Representation
-A* Algorithm
-Alpha-Beta Pruning
-Planning
-Reasoning
-Natural Language Processing (NLP)
-Speech Recognition
-Robotics
-Semi-Supervised Learning
-Polynomial Regression
-Support Vector Machine
-K-Nearest Neighbors
-Naive Bayes
-Gradient Boosting
-XGBoost
-LightGBM
-CatBoost
-K-Means Clustering
-DBSCAN
-Principal Component Analysis (PCA)
-Anomaly Detection
-Feature Engineering
-Feature Selection
-Cross Validation
-Hyperparameter Optimization
-Regularization
-L1 Regularization
-L2 Regularization
-Bias-Variance Tradeoff
-Overfitting
-Underfitting
-Confusion Matrix
-Precision
-Recall
-F1 Score
-ROC Curve
-AUC
-Mean Squared Error
-Mean Absolute Error
-Artificial Neural Network
-Perceptron
-Multilayer Perceptron
-Convolutional Neural Network (CNN)
-Recurrent Neural Network (RNN)
-LSTM
-GRU
-Autoencoder
-Variational Autoencoder
-Generative Adversarial Network (GAN)
-Attention Mechanism
-Self-Attention
-Multi-Head Attention
-Backpropagation
-Gradient Descent
-Stochastic Gradient Descent
-Adam Optimizer
-Batch Normalization
-Dropout
-Activation Functions
-ReLU
-Sigmoid
-Tanh
-Transfer Learning
-Fine-Tuning
-Tokenization
-Stemming
-Lemmatization
-Stop Words
-Bag of Words
-TF-IDF
-Word Embeddings
-Word2Vec
-GloVe
-Named Entity Recognition
-Part-of-Speech Tagging
-Sentiment Analysis
-Text Classification
-Language Modeling
-Machine Translation
-Question Answering
-Text Summarization
-Information Extraction
-Large Language Models (LLMs)
-GPT
-Prompt Engineering
-Prompt Optimization
-Vector Databases
-Retrieval-Augmented Generation (RAG)
-LoRA
-PEFT
-Agentic AI
-Tool Calling
-Function Calling
-Multimodal AI
-LLM Evaluation
-AI Evaluation
-Hallucination Detection
-AI Guardrails
-LangGraph
-Hugging Face
-Ollama
-Pinecone
-Chroma
-Weaviate
-Image Processing
-Image Classification
-Image Segmentation
-Face Recognition
-Optical Character Recognition (OCR)
-YOLO
-R-CNN
-Faster R-CNN
-Vision Transformers
-Image Generation
-Image Captioning
-Hadoop
-HDFS
-MapReduce
-Apache Spark
-Spark SQL
-PySpark
-Apache Hive
-Apache HBase
-Data Pipeline
-Stream Processing
-Virtualization
-Containers
-Docker Compose
-Google Cloud
-Amazon EC2
-Amazon S3
-AWS Lambda
-Amazon RDS
-Amazon DynamoDB
-Amazon VPC
-AWS IAM
-Amazon CloudFront
-Amazon Route 53
-Amazon ECS
-Amazon EKS
-Serverless Computing
-Auto Scaling
-Infrastructure as Code
-Jenkins
-Ansible
-Prometheus
-Grafana
-Monitoring
-Logging
-Container Orchestration
-AES
-DES
-RSA
-SHA
-Digital Signature
-Digital Certificate
-Public Key Infrastructure (PKI)
-Ethical Hacking
-Penetration Testing
-Vulnerability Assessment
-Malware Analysis
-Digital Forensics
-Phishing
-Social Engineering
-SQL Injection
-Cross-Site Scripting (XSS)
-Cross-Site Request Forgery (CSRF)
-DDoS
-Zero Trust Security
-SIEM
-Security Operations Center (SOC)
-Intrusion Detection
-Intrusion Prevention
-Blockchain Technology
-Smart Contracts
-Cryptocurrency
-Proof of Work
-Proof of Stake
-Decentralized Applications (DApps)
-Distributed Ledger Technology
-Digital Wallet
-NFT
-DAO
-Web3.js
-Ethers.js
-Hardhat
-Internet of Things
-Sensors
-Actuators
-Arduino
-Raspberry Pi
-ESP32
-Embedded Systems
-MQTT
-IoT Security
-Edge Computing
-Fog Computing
-Smart Home
-Industrial IoT
-2D Graphics
-3D Graphics
-Rendering
-Rasterization
-Ray Tracing
-OpenGL
-DirectX
-Lighting
-Shading
-Texture Mapping
-Transformations
-Animation
-Unreal Engine
-CUDA
-OpenMP
-MPI
-Boolean Model
-Vector Space Model
-Probabilistic Model
-Relevance Feedback
-Search Engine
-Web Crawling
-PageRank
-Android Development
-iOS Development
-Mobile UI
-Mobile App Architecture
-Financial Management
-Corporate Finance
-Investment Management
-Portfolio Management
-Risk Management
-Financial Modelling
-Net Present Value (NPV)
-Internal Rate of Return (IRR)
-Weighted Average Cost of Capital (WACC)
-Derivatives
-Futures
-Options
-Hedging
-Investment Banking
-Search Engine Optimization (SEO)
-Search Engine Marketing (SEM)
-Email Marketing
-Affiliate Marketing
-Influencer Marketing
-Customer Relationship Management (CRM)
-Conversion Rate Optimization
-Human Resource Management
-Recruitment
-Talent Acquisition
-Talent Management
-Performance Management
-Compensation Management
-Training and Development
-Employee Engagement
-Workforce Planning
-HR Analytics
-Supply Chain Management
-Logistics
-Inventory Management
-Production Planning
-Quality Management
-Six Sigma
-Lean Management
-Procurement
-Business Intelligence
-Advanced Excel
-Power BI
-Tableau
-Predictive Analytics
-Prescriptive Analytics
-Dashboard Development
-Data Modelling
-Strategic Management
-Business Policy
-Competitive Strategy
-Corporate Strategy
-SWOT Analysis
-PESTLE Analysis
-Porter's Five Forces
-Business Model Canvas
-Strategic Planning
-Decision Making
-Innovation Management
-Entrepreneurship
-Startup Management
-Stakeholder Management
-Microeconomics
-Macroeconomics
-Managerial Economics
-Inflation
-GDP
-Fiscal Policy
-Monetary Policy
-International Trade
-Foreign Exchange
-Contract Law
-Company Law
-Corporate Law
-Intellectual Property Rights
-Patent
-Trademark
-Consumer Protection
-Data Protection
-Corporate Governance
-Nursing Fundamentals
-Anatomy
-Physiology
-Biochemistry
-Microbiology
-Pathology
-Pharmacology
-Nutrition
-First Aid
-Patient Care
-Health Assessment
-CPR
-Basic Life Support (BLS)
-Advanced Cardiovascular Life Support (ACLS)
-Research Design
-Literature Review
-Research Paper
-Citation
-Plagiarism
-Hypothesis
-Research Variables
-Sampling
-Qualitative Research
-Quantitative Research
-Experimental Research
-Evidence-Based Practice
-Technical Writing
-Academic Writing`.split('\n').map((skill) => skill.trim()).filter(Boolean))];
+const skillOptions = [...new Set([
+  'C', 'C++', 'Java', 'Python', 'JavaScript', 'TypeScript', 'C#', 'Go', 'Rust', 'Kotlin', 'Swift', 'Dart', 'PHP', 'Ruby', 'R', 'MATLAB', 'Scala', 'Solidity', 'Lua', 'Perl', 'Bash', 'PowerShell', 'Assembly', 'SQL',
+  'HTML', 'CSS', 'Bootstrap', 'Tailwind CSS', 'Sass', 'React', 'Angular', 'Vue.js', 'Next.js', 'Node.js', 'Express.js', 'Django', 'Flask', 'FastAPI', 'Spring Boot', 'ASP.NET', 'Laravel', 'Flutter', 'React Native',
+  'DOM', 'BOM', 'JSON', 'XML', 'AJAX', 'Fetch API', 'REST API', 'GraphQL', 'WebSocket', 'WebRTC', 'JWT', 'OAuth', 'API Gateway', 'Microservices', 'Serverless Architecture', 'MVC', 'MVVM',
+  'Object-Oriented Programming (OOP)', 'Class', 'Object', 'Encapsulation', 'Abstraction', 'Inheritance', 'Polymorphism', 'Constructor', 'Destructor', 'Method Overloading', 'Method Overriding', 'Virtual Functions', 'Pure Virtual Functions', 'Interface', 'Abstract Class', 'Multiple Inheritance', 'Templates', 'Generics', 'Exception Handling', 'Operator Overloading', 'Friend Function', 'Pointers', 'References', 'Memory Management', 'Smart Pointers',
+  'Data Structures', 'Algorithms', 'Arrays', 'Strings', 'Linked List', 'Doubly Linked List', 'Circular Linked List', 'Stack', 'Queue', 'Circular Queue', 'Deque', 'Priority Queue', 'Hashing', 'Hash Table', 'Heap', 'Binary Tree', 'Binary Search Tree', 'AVL Tree', 'Red-Black Tree', 'B Tree', 'B+ Tree', 'Trie', 'Segment Tree', 'Fenwick Tree', 'Graph', 'Directed Graph', 'Undirected Graph', 'Weighted Graph', 'Union-Find / Disjoint Set', 'Recursion', 'Backtracking', 'Divide and Conquer', 'Greedy Algorithms', 'Dynamic Programming', 'Sliding Window', 'Two Pointers', 'Bit Manipulation', 'String Matching', 'KMP Algorithm', 'Rabin-Karp Algorithm', 'Z Algorithm', 'Computational Geometry', 'BFS', 'DFS', 'Dijkstra Algorithm', 'Bellman-Ford Algorithm', 'Floyd-Warshall Algorithm', 'Prim\'s Algorithm', 'Kruskal\'s Algorithm', 'Topological Sort', 'Time Complexity', 'Space Complexity', 'Big O', 'Big Theta', 'Big Omega',
+  'DBMS', 'Relational Database', 'ER Model', 'ER Diagram', 'Relational Model', 'Database Keys', 'Primary Key', 'Foreign Key', 'Candidate Key', 'Super Key', 'Composite Key', 'Normalization', '1NF', '2NF', '3NF', 'BCNF', 'Functional Dependency', 'Multivalued Dependency', 'DDL', 'DML', 'DCL', 'TCL', 'SQL Joins', 'Subqueries', 'Views', 'Stored Procedures', 'Triggers', 'Transactions', 'ACID Properties', 'Concurrency Control', 'Serializability', 'Deadlock', 'Database Recovery', 'Indexing', 'B Tree Index', 'B+ Tree Index', 'Hash Index', 'Query Optimization', 'Distributed Database', 'Database Replication', 'Database Sharding', 'CAP Theorem', 'NoSQL', 'MongoDB', 'MySQL', 'PostgreSQL', 'Oracle Database', 'SQL Server', 'SQLite', 'Redis', 'Cassandra', 'Neo4j', 'Firebase', 'Data Warehousing', 'Data Mining', 'OLTP', 'OLAP', 'ETL', 'Data Lake',
+  'Operating Systems', 'Process', 'Thread', 'Multithreading', 'Process Scheduling', 'FCFS', 'SJF', 'SRTF', 'Round Robin', 'Priority Scheduling', 'Process Synchronization', 'Critical Section', 'Mutex', 'Semaphore', 'Monitor', 'Deadlock', 'Banker\'s Algorithm', 'Memory Management', 'Paging', 'Segmentation', 'Virtual Memory', 'Page Replacement', 'FIFO', 'LRU', 'Optimal Page Replacement', 'Thrashing', 'File System', 'Disk Scheduling', 'System Calls', 'Kernel', 'Interrupts', 'Inter-Process Communication', 'Context Switching', 'Linux', 'Unix', 'Windows Internals', 'Shell Scripting',
+  'Computer Networks', 'OSI Model', 'TCP/IP Model', 'Physical Layer', 'Data Link Layer', 'Network Layer', 'Transport Layer', 'Session Layer', 'Presentation Layer', 'Application Layer', 'Ethernet', 'MAC Address', 'IP Address', 'IPv4', 'IPv6', 'Subnetting', 'CIDR', 'ARP', 'DHCP', 'DNS', 'HTTP', 'HTTPS', 'FTP', 'SMTP', 'POP3', 'IMAP', 'TCP', 'UDP', 'Routing', 'Routing Algorithms', 'RIP', 'OSPF', 'BGP', 'Switching', 'VLAN', 'NAT', 'Firewall', 'VPN', 'Proxy', 'Load Balancing', 'Congestion Control', 'Flow Control', 'Error Control', 'CSMA/CD', 'CSMA/CA', 'ALOHA', 'Socket Programming', 'Network Security',
+  'Computer Architecture', 'CPU', 'ALU', 'Control Unit', 'Registers', 'Cache Memory', 'RAM', 'ROM', 'Memory Hierarchy', 'Instruction Set Architecture', 'RISC', 'CISC', 'Pipelining', 'Pipeline Hazards', 'Branch Prediction', 'Cache Mapping', 'Direct Mapping', 'Associative Mapping', 'Set Associative Mapping', 'Parallel Processing', 'Multiprocessor Systems', 'GPU Architecture',
+  'Digital Logic', 'Boolean Algebra', 'Logic Gates', 'Combinational Circuits', 'Sequential Circuits', 'Flip-Flops', 'Registers', 'Counters', 'Multiplexers', 'Demultiplexers', 'Encoders', 'Decoders', 'Karnaugh Map', 'Finite State Machines',
+  'Discrete Mathematics', 'Set Theory', 'Relations', 'Functions', 'Logic', 'Propositional Logic', 'Predicate Logic', 'Graph Theory', 'Trees', 'Combinatorics', 'Permutation', 'Combination', 'Recurrence Relations', 'Number Theory', 'Mathematical Proofs',
+  'Theory of Computation', 'Automata Theory', 'Finite Automata', 'DFA', 'NFA', 'Regular Expression', 'Regular Language', 'Context-Free Grammar', 'Pushdown Automata', 'Turing Machine', 'Chomsky Hierarchy', 'Pumping Lemma', 'Decidability', 'Undecidability', 'Halting Problem',
+  'Compiler Design', 'Compiler', 'Interpreter', 'Lexical Analysis', 'Tokens', 'Lexemes', 'Syntax Analysis', 'Parsing', 'Parse Tree', 'LL Parser', 'LR Parser', 'SLR Parser', 'CLR Parser', 'LALR Parser', 'Semantic Analysis', 'Symbol Table', 'Intermediate Code', 'Three Address Code', 'Code Optimization', 'Code Generation', 'Register Allocation',
+  'Software Engineering', 'SDLC', 'Waterfall Model', 'Agile', 'Scrum', 'Kanban', 'Requirement Engineering', 'Software Requirements Specification', 'UML', 'Use Case Diagram', 'Class Diagram', 'Sequence Diagram', 'Activity Diagram', 'Software Architecture', 'Design Patterns', 'SOLID Principles', 'Unit Testing', 'Integration Testing', 'System Testing', 'Regression Testing', 'Black Box Testing', 'White Box Testing', 'Test Driven Development', 'Continuous Integration', 'Continuous Deployment', 'CI/CD', 'Version Control', 'Git', 'GitHub', 'GitLab', 'Bitbucket',
+  'System Design', 'High-Level Design', 'Low-Level Design', 'Scalability', 'Availability', 'Reliability', 'Fault Tolerance', 'Caching', 'Horizontal Scaling', 'Vertical Scaling', 'Database Scaling', 'Message Queues', 'Apache Kafka', 'RabbitMQ', 'Event-Driven Architecture', 'Distributed Systems', 'Distributed Transactions', 'Consensus Algorithms', 'Paxos', 'Raft', 'Consistency', 'Eventual Consistency',
+  'Artificial Intelligence (AI)', 'Intelligent Agents', 'Expert Systems', 'Knowledge Representation', 'Search Algorithms', 'A* Algorithm', 'Minimax', 'Alpha-Beta Pruning', 'Planning', 'Reasoning', 'Natural Language Processing (NLP)', 'Computer Vision', 'Speech Recognition', 'Robotics',
+  'Machine Learning (ML)', 'Supervised Learning', 'Unsupervised Learning', 'Semi-Supervised Learning', 'Reinforcement Learning', 'Linear Regression', 'Logistic Regression', 'Polynomial Regression', 'Decision Tree', 'Random Forest', 'Support Vector Machine', 'K-Nearest Neighbors', 'Naive Bayes', 'Gradient Boosting', 'XGBoost', 'LightGBM', 'CatBoost', 'K-Means Clustering', 'DBSCAN', 'Hierarchical Clustering', 'Principal Component Analysis (PCA)', 'Anomaly Detection', 'Feature Engineering', 'Feature Selection', 'Cross Validation', 'Hyperparameter Optimization', 'Regularization', 'L1 Regularization', 'L2 Regularization', 'Bias-Variance Tradeoff', 'Overfitting', 'Underfitting', 'Confusion Matrix', 'Precision', 'Recall', 'F1 Score', 'ROC Curve', 'AUC', 'Mean Squared Error', 'Mean Absolute Error',
+  'Deep Learning', 'Artificial Neural Network', 'Perceptron', 'Multilayer Perceptron', 'Convolutional Neural Network (CNN)', 'Recurrent Neural Network (RNN)', 'LSTM', 'GRU', 'Autoencoder', 'Variational Autoencoder', 'Generative Adversarial Network (GAN)', 'Transformers', 'Attention Mechanism', 'Self-Attention', 'Multi-Head Attention', 'Backpropagation', 'Gradient Descent', 'Stochastic Gradient Descent', 'Adam Optimizer', 'Batch Normalization', 'Dropout', 'Activation Functions', 'ReLU', 'Sigmoid', 'Tanh', 'Transfer Learning', 'Fine-Tuning',
+  'Natural Language Processing (NLP)', 'Tokenization', 'Stemming', 'Lemmatization', 'Stop Words', 'Bag of Words', 'TF-IDF', 'Word Embeddings', 'Word2Vec', 'GloVe', 'Named Entity Recognition', 'Part-of-Speech Tagging', 'Sentiment Analysis', 'Text Classification', 'Language Modeling', 'Machine Translation', 'Question Answering', 'Text Summarization', 'Information Extraction', 'Speech Processing',
+  'Generative AI', 'Large Language Models (LLMs)', 'GPT', 'Prompt Engineering', 'Prompt Optimization', 'Embeddings', 'Vector Databases', 'Retrieval-Augmented Generation (RAG)', 'Fine-Tuning', 'LoRA', 'PEFT', 'AI Agents', 'Agentic AI', 'Tool Calling', 'Function Calling', 'Multimodal AI', 'LLM Evaluation', 'AI Evaluation', 'Hallucination Detection', 'AI Guardrails', 'LangChain', 'LangGraph', 'Hugging Face', 'Ollama', 'Pinecone', 'Chroma', 'Weaviate',
+  'Computer Vision', 'Image Processing', 'Image Classification', 'Object Detection', 'Image Segmentation', 'Face Recognition', 'Optical Character Recognition (OCR)', 'OpenCV', 'YOLO', 'R-CNN', 'Faster R-CNN', 'Vision Transformers', 'Image Generation', 'Image Captioning', 'Image Enhancement', 'Image Restoration', 'Edge Detection', 'Noise Reduction', 'Morphological Processing', 'Fourier Transform', 'Wavelet Transform',
+  'Data Science', 'Data Analysis', 'Data Cleaning', 'Data Preprocessing', 'Exploratory Data Analysis', 'Data Visualization', 'Statistics', 'Probability', 'Descriptive Statistics', 'Inferential Statistics', 'Hypothesis Testing', 'Correlation Analysis', 'Regression Analysis', 'Time Series Analysis', 'Forecasting', 'NumPy', 'Pandas', 'Matplotlib', 'Seaborn', 'Scikit-learn', 'Jupyter Notebook',
+  'Big Data', 'Hadoop', 'HDFS', 'MapReduce', 'Apache Spark', 'Spark SQL', 'PySpark', 'Apache Hive', 'Apache HBase', 'Data Pipeline', 'Data Engineering', 'Stream Processing', 'Batch Processing',
+  'Cloud Computing', 'Virtualization', 'Containers', 'Docker', 'Docker Compose', 'Kubernetes', 'AWS', 'Microsoft Azure', 'Google Cloud', 'Amazon EC2', 'Amazon S3', 'AWS Lambda', 'Amazon RDS', 'Amazon DynamoDB', 'Amazon VPC', 'AWS IAM', 'Amazon CloudFront', 'Amazon Route 53', 'AWS API Gateway', 'Amazon ECS', 'Amazon EKS', 'Serverless Computing', 'Auto Scaling', 'Cloud Security', 'Infrastructure as Code', 'Terraform',
+  'DevOps', 'Jenkins', 'Ansible', 'Prometheus', 'Grafana', 'Monitoring', 'Logging', 'Container Orchestration', 'CI/CD', 'Infrastructure as Code',
+  'Cybersecurity', 'Information Security', 'Network Security', 'Application Security', 'Cloud Security', 'Cryptography', 'Encryption', 'Decryption', 'Hashing', 'AES', 'DES', 'RSA', 'SHA', 'Digital Signature', 'Digital Certificate', 'Public Key Infrastructure (PKI)', 'Authentication', 'Authorization', 'Ethical Hacking', 'Penetration Testing', 'Vulnerability Assessment', 'Malware Analysis', 'Digital Forensics', 'Phishing', 'Social Engineering', 'SQL Injection', 'Cross-Site Scripting (XSS)', 'Cross-Site Request Forgery (CSRF)', 'DDoS', 'Zero Trust Security', 'SIEM', 'Security Operations Center (SOC)', 'Intrusion Detection', 'Intrusion Prevention',
+  'Blockchain', 'Blockchain Technology', 'Bitcoin', 'Ethereum', 'Smart Contracts', 'Cryptocurrency', 'Consensus Algorithms', 'Proof of Work', 'Proof of Stake', 'Decentralized Applications (DApps)', 'Web3', 'Distributed Ledger Technology', 'Digital Wallet', 'NFT', 'DAO', 'Web3.js', 'Ethers.js', 'Hardhat',
+  'IoT', 'Internet of Things', 'Sensors', 'Actuators', 'Arduino', 'Raspberry Pi', 'ESP32', 'Embedded Systems', 'MQTT', 'IoT Security', 'Edge Computing', 'Fog Computing', 'Smart Home', 'Industrial IoT',
+  'Computer Graphics', '2D Graphics', '3D Graphics', 'Rendering', 'Rasterization', 'Ray Tracing', 'OpenGL', 'DirectX', 'Lighting', 'Shading', 'Texture Mapping', 'Transformations', 'Animation', 'Game Development', 'Unity', 'Unreal Engine',
+  'Parallel Computing', 'Parallel Algorithms', 'GPU Computing', 'CUDA', 'OpenMP', 'MPI', 'Distributed Computing', 'High Performance Computing',
+  'Information Retrieval', 'Boolean Model', 'Vector Space Model', 'Probabilistic Model', 'Relevance Feedback', 'Search Engine', 'Web Crawling', 'Indexing', 'Ranking', 'PageRank', 'Multimedia Retrieval', 'Cross-Language Information Retrieval',
+  'Mobile Application Development', 'Android Development', 'iOS Development', 'Mobile UI', 'Mobile App Architecture',
+  'Business Mathematics', 'Business Statistics', 'Financial Mathematics', 'Calculus', 'Linear Algebra', 'Matrices', 'Optimization', 'Operations Research', 'Linear Programming', 'Integer Programming', 'Transportation Problem', 'Assignment Problem', 'Game Theory', 'Queuing Theory', 'Decision Theory',
+  'Accounting', 'Financial Accounting', 'Cost Accounting', 'Management Accounting', 'Corporate Accounting', 'Taxation', 'Auditing', 'Financial Statements', 'Balance Sheet', 'Income Statement', 'Cash Flow Statement', 'Ratio Analysis', 'Budgeting', 'Capital Budgeting',
+  'Finance', 'Financial Management', 'Corporate Finance', 'Investment Management', 'Portfolio Management', 'Risk Management', 'Financial Modelling', 'Financial Analysis', 'Capital Structure', 'Working Capital Management', 'Time Value of Money', 'Net Present Value (NPV)', 'Internal Rate of Return (IRR)', 'Weighted Average Cost of Capital (WACC)', 'Derivatives', 'Futures', 'Options', 'Hedging', 'Mergers and Acquisitions', 'Company Valuation', 'Investment Banking',
+  'Marketing', 'Marketing Management', 'Digital Marketing', 'Search Engine Optimization (SEO)', 'Search Engine Marketing (SEM)', 'Social Media Marketing', 'Content Marketing', 'Email Marketing', 'Affiliate Marketing', 'Influencer Marketing', 'Brand Management', 'Consumer Behaviour', 'Market Research', 'Product Management', 'Sales Management', 'Customer Relationship Management (CRM)', 'Pricing Strategy', 'Marketing Analytics', 'Customer Segmentation', 'Conversion Rate Optimization',
+  'Human Resource Management', 'Recruitment', 'Talent Acquisition', 'Talent Management', 'Performance Management', 'Compensation Management', 'Training and Development', 'Employee Engagement', 'Organizational Behaviour', 'Leadership', 'Workforce Planning', 'HR Analytics', 'Industrial Relations', 'Labour Laws',
+  'Operations Management', 'Supply Chain Management', 'Logistics', 'Inventory Management', 'Production Planning', 'Quality Management', 'Six Sigma', 'Lean Management', 'Total Quality Management', 'Demand Forecasting', 'Demand Planning', 'Procurement', 'Warehouse Management',
+  'Business Analytics', 'Business Intelligence', 'Advanced Excel', 'Power BI', 'Tableau', 'Predictive Analytics', 'Prescriptive Analytics', 'Descriptive Analytics', 'Diagnostic Analytics', 'Dashboard Development', 'Data Modelling',
+  'Strategic Management', 'Business Policy', 'Competitive Strategy', 'Corporate Strategy', 'SWOT Analysis', 'PESTLE Analysis', 'Porter\'s Five Forces', 'Business Model Canvas', 'Strategic Planning', 'Decision Making', 'Risk Management', 'Change Management', 'Innovation Management', 'Entrepreneurship', 'Startup Management', 'Project Management', 'Stakeholder Management',
+  'Economics', 'Microeconomics', 'Macroeconomics', 'Managerial Economics', 'Demand and Supply', 'Market Structures', 'Perfect Competition', 'Monopoly', 'Oligopoly', 'Inflation', 'GDP', 'Fiscal Policy', 'Monetary Policy', 'International Trade', 'Foreign Exchange', 'Balance of Payments',
+  'Business Law', 'Contract Law', 'Company Law', 'Corporate Law', 'Intellectual Property Rights', 'Copyright', 'Patent', 'Trademark', 'Consumer Protection', 'Cyber Law', 'Labour Law', 'Tax Law', 'Data Protection', 'Corporate Governance',
+  'Nursing Fundamentals', 'Anatomy', 'Physiology', 'Biochemistry', 'Microbiology', 'Pathology', 'Pharmacology', 'Nutrition', 'Psychology', 'Sociology', 'First Aid', 'Patient Care', 'Health Assessment', 'Nursing Ethics', 'Nursing Administration', 'Nursing Research', 'Community Health Nursing', 'Medical-Surgical Nursing', 'Child Health Nursing', 'Pediatric Nursing', 'Mental Health Nursing', 'Psychiatric Nursing', 'Maternal Health Nursing', 'Obstetric Nursing', 'Gynecological Nursing', 'Geriatric Nursing', 'Critical Care Nursing', 'Emergency Nursing', 'ICU Nursing', 'Cardiac Nursing', 'Oncology Nursing', 'Neurological Nursing', 'Renal Nursing', 'Respiratory Nursing', 'Neonatal Nursing', 'Trauma Nursing', 'Community Medicine', 'Epidemiology', 'Biostatistics', 'Infection Control', 'Patient Safety', 'Clinical Research', 'Evidence-Based Practice', 'Health Informatics', 'Telemedicine', 'Electronic Health Records', 'Medical Coding', 'Healthcare Data Analytics', 'Medical IoT', 'AI in Healthcare', 'Medical Imaging', 'Digital Health', 'Clinical Decision Support', 'Patient Monitoring', 'ECG', 'CPR', 'Basic Life Support (BLS)', 'Advanced Cardiovascular Life Support (ACLS)', 'Ventilator Management', 'Hemodynamic Monitoring', 'IV Therapy', 'Blood Transfusion', 'Medication Administration', 'Pain Management', 'Wound Care', 'Sepsis Management',
+  'Research Methodology', 'Research Design', 'Literature Review', 'Research Paper', 'Technical Writing', 'Citation', 'Plagiarism', 'Hypothesis', 'Research Variables', 'Sampling', 'Qualitative Research', 'Quantitative Research', 'Experimental Research', 'Statistical Analysis', 'Data Collection', 'Data Analysis', 'Academic Writing',
+  'Mathematics', 'Differential Calculus', 'Integral Calculus', 'Differential Equations', 'Numerical Methods', 'Complex Numbers', 'Optimization', 'Business Statistics', 'Financial Mathematics', 'Matrices', 'Linear Algebra', 'Calculus', 'Business Analytics', 'Advanced Excel', 'Power BI', 'Tableau', 'Digital Marketing', 'SEO', 'Content Marketing', 'Social Media Marketing', 'Google Analytics', 'Product Management', 'Project Management', 'Leadership', 'Technical Writing', 'Academic Writing'
+])].sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
 
 function getInitialPage() {
   const page = new URLSearchParams(window.location.search).get('page');
@@ -822,6 +87,7 @@ function App() {
   const [accent, setAccent] = useState(() => localStorage.getItem('skillswap-accent') || 'lime');
   const [language, setLanguage] = useState(() => localStorage.getItem('skillswap-language') || 'en');
   const [currentUser, setCurrentUser] = useState(() => JSON.parse(localStorage.getItem('skillswap-user') || 'null'));
+  const [adminKey, setAdminKey] = useState(() => localStorage.getItem('skillswap-admin-key') || import.meta.env.VITE_ADMIN_KEY || '');
   const [accountOpen, setAccountOpen] = useState(false);
   const [messageRecipient, setMessageRecipient] = useState(null);
   const [notificationOpen, setNotificationOpen] = useState(false);
@@ -851,8 +117,16 @@ function App() {
   }, [activePage]);
 
   useEffect(() => {
-    if (activeModal === 'login' || activeModal === 'account-community' || activeModal === 'account-advanced') setMobileOpen(false);
+    if (activeModal === 'login' || activeModal === 'account-community' || activeModal === 'account-advanced' || activeModal === 'admin-dashboard') setMobileOpen(false);
   }, [activeModal]);
+
+  useEffect(() => {
+    if (!adminKey) {
+      localStorage.removeItem('skillswap-admin-key');
+      return;
+    }
+    localStorage.setItem('skillswap-admin-key', adminKey);
+  }, [adminKey]);
 
   useEffect(() => {
     const nav = document.querySelector('.main-nav');
@@ -891,29 +165,32 @@ function App() {
 
   useEffect(() => {
     if (!currentUser) return undefined;
-    const fields = [...document.querySelectorAll('input[type="password"]')].map((input) => {
-      const form = input.closest('form');
-      const toggle = document.createElement('button');
-      toggle.className = 'password-toggle';
-      toggle.type = 'button';
-      toggle.setAttribute('aria-label', 'Show password');
-      toggle.setAttribute('title', 'Show password');
-      toggle.textContent = '◉';
-      input.classList.add('password-input');
-      form.classList.add('password-form');
-      form.insertBefore(toggle, input.nextSibling);
-      const position = () => { const field = input.closest('label') || input; toggle.style.top = `${field.offsetTop + (field.offsetHeight / 2) - 14}px`; };
-      position();
-      const update = () => {
-        const visible = input.type === 'text';
-        toggle.textContent = visible ? '◉' : '◉';
-        toggle.setAttribute('aria-label', visible ? 'Hide password' : 'Show password');
-        toggle.setAttribute('title', visible ? 'Hide password' : 'Show password');
-      };
-      toggle.addEventListener('click', () => { input.type = input.type === 'password' ? 'text' : 'password'; update(); input.focus(); });
-      window.addEventListener('resize', position);
-      return { input, form, toggle, position };
-    });
+    const fields = [...document.querySelectorAll('input[type="password"]')]
+      .map((input) => {
+        const form = input.closest('form');
+        if (!form) return null;
+        const toggle = document.createElement('button');
+        toggle.className = 'password-toggle';
+        toggle.type = 'button';
+        toggle.setAttribute('aria-label', 'Show password');
+        toggle.setAttribute('title', 'Show password');
+        toggle.textContent = '◉';
+        input.classList.add('password-input');
+        form.classList.add('password-form');
+        form.insertBefore(toggle, input.nextSibling);
+        const position = () => { const field = input.closest('label') || input; toggle.style.top = `${field.offsetTop + (field.offsetHeight / 2) - 14}px`; };
+        position();
+        const update = () => {
+          const visible = input.type === 'text';
+          toggle.textContent = visible ? '◉' : '◉';
+          toggle.setAttribute('aria-label', visible ? 'Hide password' : 'Show password');
+          toggle.setAttribute('title', visible ? 'Hide password' : 'Show password');
+        };
+        toggle.addEventListener('click', () => { input.type = input.type === 'password' ? 'text' : 'password'; update(); input.focus(); });
+        window.addEventListener('resize', position);
+        return { input, form, toggle, position };
+      })
+      .filter(Boolean);
     return () => fields.forEach(({ input, form, toggle, position }) => { toggle.remove(); input.classList.remove('password-input'); form.classList.remove('password-form'); window.removeEventListener('resize', position); });
   }, [activeModal, currentUser]);
 
@@ -974,7 +251,7 @@ function App() {
       <nav className={mobileOpen ? 'main-nav open' : 'main-nav'}>
         <button onClick={() => { setActivePage('explore'); setActiveModal(null); setMobileOpen(false); }}>{labels.explore}</button><button onClick={() => { setActivePage('people'); setActiveModal(null); setMobileOpen(false); }}>{labels.people}</button><button onClick={() => { setActivePage('how'); setActiveModal(null); setMobileOpen(false); }}>How it works</button><button onClick={() => { setActivePage('stories'); setActiveModal(null); setMobileOpen(false); }}>Stories</button><button onClick={() => { setActivePage('community'); setActiveModal(null); setMobileOpen(false); }}>{labels.community}</button><button onClick={() => { setActivePage('advanced'); setActiveModal(null); setMobileOpen(false); }}><Sparkles size={14} /> {labels.advanced}</button>
         <button className={darkMode ? 'theme-toggle is-dark' : 'theme-toggle'} onClick={() => setDarkMode(!darkMode)} aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'} title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}><Moon className="theme-moon" size={14} /><span className="theme-knob"></span><Sun className="theme-sun" size={14} /></button>
-        {currentUser ? <div className="user-menu"><button className="user-menu-trigger" onClick={() => setAccountOpen(!accountOpen)} aria-expanded={accountOpen}>{currentUser.avatar ? <img className="nav-avatar" src={currentUser.avatar} alt="" /> : <span className="nav-avatar nav-avatar-fallback">{currentUser.name?.slice(0, 2).toUpperCase()}</span>}<span className="signed-in-user">{currentUser.name}</span><ChevronDown size={14} /></button>{accountOpen && <div className="user-dropdown"><button onClick={() => { setActiveModal('account-profile'); setAccountOpen(false); }}><UserRound size={14} /> My profile</button><button onClick={() => { setActiveModal('account-messages'); setAccountOpen(false); }}><MessageCircle size={14} /> Messages {unreadMessages > 0 && <span className="menu-count">{unreadMessages}</span>}</button><button onClick={() => { setActiveModal('account-exchanges'); setAccountOpen(false); }}><Repeat2 size={14} /> My exchanges</button><button onClick={() => { setActiveModal('account-saved'); setAccountOpen(false); }}><Bookmark size={14} /> Saved skills</button><button onClick={() => { setActiveModal('account-settings'); setAccountOpen(false); }}><Settings size={14} /> Settings</button><button onClick={() => { setActiveModal('account-password'); setAccountOpen(false); }}><Settings size={14} /> Change password</button><button onClick={() => { setActiveModal('account-safety'); setAccountOpen(false); }}><ShieldCheck size={14} /> Trust & safety</button><span className="dropdown-divider"></span><button className="logout-item" onClick={() => { localStorage.removeItem('skillswap-user'); setCurrentUser(null); setAccountOpen(false); }}><ArrowUpRight size={14} /> Log out</button></div>}</div> : <button className="login-link" onClick={() => setActiveModal('login')}>Log in</button>}
+        {currentUser ? <div className="user-menu"><button className="user-menu-trigger" onClick={() => setAccountOpen(!accountOpen)} aria-expanded={accountOpen}>{currentUser.avatar ? <img className="nav-avatar" src={currentUser.avatar} alt="" /> : <span className="nav-avatar nav-avatar-fallback">{currentUser.name?.slice(0, 2).toUpperCase()}</span>}<span className="signed-in-user">{currentUser.name}</span><ChevronDown size={14} /></button>{accountOpen && <div className="user-dropdown"><button onClick={() => { setActiveModal('account-profile'); setAccountOpen(false); }}><UserRound size={14} /> My profile</button><button onClick={() => { setActiveModal('account-messages'); setAccountOpen(false); }}><MessageCircle size={14} /> Messages {unreadMessages > 0 && <span className="menu-count">{unreadMessages}</span>}</button><button onClick={() => { setActiveModal('account-exchanges'); setAccountOpen(false); }}><Repeat2 size={14} /> My exchanges</button><button onClick={() => { setActiveModal('account-saved'); setAccountOpen(false); }}><Bookmark size={14} /> Saved skills</button><button onClick={() => { setActiveModal('account-settings'); setAccountOpen(false); }}><Settings size={14} /> Settings</button><button onClick={() => { setActiveModal('account-password'); setAccountOpen(false); }}><Settings size={14} /> Change password</button><button onClick={() => { setActiveModal('account-safety'); setAccountOpen(false); }}><ShieldCheck size={14} /> Trust & safety</button><div className="dropdown-section"><span className="dropdown-label">Owner tools</span>{adminKey ? <button onClick={() => { setActiveModal('admin-dashboard'); setAccountOpen(false); }}><ShieldCheck size={14} /> Owner dashboard</button> : <button onClick={() => { setActiveModal('owner-login'); setAccountOpen(false); }}><ShieldCheck size={14} /> Owner login</button>}</div><span className="dropdown-divider"></span><button className="logout-item" onClick={() => { localStorage.removeItem('skillswap-user'); setCurrentUser(null); setAccountOpen(false); }}><ArrowUpRight size={14} /> Log out</button></div>}</div> : <button className="login-link" onClick={() => setActiveModal('login')}>Log in</button>}
         {currentUser && <button className="notification-button" onClick={() => setNotificationOpen(!notificationOpen)} aria-label="Notifications" aria-expanded={notificationOpen}><Bell size={17} />{notificationHistory.filter((item) => !item.read).length > 0 && <span>{notificationHistory.filter((item) => !item.read).length}</span>}</button>}
         {!currentUser && <button className="nav-cta" onClick={() => setActiveModal('profile')}>Create a profile <ArrowUpRight size={16} /></button>}
       </nav>
@@ -1016,7 +293,9 @@ function App() {
     {selectedPerson && <PeopleProfilePanel person={selectedPerson} onClose={() => setSelectedPerson(null)} onMessage={() => openMessage({ name: selectedPerson.name, email: selectedPerson.email || '' })} onOffer={() => { setSelectedPerson(null); setActiveModal(currentUser ? 'account-edit' : 'profile'); }} />}
     {selectedStory && <StoryDetailPanel story={selectedStory} onClose={() => setSelectedStory(null)} onStart={() => { setSelectedStory(null); setActivePage('people'); }} />}
     {activeModal === 'account-advanced' && <AdvancedPanel user={currentUser} onClose={() => setActiveModal(null)} onSaved={(user) => { setCurrentUser(user); localStorage.setItem('skillswap-user', JSON.stringify(user)); }} />}
-    {activeModal && (activeModal === 'account-edit' ? <EditProfilePanelEnhanced user={currentUser} onClose={() => setActiveModal(null)} onSaved={(user) => { setCurrentUser(user); localStorage.setItem('skillswap-user', JSON.stringify(user)); setActiveModal('account-profile'); }} /> : activeModal === 'account-community' ? <CommunityPanel user={currentUser} onClose={() => setActiveModal(null)} /> : activeModal === 'account-password' ? <PasswordPanel email={currentUser?.email} onClose={() => setActiveModal(null)} /> : activeModal === 'account-safety' ? <SafetyPanel user={currentUser} onClose={() => setActiveModal(null)} onDeleted={() => { localStorage.removeItem('skillswap-user'); setCurrentUser(null); setActiveModal(null); }} /> : activeModal === 'account-exchanges' ? <ExchangesPanel user={currentUser} onClose={() => setActiveModal(null)} onOpenMessages={(recipient) => { setMessageRecipient(recipient); setActiveModal('account-messages'); }} /> : activeModal === 'account-messages' ? <MessagesPanel user={currentUser} initialRecipient={messageRecipient} onClose={() => setActiveModal(null)} /> : activeModal === 'account-saved' ? <SavedSkillsPanel skills={allSkills} savedSkills={savedSkills} onToggle={toggleSavedSkill} onConnect={openMessage} onClose={() => setActiveModal(null)} /> : activeModal === 'account-settings' ? <SettingsPanel darkMode={darkMode} setDarkMode={setDarkMode} accent={accent} setAccent={setAccent} language={language} setLanguage={setLanguage} onPassword={() => setActiveModal('account-password')} onClose={() => setActiveModal(null)} /> : activeModal.startsWith('account-') ? <AccountPanelEnhanced section={activeModal.replace('account-', '')} user={currentUser} onClose={() => setActiveModal(null)} onEdit={() => setActiveModal('account-edit')} /> : <Modal type={activeModal} recipient={messageRecipient} sender={currentUser} onClose={() => { setActiveModal(null); setStatus(''); }} status={status} setStatus={setStatus} onLogin={(user) => { setCurrentUser(user); localStorage.setItem('skillswap-user', JSON.stringify(user)); }} />)}
+    {activeModal === 'owner-login' && <OwnerAccessGate adminKey={adminKey} setAdminKey={setAdminKey} onOpenDashboard={() => setActiveModal('admin-dashboard')} onClose={() => setActiveModal(null)} />}
+    {activeModal === 'admin-dashboard' && <AdminDashboardPanel adminKey={adminKey} setAdminKey={setAdminKey} onClose={() => setActiveModal(null)} />}
+    {activeModal && !['owner-login', 'admin-dashboard'].includes(activeModal) && (activeModal === 'account-edit' ? <EditProfilePanelEnhanced user={currentUser} onClose={() => setActiveModal(null)} onSaved={(user) => { setCurrentUser(user); localStorage.setItem('skillswap-user', JSON.stringify(user)); setActiveModal('account-profile'); }} /> : activeModal === 'account-community' ? <CommunityPanel user={currentUser} onClose={() => setActiveModal(null)} /> : activeModal === 'account-password' ? <PasswordPanel email={currentUser?.email} onClose={() => setActiveModal(null)} /> : activeModal === 'account-safety' ? <SafetyPanel user={currentUser} onClose={() => setActiveModal(null)} onDeleted={() => { localStorage.removeItem('skillswap-user'); setCurrentUser(null); setActiveModal(null); }} /> : activeModal === 'account-exchanges' ? <ExchangesPanel user={currentUser} onClose={() => setActiveModal(null)} onOpenMessages={(recipient) => { setMessageRecipient(recipient); setActiveModal('account-messages'); }} /> : activeModal === 'account-messages' ? <MessagesPanel user={currentUser} initialRecipient={messageRecipient} onClose={() => setActiveModal(null)} /> : activeModal === 'account-saved' ? <SavedSkillsPanel skills={allSkills} savedSkills={savedSkills} onToggle={toggleSavedSkill} onConnect={openMessage} onClose={() => setActiveModal(null)} /> : activeModal === 'account-settings' ? <SettingsPanel darkMode={darkMode} setDarkMode={setDarkMode} accent={accent} setAccent={setAccent} language={language} setLanguage={setLanguage} onPassword={() => setActiveModal('account-password')} onClose={() => setActiveModal(null)} /> : activeModal.startsWith('account-') ? <AccountPanelEnhanced section={activeModal.replace('account-', '')} user={currentUser} onClose={() => setActiveModal(null)} onEdit={() => setActiveModal('account-edit')} /> : <Modal type={activeModal} recipient={messageRecipient} sender={currentUser} onClose={() => { setActiveModal(null); setStatus(''); }} status={status} setStatus={setStatus} onLogin={(user) => { setCurrentUser(user); localStorage.setItem('skillswap-user', JSON.stringify(user)); }} />)}
   </div></>;
 }
 
@@ -1073,7 +352,7 @@ function AuthGate({ onLogin }) {
     }
   };
   useEffect(() => { const signupTab = document.querySelector('.auth-tabs button:nth-child(2)'); if (signupTab) signupTab.textContent = 'Sign up'; }, [mode]);
-  return <><div className="auth-gate"><div className="auth-panel"><div className="auth-brand"><span className="brand-mark"><ArrowLeftRight size={17} strokeWidth={2.4} /></span><strong>skillswap</strong></div><div className="auth-layout"><div className="auth-intro"><div className="eyebrow"><Sparkles size={14} /> skills worth sharing</div><h1>Trade what you know.<br /><em>Grow together.</em></h1><p>Join a community where every useful skill can become someone else’s next chapter.</p><div className="auth-proof"><span>2,400+</span><small>good exchanges already moving</small></div></div><div className="auth-card"><div className="auth-tabs"><button type="button" className={mode === 'login' ? 'active' : ''} onClick={() => switchMode('login')}>Log in</button><button type="button" className={mode === 'signup' ? 'active' : ''} onClick={() => switchMode('signup')}>Sign in</button></div><div className="eyebrow">{mode === 'login' ? 'welcome back' : 'make your move'}</div><h2>{mode === 'login' ? 'Log in to SkillSwap.' : 'Create your profile.'}</h2><p>{mode === 'login' ? 'Pick up where your next good exchange left off.' : 'Put one skill on the table and meet your next exchange partner.'}</p><form onSubmit={submit}>{mode === 'signup' && <input required placeholder="Your name" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />}<input required type="email" placeholder="Email address" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} /><PasswordInput required minLength={mode === 'signup' ? 8 : undefined} placeholder={mode === 'signup' ? 'Password (8+ characters)' : 'Password'} value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} />{mode === 'signup' && <><input placeholder="What can you teach?" value={form.teaches} onChange={(event) => setForm({ ...form, teaches: event.target.value })} /><input placeholder="What do you want to learn?" value={form.wants} onChange={(event) => setForm({ ...form, wants: event.target.value })} /></>}{error && <p className="auth-error" role="alert">{error}</p>}{notice && <p className="auth-notice" role="status">{notice}</p>}<button className="button button-dark auth-submit" type="submit" disabled={loading}>{loading ? 'Please wait...' : mode === 'login' ? 'Log in' : 'Create profile'} <ArrowUpRight size={16} /></button></form>{mode === 'login' && <button type="button" className="forgot-password-link" onClick={() => { setResetEmail(form.email); setResetOpen(true); setError(''); }} disabled={loading}>Forgot password?</button>}<small className="auth-privacy">Your profile stays yours. No money, no pressure, just useful exchanges.</small></div></div></div></div>{resetOpen && <div className="modal-backdrop reset-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setResetOpen(false)} onClick={(event) => event.stopPropagation()}><div className="modal-panel reset-panel" role="dialog" aria-modal="true" aria-labelledby="reset-password-title" onClick={(event) => event.stopPropagation()}><button className="modal-close" type="button" onClick={() => setResetOpen(false)} aria-label="Close"><X size={19} /></button><div className="eyebrow">account recovery</div><h2 id="reset-password-title">Reset your password.</h2><p>Enter your account email and we will send a secure reset link.</p>{resetStatus && <p className="reset-result" role="alert">{resetStatus}</p>}<form onSubmit={(event) => { event.preventDefault(); requestReset(); }}><input required type="email" autoFocus placeholder="Email address" value={resetEmail} onChange={(event) => setResetEmail(event.target.value)} /><button className="button button-dark" type="submit" disabled={resetLoading}>{resetLoading ? 'Sending...' : 'Send reset link'} <ArrowUpRight size={16} /></button></form></div></div>}</>;
+  return <><div className="auth-gate"><div className="auth-panel"><div className="auth-brand"><span className="brand-mark"><ArrowLeftRight size={17} strokeWidth={2.4} /></span><strong>skillswap</strong></div><div className="auth-layout"><div className="auth-intro"><div className="eyebrow"><Sparkles size={14} /> skills worth sharing</div><h1>Trade what you know.<br /><em>Grow together.</em></h1><p>Join a community where every useful skill can become someone else’s next chapter.</p><div className="auth-proof"><span>2,400+</span><small>good exchanges already moving</small></div></div><div className="auth-card"><div className="auth-tabs"><button type="button" className={mode === 'login' ? 'active' : ''} onClick={() => switchMode('login')}>Log in</button><button type="button" className={mode === 'signup' ? 'active' : ''} onClick={() => switchMode('signup')}>Sign in</button></div><div className="eyebrow">{mode === 'login' ? 'welcome back' : 'make your move'}</div><h2>{mode === 'login' ? 'Log in to SkillSwap.' : 'Create your profile.'}</h2><p>{mode === 'login' ? 'Pick up where your next good exchange left off.' : 'Put one skill on the table and meet your next exchange partner.'}</p><form onSubmit={submit}>{mode === 'signup' && <input required placeholder="Your name" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />}<input required type="email" placeholder="Email address" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} /><PasswordInput required minLength={mode === 'signup' ? 8 : undefined} placeholder={mode === 'signup' ? 'Password (8+ characters)' : 'Password'} value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} />{mode === 'signup' && <><SkillPicker label="What can you teach?" value={form.teaches} onChange={(value) => setForm({ ...form, teaches: value })} placeholder="Select a skill you teach" /><SkillPicker label="What do you want to learn?" value={form.wants} onChange={(value) => setForm({ ...form, wants: value })} placeholder="Select a skill you want to learn" /></>}{error && <p className="auth-error" role="alert">{error}</p>}{notice && <p className="auth-notice" role="status">{notice}</p>}<button className="button button-dark auth-submit" type="submit" disabled={loading}>{loading ? 'Please wait...' : mode === 'login' ? 'Log in' : 'Create profile'} <ArrowUpRight size={16} /></button></form>{mode === 'login' && <button type="button" className="forgot-password-link" onClick={() => { setResetEmail(form.email); setResetOpen(true); setError(''); }} disabled={loading}>Forgot password?</button>}<small className="auth-privacy">Your profile stays yours. No money, no pressure, just useful exchanges.</small></div></div></div></div>{resetOpen && <div className="modal-backdrop reset-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setResetOpen(false)} onClick={(event) => event.stopPropagation()}><div className="modal-panel reset-panel" role="dialog" aria-modal="true" aria-labelledby="reset-password-title" onClick={(event) => event.stopPropagation()}><button className="modal-close" type="button" onClick={() => setResetOpen(false)} aria-label="Close"><X size={19} /></button><div className="eyebrow">account recovery</div><h2 id="reset-password-title">Reset your password.</h2><p>Enter your account email and we will send a secure reset link.</p>{resetStatus && <p className="reset-result" role="alert">{resetStatus}</p>}<form onSubmit={(event) => { event.preventDefault(); requestReset(); }}><input required type="email" autoFocus placeholder="Email address" value={resetEmail} onChange={(event) => setResetEmail(event.target.value)} /><button className="button button-dark" type="submit" disabled={resetLoading}>{resetLoading ? 'Sending...' : 'Send reset link'} <ArrowUpRight size={16} /></button></form></div></div>}</>;
 }
 
 function VerificationGate({ token }) {
@@ -1114,6 +393,87 @@ function EditProfilePanel({ user, onClose, onSaved }) { const [form, setForm] = 
 
 function Modal({ type, recipient, sender, onClose, status, setStatus, onLogin }) { const isProfile = type === 'profile'; const isLogin = type === 'login'; const isContact = type === 'contact'; const [form, setForm] = useState({}); const submit = async (event) => { event.preventDefault(); try { if (isProfile) await createProfile(form); else if (isLogin) { const result = await loginProfile(form); onLogin(result.profile); } else if (isContact) { if (!sender) throw new Error('Please log in before messaging another member.'); await sendMessage({ senderName: sender.name, senderEmail: sender.email, recipientName: recipient?.name || 'SkillSwap member', recipientEmail: recipient?.email || '', message: form.message }); } setStatus(isProfile ? 'Profile saved. Welcome to the exchange.' : isLogin ? 'Welcome back to SkillSwap.' : 'Message sent to your exchange partner.'); } catch (error) { setStatus(error.message || 'Something went wrong. Please try again.'); } }; return <div className="modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}><div className="modal-panel"><button className="modal-close" onClick={onClose} aria-label="Close"><X size={19} /></button>{status ? <div className="success-state"><div className="success-icon"><Check size={22} /></div><h2>{status}</h2><button className="button button-dark" onClick={onClose}>Close</button></div> : <><div className="eyebrow">{isProfile ? 'make your move' : isLogin ? 'welcome back' : 'say hello'}</div><h2>{isProfile ? 'Create your profile.' : isLogin ? 'Log in to SkillSwap.' : `Message ${recipient?.name || 'this member'}.`}</h2><p>{isProfile ? 'Put one skill on the table. You never know who has the thing you need.' : isLogin ? 'Pick up where your next good exchange left off.' : `Start a direct conversation with ${recipient?.name || 'your exchange partner'}.`}</p><form onSubmit={submit}>{isProfile ? <><input required placeholder="Your name" onChange={(e) => setForm({ ...form, name: e.target.value })} /><input required type="email" placeholder="Email address" onChange={(e) => setForm({ ...form, email: e.target.value })} /><input required type="password" minLength="8" placeholder="Password (8+ characters)" onChange={(e) => setForm({ ...form, password: e.target.value })} /><input placeholder="What can you teach?" onChange={(e) => setForm({ ...form, teaches: [e.target.value] })} /><input placeholder="What do you want to learn?" onChange={(e) => setForm({ ...form, wants: [e.target.value] })} /></> : isLogin ? <><input required type="email" placeholder="Email address" onChange={(e) => setForm({ ...form, email: e.target.value })} /><input required type="password" placeholder="Password" onChange={(e) => setForm({ ...form, password: e.target.value })} /></> : <textarea required placeholder="Write your message" rows="5" onChange={(e) => setForm({ ...form, message: e.target.value })}></textarea>}<button className="button button-dark" type="submit">{isProfile ? 'Create profile' : isLogin ? 'Log in' : 'Send message'} <ArrowUpRight size={16} /></button></form></>}</div></div>; }
 
+function OwnerAccessGate({ adminKey, setAdminKey, onOpenDashboard, onClose }) {
+  const [entry, setEntry] = useState(adminKey || '');
+  const [error, setError] = useState('');
+
+  return <div className="modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}><div className="modal-panel admin-panel"><button className="modal-close" onClick={onClose} aria-label="Close"><X size={19} /></button><div className="eyebrow">owner access</div><h2>Owner login</h2><p>Enter the owner key to unlock the user directory and management tools.</p><label className="settings-select admin-key-row"><span>Admin key</span><input value={entry} onChange={(event) => setEntry(event.target.value)} aria-label="Admin key" type="password" placeholder="Owner key" /></label>{error && <p className="form-error">{error}</p>}<button className="button button-dark" onClick={() => {
+    const nextKey = entry.trim();
+    if (!nextKey) {
+      setError('Please enter the owner key.');
+      return;
+    }
+    setAdminKey(nextKey);
+    setError('');
+    onOpenDashboard();
+  }}>Open owner dashboard</button></div></div>;
+}
+
+function AdminDashboardPanel({ adminKey, setAdminKey, onClose }) {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const loadUsers = () => {
+    let cancelled = false;
+    setLoading(true);
+    getAdminUsers(adminKey)
+      .then((items) => {
+        if (!cancelled) setUsers(Array.isArray(items) ? items : []);
+      })
+      .catch((requestError) => {
+        if (!cancelled) setError(requestError.message || 'Could not load the owner dashboard.');
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => { cancelled = true; };
+  };
+
+  useEffect(() => {
+    if (!adminKey) return undefined;
+    return loadUsers();
+  }, [adminKey]);
+
+  const updateUser = async (user, updates) => {
+    if (!adminKey) return;
+    setSaving(true);
+    try {
+      const updated = await updateAdminUser(adminKey, user._id || user.email, updates);
+      setUsers((current) => current.map((item) => (item._id === updated._id || item.email === updated.email ? { ...item, ...updated } : item)));
+      setError('');
+    } catch (requestError) {
+      setError(requestError.message || 'Could not update this user.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const deleteUser = async (user) => {
+    if (!adminKey || !window.confirm(`Delete ${user.name || user.email}? This action cannot be undone.`)) return;
+    setSaving(true);
+    try {
+      await deleteAdminUser(adminKey, user._id || user.email);
+      setUsers((current) => current.filter((item) => !(item._id === user._id || item.email === user.email)));
+      setError('');
+    } catch (requestError) {
+      setError(requestError.message || 'Could not delete this user.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const summary = {
+    total: users.length,
+    verified: users.filter((user) => user.emailVerified || user.verified).length,
+    hidden: users.filter((user) => user.profileVisible === false).length,
+    blocked: users.filter((user) => user.allowMessages === false).length
+  };
+
+  return <div className="modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}><div className="modal-panel admin-panel"><button className="modal-close" onClick={onClose} aria-label="Close"><X size={19} /></button><div className="eyebrow">owner access</div><div className="admin-panel-header"><div><h2>All user details.</h2><p>Review the full user directory, update records, and restrict or remove risky accounts.</p></div><button className="button button-light admin-refresh-button" onClick={loadUsers} disabled={loading}>Refresh</button></div><div className="admin-summary"><div className="admin-summary-card"><span>Total users</span><strong>{summary.total}</strong></div><div className="admin-summary-card"><span>Verified</span><strong>{summary.verified}</strong></div><div className="admin-summary-card"><span>Hidden profiles</span><strong>{summary.hidden}</strong></div><div className="admin-summary-card"><span>Blocked messaging</span><strong>{summary.blocked}</strong></div></div><label className="settings-select admin-key-row"><span>Admin key</span><input value={adminKey} onChange={(event) => setAdminKey(event.target.value)} aria-label="Admin key" type="password" /></label>{loading ? <div className="empty-exchanges"><strong>Loading users...</strong></div> : error ? <div className="empty-exchanges"><strong>{error}</strong></div> : <div className="admin-user-list">{users.length ? users.map((user) => <div className="admin-user-card" key={user._id || user.email}><div className="admin-user-head"><span className="profile-avatar">{(user.name || user.email || 'U').slice(0, 2).toUpperCase()}</span><div><strong>{user.name || 'Unnamed member'}</strong><small>{user.email}</small></div></div><div className="admin-user-meta"><span><b>Location</b>{user.location || 'Not shared'}</span><span><b>Verified</b>{user.emailVerified || user.verified ? 'Yes' : 'No'}</span><span><b>Privacy</b>{user.profileVisible === false ? 'Hidden' : 'Visible'}</span><span><b>Messages</b>{user.allowMessages === false ? 'Blocked' : 'Allowed'}</span><span><b>Skills</b>{(user.teaches || []).join(', ') || 'No skill list'}</span><span><b>Wants</b>{(user.wants || []).join(', ') || 'No learning goals'}</span></div><div className="admin-user-actions"><button className="button button-light" onClick={() => updateUser(user, { verified: !(user.emailVerified || user.verified) })} disabled={saving}>{(user.emailVerified || user.verified) ? 'Mark unverified' : 'Verify user'}</button><button className="button button-light" onClick={() => updateUser(user, { profileVisible: !(user.profileVisible === false) })} disabled={saving}>{user.profileVisible === false ? 'Show profile' : 'Hide profile'}</button><button className="button button-light" onClick={() => updateUser(user, { allowMessages: !(user.allowMessages === false) })} disabled={saving}>{user.allowMessages === false ? 'Allow messages' : 'Block messages'}</button><button className="button button-light danger-button" onClick={() => deleteUser(user)} disabled={saving}>Delete</button></div></div>) : <div className="empty-exchanges"><strong>No users found.</strong><p>Once accounts exist, the full directory will appear here.</p></div>}</div>}</div></div>;
+}
+
 function AccountPanelEnhanced({ section, user, onClose, onEdit }) {
   const content = {
     exchanges: ['My exchanges', 'Your active and completed skill swaps will appear here.'],
@@ -1141,7 +501,7 @@ function EditProfilePanelEnhanced({ user, onClose, onSaved }) {
   const [error, setError] = useState('');
   const handleAvatar = (event) => { const file = event.target.files?.[0]; if (!file) return; if (file.size > 2 * 1024 * 1024) { setError('Profile picture must be smaller than 2MB.'); return; } const reader = new FileReader(); reader.onload = () => setAvatarPreview(reader.result); reader.readAsDataURL(file); };
   const submit = async (event) => { event.preventDefault(); try { const updated = await updateProfile(user._id, { ...form, avatar: avatarPreview, teaches: form.teaches.split(',').map((skill) => skill.trim()).filter(Boolean), wants: form.wants.split(',').map((skill) => skill.trim()).filter(Boolean) }); onSaved(updated); } catch (requestError) { setError(requestError.message); } };
-  return <div className="modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}><div className="modal-panel edit-profile-panel"><button className="modal-close" onClick={onClose} aria-label="Close"><X size={19} /></button><div className="eyebrow">edit your profile</div><h2>Make it more you.</h2><p>Keep your exchange profile current so the right people can find you.</p><form onSubmit={submit}><label className="avatar-upload"><span className="upload-avatar">{avatarPreview ? <img src={avatarPreview} alt="Selected profile" /> : user?.name?.slice(0, 2).toUpperCase()}</span><span><strong>Profile picture</strong><small>JPG, PNG or WebP · max 2MB</small></span><input type="file" accept="image/png,image/jpeg,image/webp" onChange={handleAvatar} /></label><input required value={form.name} placeholder="Your name" onChange={(event) => setForm({ ...form, name: event.target.value })} /><input required type="email" value={form.email} readOnly aria-readonly="true" title="Login email cannot be edited" placeholder="Email address" /><input value={form.location} placeholder="Location" onChange={(event) => setForm({ ...form, location: event.target.value })} /><textarea value={form.bio} rows="3" placeholder="Short bio" onChange={(event) => setForm({ ...form, bio: event.target.value })}></textarea><input value={form.teaches} placeholder="Skills you teach, separated by commas" onChange={(event) => setForm({ ...form, teaches: event.target.value })} /><input value={form.wants} placeholder="Skills you want to learn, separated by commas" onChange={(event) => setForm({ ...form, wants: event.target.value })} />{error && <p className="form-error">{error}</p>}<button className="button button-dark" type="submit">Save changes <Check size={16} /></button></form></div></div>;
+  return <div className="modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}><div className="modal-panel edit-profile-panel"><button className="modal-close" onClick={onClose} aria-label="Close"><X size={19} /></button><div className="eyebrow">edit your profile</div><h2>Make it more you.</h2><p>Keep your exchange profile current so the right people can find you.</p><form onSubmit={submit}><label className="avatar-upload"><span className="upload-avatar">{avatarPreview ? <img src={avatarPreview} alt="Selected profile" /> : user?.name?.slice(0, 2).toUpperCase()}</span><span><strong>Profile picture</strong><small>JPG, PNG or WebP · max 2MB</small></span><input type="file" accept="image/png,image/jpeg,image/webp" onChange={handleAvatar} /></label><input required value={form.name} placeholder="Your name" onChange={(event) => setForm({ ...form, name: event.target.value })} /><input required type="email" value={form.email} readOnly aria-readonly="true" title="Login email cannot be edited" placeholder="Email address" /><input value={form.location} placeholder="Location" onChange={(event) => setForm({ ...form, location: event.target.value })} /><textarea value={form.bio} rows="3" placeholder="Short bio" onChange={(event) => setForm({ ...form, bio: event.target.value })}></textarea><SkillPicker label="What can you teach?" value={form.teaches} onChange={(value) => setForm({ ...form, teaches: value })} placeholder="Select a skill you teach" /><SkillPicker label="What do you want to learn?" value={form.wants} onChange={(value) => setForm({ ...form, wants: value })} placeholder="Select a skill you want to learn" />{error && <p className="form-error">{error}</p>}<button className="button button-dark" type="submit">Save changes <Check size={16} /></button></form></div></div>;
 }
 
 function ExchangesPanel({ user, onClose, onOpenMessages }) {
@@ -1221,19 +581,20 @@ function CommunityPanel({ user, onClose }) {
   return <div className="modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}><div className="modal-panel community-panel"><button className="modal-close" onClick={onClose} aria-label="Close"><X size={19} /></button><div className="eyebrow">the wider exchange</div><h2>Community.</h2><p>Find your circle, learn together and celebrate generous skill-sharing.</p><div className="community-section"><span className="settings-heading">Groups</span>{groups.map((group) => <div className="group-row" key={group._id}><span className="group-icon"><UsersRound size={17} /></span><span><strong>{group.name}</strong><small>{group.description}</small></span><button onClick={async () => { const updated = await joinGroup(group._id); setJoined({ ...joined, [group._id]: true }); setGroups(groups.map((item) => item._id === group._id ? updated : item)); }}>{joined[group._id] ? 'Joined' : `Join · ${group.members}`}</button></div>)}</div><div className="community-section"><span className="settings-heading">Leaderboard</span>{leaders.length ? leaders.slice(0, 5).map((leader, index) => <div className="leader-row" key={leader.name}><b>#{index + 1}</b><span>{leader.name}</span><small>{leader.exchanges} exchanges · {leader.rating || 'New'} rating</small></div>) : <div className="community-empty">Complete exchanges to appear here.</div>}</div><div className="community-section"><span className="settings-heading">Video room</span><p className="community-small">Create a free Jitsi room for your next exchange.</p><button className="button button-dark" onClick={createRoom}>Create video room <CalendarDays size={16} /></button>{room && <a className="room-link" href={room} target="_blank" rel="noreferrer">Open meeting room</a>}</div><button className="button button-dark" onClick={onClose}>Done <Check size={16} /></button></div></div>;
 }
 
-function conversationsFromMessages(messages, userEmail) {
+export function conversationsFromMessages(messages, userEmail) {
   const grouped = new Map();
   messages.forEach((message) => {
     const isSender = message.senderEmail === userEmail;
     const email = isSender ? message.recipientEmail : message.senderEmail;
     if (!email) return;
+    const counterpartName = isSender ? (message.recipientName || message.recipientEmail || 'Direct message') : (message.senderName || message.senderEmail || 'Direct message');
     const current = grouped.get(email);
-    if (!current || Date.parse(message.createdAt) > Date.parse(current.createdAt)) grouped.set(email, { id: email, email, name: isSender ? message.recipientName : message.senderName, avatar: isSender ? message.recipientAvatar : message.senderAvatar, initials: (isSender ? message.recipientName : message.senderName).slice(0, 2).toUpperCase(), preview: message.message, time: new Date(message.createdAt).toLocaleDateString(), unread: !isSender && !message.read, status: 'Available', skill: 'Direct message', match: 0, exchange: 'New request', availability: 'Flexible', rating: 0, createdAt: message.createdAt });
+    if (!current || Date.parse(message.createdAt) > Date.parse(current.createdAt)) grouped.set(email, { id: email, email, name: counterpartName, avatar: isSender ? message.recipientAvatar : message.senderAvatar, initials: counterpartName.slice(0, 2).toUpperCase(), preview: message.message, time: new Date(message.createdAt).toLocaleDateString(), unread: !isSender && !message.read, status: 'Available', skill: 'Direct message', match: 0, exchange: 'New request', availability: 'Flexible', rating: 0, createdAt: message.createdAt });
   });
   return [...grouped.values()].sort((first, second) => Date.parse(second.createdAt) - Date.parse(first.createdAt));
 }
 
-function chatFromMessages(messages, userEmail) {
+export function chatFromMessages(messages, userEmail) {
   return [...messages].sort((first, second) => Date.parse(first.createdAt) - Date.parse(second.createdAt)).reduce((result, message) => {
     const conversationId = message.senderEmail === userEmail ? message.recipientEmail : message.senderEmail;
     if (!conversationId) return result;
@@ -1258,10 +619,18 @@ function MessagesPanel({ user, onClose, initialRecipient }) {
   const [query, setQuery] = useState('');
   const [draft, setDraft] = useState('');
   const [chat, setChat] = useState({});
-  const [typing, setTypingState] = useState('');
-  const typingUser = typing;
-  const setTypingUser = (value) => setTypingState(value);
-  const setTyping = (value) => { const isTyping = value === true; setTypingState(''); socketRef.current?.emit('typing', { senderName: user.name, senderEmail: user.email, recipientEmail: active.email, isTyping }); };
+  const [typingUsers, setTypingUsers] = useState({});
+  const activeTypingUser = activeId ? (typingUsers[activeId] || '') : '';
+  const setTyping = (value) => {
+    const isTyping = Boolean(value);
+    if (!user?.email || !active?.email) return;
+    socketRef.current?.emit('typing', {
+      senderName: user.name,
+      senderEmail: user.email,
+      recipientEmail: active.email,
+      isTyping,
+    });
+  };
   const [scheduled, setScheduled] = useState(false);
   const [room, setRoom] = useState('');
   const [status, setStatus] = useState('');
@@ -1269,7 +638,7 @@ function MessagesPanel({ user, onClose, initialRecipient }) {
   const messagesEndRef = useRef(null);
   const active = conversations.find((item) => item.id === activeId) || { name: 'No conversations yet', avatar: '', initials: '--', status: 'Start an exchange to message a member', skill: 'No active exchange', match: 0, exchange: 'None', availability: 'Flexible', rating: 0 };
   const visible = conversations.filter((item) => (!query || `${item.name} ${item.preview} ${item.skill}`.toLowerCase().includes(query.toLowerCase())) && (filter === 'all' || filter === 'unread' && item.unread || filter === 'active' && item.exchange === 'In progress' || filter === 'archived' && item.exchange === 'Archived'));
-  useEffect(() => { if (!user?.email) return undefined; let cancelled = false; const syncMessages = () => getMessages(user.email).then((items) => { if (cancelled) return; const loaded = conversationsFromMessages(items, user.email); setChat(chatFromMessages(items, user.email)); const target = initialRecipient && loaded.find((item) => (initialRecipient.email && item.email === initialRecipient.email) || item.name === initialRecipient.name); if (initialRecipient) { const pending = target || pendingConversation(initialRecipient); const withoutDuplicate = loaded.filter((item) => item.id !== pending.id); setConversations([pending, ...withoutDuplicate]); setActiveId(pending.id); } else { setConversations(loaded); setActiveId((current) => current || loaded[0]?.id || null); } }).catch(() => { if (!cancelled && initialRecipient) { const pending = pendingConversation(initialRecipient); setConversations((items) => items.some((item) => item.id === pending.id) ? items : [pending, ...items]); setActiveId(pending.id); } }); syncMessages(); const pollTimer = window.setInterval(syncMessages, 2000); const socket = connectChat(user.email, (message) => { const conversationId = message.senderEmail; const incoming = { id: message._id || `live-${Date.now()}`, from: 'them', text: message.message, time: 'now', status: 'Delivered' }; setChat((items) => ({ ...items, [conversationId]: [...(items[conversationId] || []).filter((item) => item.id !== incoming.id), incoming] })); setConversations((items) => [{ id: conversationId, email: conversationId, name: message.senderName, initials: message.senderName.slice(0, 2).toUpperCase(), preview: message.message, time: 'now', unread: true, status: 'Online', skill: 'New exchange', match: 80, exchange: 'New request', availability: 'Flexible', rating: 0 }, ...items.filter((item) => item.id !== conversationId)]); }, (seen) => setChat((items) => Object.fromEntries(Object.entries(items).map(([conversationId, messages]) => [conversationId, messages.map((message) => message.id === seen.messageId ? { ...message, status: 'Read' } : message)]))), (typingEvent) => { if (typingEvent.conversationId === activeId) setTypingUser(typingEvent.isTyping ? typingEvent.senderName : ''); }); socketRef.current = socket; return () => { cancelled = true; window.clearInterval(pollTimer); socketRef.current = null; socket.disconnect(); }; }, [user?.email, initialRecipient?.email, initialRecipient?.name, activeId]);
+  useEffect(() => { if (!user?.email) return undefined; let cancelled = false; const syncMessages = () => getMessages(user.email).then((items) => { if (cancelled) return; const loaded = conversationsFromMessages(items, user.email); setChat(chatFromMessages(items, user.email)); const target = initialRecipient && loaded.find((item) => (initialRecipient.email && item.email === initialRecipient.email) || item.name === initialRecipient.name); if (initialRecipient) { const pending = target || pendingConversation(initialRecipient); const withoutDuplicate = loaded.filter((item) => item.id !== pending.id); setConversations([pending, ...withoutDuplicate]); setActiveId(pending.id); } else { setConversations(loaded); setActiveId((current) => current || loaded[0]?.id || null); } }).catch(() => { if (!cancelled && initialRecipient) { const pending = pendingConversation(initialRecipient); setConversations((items) => items.some((item) => item.id === pending.id) ? items : [pending, ...items]); setActiveId(pending.id); } }); syncMessages(); const pollTimer = window.setInterval(syncMessages, 2000); const socket = connectChat(user.email, (message) => { const conversationId = message.senderEmail; const incoming = { id: message._id || `live-${Date.now()}`, from: 'them', text: message.message, time: 'now', status: 'Delivered' }; setChat((items) => ({ ...items, [conversationId]: [...(items[conversationId] || []).filter((item) => item.id !== incoming.id), incoming] })); setConversations((items) => [{ id: conversationId, email: conversationId, name: message.senderName, initials: message.senderName.slice(0, 2).toUpperCase(), preview: message.message, time: 'now', unread: true, status: 'Online', skill: 'New exchange', match: 80, exchange: 'New request', availability: 'Flexible', rating: 0 }, ...items.filter((item) => item.id !== conversationId)]); }, (seen) => setChat((items) => Object.fromEntries(Object.entries(items).map(([conversationId, messages]) => [conversationId, messages.map((message) => message.id === seen.messageId ? { ...message, status: 'Read' } : message)]))), (typingEvent) => { const conversationId = typingEvent?.senderEmail || typingEvent?.conversationId; if (!conversationId) return; setTypingUsers((current) => ({ ...current, [conversationId]: typingEvent.isTyping ? (typingEvent.senderName || 'Someone') : '' })); }); socketRef.current = socket; return () => { cancelled = true; window.clearInterval(pollTimer); socketRef.current = null; socket.disconnect(); }; }, [user?.email, initialRecipient?.email, initialRecipient?.name, activeId]);
   useEffect(() => {
     const missingAvatars = conversations.filter((conversation) => conversation.email && !conversation.avatar);
     if (!missingAvatars.length) return undefined;
@@ -1284,12 +653,12 @@ function MessagesPanel({ user, onClose, initialRecipient }) {
   }, [conversations]);
   useEffect(() => { if (!activeId || !active.email || !socketRef.current) return undefined; const unread = (chat[activeId] || []).filter((message) => message.from === 'them' && message.status !== 'Read' && message.id && !String(message.id).startsWith('live-')); if (!unread.length) return undefined; setChat((items) => ({ ...items, [activeId]: (items[activeId] || []).map((message) => unread.some((item) => item.id === message.id) ? { ...message, status: 'Read' } : message) })); unread.forEach((message) => { markMessageRead(message.id).catch(() => {}); socketRef.current.emit('message-seen', { messageId: message.id, senderEmail: active.email }); }); return undefined; }, [activeId, active.email, chat]);
   const markRead = (id) => setConversations((items) => items.map((item) => item.id === id ? { ...item, unread: false } : item));
-  useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }); }, [activeId, chat, typingUser]);
-  useEffect(() => { document.documentElement.style.setProperty('--typing-user', JSON.stringify(typingUser || '')); return () => document.documentElement.style.removeProperty('--typing-user'); }, [typingUser]);
+  useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }); }, [activeId, chat, activeTypingUser]);
+  useEffect(() => { document.documentElement.style.setProperty('--typing-user', JSON.stringify(activeTypingUser || '')); return () => document.documentElement.style.removeProperty('--typing-user'); }, [activeTypingUser]);
   const sendMessageNow = (text = draft, messageId = `local-${Date.now()}`) => { if (!text.trim()) return; setChat((items) => ({ ...items, [activeId]: [...(items[activeId] || []), { id: messageId, from: 'me', text: text.trim(), time: 'now', status: 'Delivered' }] })); setConversations((items) => items.map((item) => item.id === activeId ? { ...item, preview: text.trim(), time: 'now' } : item)); setDraft(''); };
   const sendLiveMessage = async () => { const messageText = draft.trim(); if (!messageText || !active.email) { if (!active.email) setStatus('This conversation is missing a recipient email.'); return; } try { const created = await sendMessage({ senderName: user.name, senderEmail: user.email, recipientName: active.name, recipientEmail: active.email, message: messageText }); sendMessageNow(messageText, created._id); const socket = socketRef.current || connectChat(user.email, () => {}); socket.emit('send-message', { _id: created._id, senderName: user.name, senderEmail: user.email, recipientName: active.name, recipientEmail: active.email, message: messageText }); if (!socketRef.current) socket.disconnect(); } catch (error) { setStatus(error.message || 'Could not send this message.'); } };
   const createRoom = async () => { try { const result = await createVideoRoom(); setRoom(result.url); } catch { setStatus('Video room unavailable.'); } };
-  return <div className="modal-backdrop messages-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}><div className="modal-panel messages-workspace" role="dialog" aria-modal="true"><button className="modal-close" onClick={onClose} aria-label="Close"><X size={19} /></button><aside className="messages-sidebar"><div className="eyebrow">your inbox</div><h2>Messages.</h2><div className="message-search"><Search size={15} /><input aria-label="Search messages" placeholder="Search conversations" value={query} onChange={(event) => setQuery(event.target.value)} /></div><div className="message-filters">{[['all', 'All'], ['unread', 'Unread'], ['active', 'Active'], ['archived', 'Archived']].map(([value, label]) => <button className={filter === value ? 'active' : ''} key={value} onClick={() => setFilter(value)}>{label}</button>)}</div><div className="conversation-list">{visible.map((conversation) => <button className={activeId === conversation.id ? 'active' : ''} key={conversation.id} onClick={() => { setActiveId(conversation.id); markRead(conversation.id); }}><MessageAvatar avatar={conversation.avatar} initials={conversation.initials} /><span className="conversation-copy"><strong>{conversation.name}</strong><small>{conversation.preview}</small><em>{conversation.time}</em></span>{conversation.unread && <i />}</button>)}</div></aside><section className="chat-pane"><header className="chat-header"><MessageAvatar avatar={active.avatar} initials={active.initials} /><div><strong>{active.name}</strong><small><span className="online-dot"></span>{active.status}</small></div><div className="chat-header-actions"><button title="Report user" onClick={() => setStatus('Report option opened.')}><ShieldCheck size={15} /></button><button title="Block user" onClick={() => setStatus('Member blocked.')}><X size={15} /></button></div></header><div className="exchange-context"><div><span className="profile-label">exchange context</span><strong>{active.skill}</strong><small>{active.match}% match · {active.exchange}</small></div><button onClick={() => setConversations((items) => items.map((item) => item.id === active.id ? { ...item, exchange: item.exchange === 'Complete' ? 'In progress' : 'Complete' } : item))}><Check size={14} /> {active.exchange === 'Complete' ? 'Completed' : 'Mark complete'}</button></div><div className="chat-messages">{(chat[activeId] || []).map((message, index) => <div className={message.from === 'me' ? 'chat-bubble me' : 'chat-bubble'} key={`${message.id || message.time}-${index}`}>{message.text}<small>{message.time} · {message.status || 'Delivered'}</small></div>)}{typing && <div className="typing-indicator">{active.name} is typing...</div>}<span ref={messagesEndRef} /></div><div className="message-templates">{['I would like to learn...', 'I can teach...', 'Are you available this weekend?', 'Let’s schedule our exchange.'].map((template) => <button key={template} onClick={() => setDraft(template)}>{template}</button>)}</div><div className="message-composer"><button title="Attach resource" onClick={() => setStatus('Attachment picker ready for portfolio, resume or learning resources.')}><Bookmark size={16} /></button><input aria-label="Write a message" placeholder={`Write to ${active.name}...`} value={draft} onChange={(event) => { setDraft(event.target.value); setTyping(true); window.clearTimeout(window.messageTypingTimer); window.messageTypingTimer = window.setTimeout(() => setTyping(false), 800); }} onKeyDown={(event) => event.key === 'Enter' && sendLiveMessage()} /><button onClick={sendLiveMessage} aria-label="Send message"><ArrowUpRight size={17} /></button></div></section><aside className="chat-details"><span className="profile-label">conversation profile</span><div className="chat-profile"><MessageAvatar avatar={active.avatar} initials={active.initials} className="profile-avatar" /><h3>{active.name}</h3><small>{active.status}</small></div><div className="chat-detail-block"><b>Skills</b><span>{active.skill}</span></div><div className="chat-detail-block"><b>Rating</b><span><Star size={13} fill="currentColor" /> {active.rating || 'New'} · 12 exchanges</span></div><div className="chat-detail-block"><b>Availability</b><span>{active.availability} · Online</span></div><div className="chat-actions"><button onClick={() => setScheduled(true)}><CalendarDays size={15} /> Suggest a time</button><button onClick={createRoom}><Video size={15} /> Create video room</button><button onClick={() => setStatus('Exchange request sent.')}><Repeat2 size={15} /> Start exchange</button></div>{scheduled && <div className="schedule-box"><strong>Schedule session</strong><input type="date" /><input type="time" /><select><option>Online</option><option>Video call</option><option>In person</option></select><button className="button button-dark" onClick={() => { setScheduled(false); setStatus('Session confirmed and reminder saved.'); }}>Confirm time</button></div>}{room && <a className="room-link" href={room} target="_blank" rel="noreferrer">Open meeting room</a>}{status && <p className="password-status" role="status">{status}</p>}</aside></div></div>;
+  return <div className="modal-backdrop messages-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}><div className="modal-panel messages-workspace" role="dialog" aria-modal="true"><button className="modal-close" onClick={onClose} aria-label="Close"><X size={19} /></button><aside className="messages-sidebar"><div className="eyebrow">your inbox</div><h2>Messages.</h2><div className="message-search"><Search size={15} /><input aria-label="Search messages" placeholder="Search conversations" value={query} onChange={(event) => setQuery(event.target.value)} /></div><div className="message-filters">{[['all', 'All'], ['unread', 'Unread'], ['active', 'Active'], ['archived', 'Archived']].map(([value, label]) => <button className={filter === value ? 'active' : ''} key={value} onClick={() => setFilter(value)}>{label}</button>)}</div><div className="conversation-list">{visible.map((conversation) => <button className={activeId === conversation.id ? 'active' : ''} key={conversation.id} onClick={() => { setActiveId(conversation.id); markRead(conversation.id); }}><MessageAvatar avatar={conversation.avatar} initials={conversation.initials} /><span className="conversation-copy"><strong>{conversation.name}</strong><small>{conversation.preview}</small><em>{conversation.time}</em></span>{conversation.unread && <i />}</button>)}</div></aside><section className="chat-pane"><header className="chat-header"><MessageAvatar avatar={active.avatar} initials={active.initials} /><div><strong>{active.name}</strong><small><span className="online-dot"></span>{active.status}</small></div><div className="chat-header-actions"><button title="Report user" onClick={() => setStatus('Report option opened.')}><ShieldCheck size={15} /></button><button title="Block user" onClick={() => setStatus('Member blocked.')}><X size={15} /></button></div></header><div className="exchange-context"><div><span className="profile-label">exchange context</span><strong>{active.skill}</strong><small>{active.match}% match · {active.exchange}</small></div><button onClick={() => setConversations((items) => items.map((item) => item.id === active.id ? { ...item, exchange: item.exchange === 'Complete' ? 'In progress' : 'Complete' } : item))}><Check size={14} /> {active.exchange === 'Complete' ? 'Completed' : 'Mark complete'}</button></div><div className="chat-messages">{(chat[activeId] || []).map((message, index) => <div className={message.from === 'me' ? 'chat-bubble me' : 'chat-bubble'} key={`${message.id || message.time}-${index}`}>{message.text}<small>{message.time} · {message.status || 'Delivered'}</small></div>)}{activeTypingUser && <div className="typing-indicator">{activeTypingUser} is typing...</div>}<span ref={messagesEndRef} /></div><div className="message-templates">{['I would like to learn...', 'I can teach...', 'Are you available this weekend?', 'Let’s schedule our exchange.'].map((template) => <button key={template} onClick={() => setDraft(template)}>{template}</button>)}</div><div className="message-composer"><button title="Attach resource" onClick={() => setStatus('Attachment picker ready for portfolio, resume or learning resources.')}><Bookmark size={16} /></button><input aria-label="Write a message" placeholder={`Write to ${active.name}...`} value={draft} onChange={(event) => { setDraft(event.target.value); setTyping(true); window.clearTimeout(window.messageTypingTimer); window.messageTypingTimer = window.setTimeout(() => setTyping(false), 800); }} onKeyDown={(event) => event.key === 'Enter' && sendLiveMessage()} /><button onClick={sendLiveMessage} aria-label="Send message"><ArrowUpRight size={17} /></button></div></section><aside className="chat-details"><span className="profile-label">conversation profile</span><div className="chat-profile"><MessageAvatar avatar={active.avatar} initials={active.initials} className="profile-avatar" /><h3>{active.name}</h3><small>{active.status}</small></div><div className="chat-detail-block"><b>Skills</b><span>{active.skill}</span></div><div className="chat-detail-block"><b>Rating</b><span><Star size={13} fill="currentColor" /> {active.rating || 'New'} · 12 exchanges</span></div><div className="chat-detail-block"><b>Availability</b><span>{active.availability} · Online</span></div><div className="chat-actions"><button onClick={() => setScheduled(true)}><CalendarDays size={15} /> Suggest a time</button><button onClick={createRoom}><Video size={15} /> Create video room</button><button onClick={() => setStatus('Exchange request sent.')}><Repeat2 size={15} /> Start exchange</button></div>{scheduled && <div className="schedule-box"><strong>Schedule session</strong><input type="date" /><input type="time" /><select><option>Online</option><option>Video call</option><option>In person</option></select><button className="button button-dark" onClick={() => { setScheduled(false); setStatus('Session confirmed and reminder saved.'); }}>Confirm time</button></div>}{room && <a className="room-link" href={room} target="_blank" rel="noreferrer">Open meeting room</a>}{status && <p className="password-status" role="status">{status}</p>}</aside></div></div>;
 }
 
 function AdvancedPanel({ user, onClose, onSaved }) {
