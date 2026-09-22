@@ -538,7 +538,8 @@ router.post('/messages', async (request, response) => {
 router.get('/messages/:email', async (request, response) => {
   const email = decodeURIComponent(request.params.email).toLowerCase();
   const emails = await discoverableEmails();
-  return response.json(readMessages().filter((message) => (message.senderEmail === email || message.recipientEmail === email) && hasDiscoverableParticipants(message, emails, ['senderEmail', 'recipientEmail'])));
+  const profiles = new Map(readProfiles().map((profile) => [profile.email, profile.avatar || '']));
+  return response.json(readMessages().filter((message) => (message.senderEmail === email || message.recipientEmail === email) && hasDiscoverableParticipants(message, emails, ['senderEmail', 'recipientEmail'])).map((message) => ({ ...message, senderAvatar: profiles.get(message.senderEmail) || '', recipientAvatar: profiles.get(message.recipientEmail) || '' })));
 });
 
 router.patch('/messages/:id/read', (request, response) => {
