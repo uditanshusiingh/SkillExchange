@@ -745,6 +745,17 @@ html[data-theme='dark'] .profile-view .modal-close:hover { background: #294438; 
 html[data-theme='dark'] .profile-view .profile-about { background: #243d30; }
 html[data-theme='dark'] .profile-view .profile-about p { color: #c5d1c7; }
 html[data-theme='dark'] .profile-view .profile-columns > div { background: #eff3ed; border-color: #b8cbb9; }
+html[data-theme='dark'] .modal-panel.profile-view { background: #182c24; border-color: #466050; color: #eef4ed; }
+html[data-theme='dark'] .profile-view .profile-heading h2 { color: #eef4ed; }
+html[data-theme='dark'] .profile-view .profile-label,
+html[data-theme='dark'] .profile-view .credential-label,
+html[data-theme='dark'] .profile-view .profile-heading small { color: #aebdb1; }
+html[data-theme='dark'] .profile-view .profile-avatar { box-shadow: 0 0 0 5px #294438; }
+html[data-theme='dark'] .profile-view .profile-columns > div { background: #16261f; border-color: #365347; }
+html[data-theme='dark'] .profile-view .profile-tags span { background: #2b493c; color: #dce9dc; }
+html[data-theme='dark'] .profile-view .completion-block > div:first-child { color: #aebdb1; }
+html[data-theme='dark'] .profile-view .completion-block strong { color: #d9ed67; }
+html[data-theme='dark'] .profile-view .completion-track { background: #294438; }
 
 .save-skill-button { position: absolute; right: 52px; top: 13px; width: 31px; height: 31px; display: grid; place-items: center; border-radius: 50%; color: var(--forest); background: rgba(251,248,241,.82); transition: transform .2s, background .2s; }
 .save-skill-button:hover { transform: translateY(-2px); background: var(--lime); }
