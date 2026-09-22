@@ -1266,6 +1266,51 @@ html[data-theme='dark'] .visual-header, html[data-theme='dark'] .visual-footer, 
   background: var(--peach);
 }
 html[data-theme='dark'] .back-to-top { border-color: rgba(217,237,103,.4); }
+html[data-theme='dark'] .modal-panel.exchanges-panel input,
+html[data-theme='dark'] .modal-panel.exchanges-panel textarea,
+html[data-theme='dark'] .modal-panel.exchanges-panel select,
+html[data-theme='dark'] .modal-panel.saved-panel input,
+html[data-theme='dark'] .modal-panel.saved-panel textarea,
+html[data-theme='dark'] .modal-panel.saved-panel select,
+html[data-theme='dark'] .modal-panel.settings-panel input,
+html[data-theme='dark'] .modal-panel.settings-panel textarea,
+html[data-theme='dark'] .modal-panel.settings-panel select,
+html[data-theme='dark'] .modal-panel.password-panel input,
+html[data-theme='dark'] .modal-panel.password-panel textarea,
+html[data-theme='dark'] .modal-panel.password-panel select,
+html[data-theme='dark'] .modal-panel.safety-panel input,
+html[data-theme='dark'] .modal-panel.safety-panel textarea,
+html[data-theme='dark'] .modal-panel.safety-panel select { background: #102019 !important; border-color: #466050 !important; color: #eef4ed !important; }
+html[data-theme='dark'] .modal-panel input::placeholder,
+html[data-theme='dark'] .modal-panel textarea::placeholder { color: #9fb7a5 !important; opacity: 1; }
+html[data-theme='dark'] .modal-panel.exchanges-panel h2,
+html[data-theme='dark'] .modal-panel.saved-panel h2,
+html[data-theme='dark'] .modal-panel.settings-panel h2,
+html[data-theme='dark'] .modal-panel.password-panel h2,
+html[data-theme='dark'] .modal-panel.safety-panel h2,
+html[data-theme='dark'] .modal-panel.exchanges-panel strong,
+html[data-theme='dark'] .modal-panel.saved-panel strong,
+html[data-theme='dark'] .modal-panel.settings-panel strong,
+html[data-theme='dark'] .modal-panel.password-panel strong,
+html[data-theme='dark'] .modal-panel.safety-panel strong { color: #eef4ed; }
+html[data-theme='dark'] .modal-panel.exchanges-panel .eyebrow,
+html[data-theme='dark'] .modal-panel.saved-panel .eyebrow,
+html[data-theme='dark'] .modal-panel.settings-panel .eyebrow,
+html[data-theme='dark'] .modal-panel.password-panel .eyebrow,
+html[data-theme='dark'] .modal-panel.safety-panel .eyebrow,
+html[data-theme='dark'] .modal-panel.exchanges-panel .profile-label,
+html[data-theme='dark'] .modal-panel.saved-panel .profile-label,
+html[data-theme='dark'] .modal-panel.settings-panel .profile-label,
+html[data-theme='dark'] .modal-panel.password-panel .profile-label,
+html[data-theme='dark'] .modal-panel.safety-panel .profile-label { color: #aebdb1; }
+html[data-theme='dark'] .exchange-tabs button span { background: #2b493c; color: #dce9dc; }
+html[data-theme='dark'] .status-active { background: #2b493c; color: #bfe3c8; }
+html[data-theme='dark'] .status-pending { background: #553f32; color: #f0c19f; }
+html[data-theme='dark'] .modal-panel.settings-panel .settings-heading,
+html[data-theme='dark'] .modal-panel.settings-panel .setting-row,
+html[data-theme='dark'] .modal-panel.settings-panel .settings-select { color: #dce9dc; }
+html[data-theme='dark'] .modal-panel.safety-panel .safety-section strong,
+html[data-theme='dark'] .modal-panel.safety-panel .safety-section small { color: #dce9dc; }
 @media (max-width: 640px) {
   .back-to-top { right: 16px; bottom: 16px; width: 42px; height: 42px; }
 }
