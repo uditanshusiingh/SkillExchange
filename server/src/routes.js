@@ -538,7 +538,9 @@ router.post('/messages', async (request, response) => {
 router.get('/messages/:email', async (request, response) => {
   const email = decodeURIComponent(request.params.email).toLowerCase();
   const emails = await discoverableEmails();
-  const profiles = new Map(readProfiles().map((profile) => [profile.email, profile.avatar || '']));
+  const profiles = process.env.MONGODB_URI
+    ? new Map((await Profile.find({ email: { $in: [...emails] } }).select('email avatar').lean()).map((profile) => [profile.email, profile.avatar || '']))
+    : new Map(readProfiles().map((profile) => [profile.email, profile.avatar || '']));
   return response.json(readMessages().filter((message) => (message.senderEmail === email || message.recipientEmail === email) && hasDiscoverableParticipants(message, emails, ['senderEmail', 'recipientEmail'])).map((message) => ({ ...message, senderAvatar: profiles.get(message.senderEmail) || '', recipientAvatar: profiles.get(message.recipientEmail) || '' })));
 });
 
