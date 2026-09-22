@@ -674,6 +674,8 @@ html[data-theme='dark'] .message-composer input::placeholder { color: #9fb7a5; }
 .message-composer button { width: 39px; height: 39px; display: grid; place-items: center; border-radius: 50%; background: var(--forest); color: var(--cream); }
 html[data-theme='dark'] .message-composer input { background: #102019; border-color: #466050; color: #eef4ed; caret-color: #d9ed67; }
 html[data-theme='dark'] .message-composer input::placeholder { color: #9fb7a5; opacity: 1; }
+.app-shell.dark-mode .modal-panel.messages-workspace .message-composer input { background: #102019 !important; border-color: #466050 !important; color: #eef4ed !important; caret-color: #d9ed67; }
+.app-shell.dark-mode .modal-panel.messages-workspace .message-composer input::placeholder { color: #9fb7a5 !important; opacity: 1; }
 html[data-theme='dark'] .notification-button { color: #c5d1c7; }
 html[data-theme='dark'] .notification-button:hover { background: #294438; }
 html[data-theme='dark'] .notification-popover, html[data-theme='dark'] .message-row { background: #eff3ed; border-color: #b8cbb9; }
