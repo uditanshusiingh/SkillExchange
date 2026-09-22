@@ -664,7 +664,8 @@ html[data-theme='dark'] .message-composer input::placeholder { color: #9fb7a5; }
 .message-list { display: grid; gap: 8px; margin: 24px 0; }
 .message-row { display: flex; align-items: center; gap: 11px; width: 100%; padding: 13px; border: 1px solid #d7e0d5; border-radius: 8px; background: #fffdf9; text-align: left; transition: transform .2s, box-shadow .2s; }
 .message-row:hover { transform: translateX(3px); box-shadow: 4px 4px 0 #dfeedd; }
-.message-avatar { width: 39px; height: 39px; display: grid; place-items: center; border-radius: 50%; background: var(--peach); color: var(--forest); font: 10px 'DM Mono', monospace; flex-shrink: 0; }
+.message-avatar { width: 39px; height: 39px; display: grid; place-items: center; border-radius: 50%; background: var(--peach); color: var(--forest); font: 10px 'DM Mono', monospace; flex-shrink: 0; overflow: hidden; }
+.message-avatar img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center 27%; border-radius: 50%; }
 .message-copy { min-width: 0; flex: 1; }
 .message-copy strong, .message-copy small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .message-copy strong { font-size: 13px; }
