@@ -554,6 +554,7 @@ function AuthGate({ onLogin }) {
   const [resetEmail, setResetEmail] = useState('');
   const [resetStatus, setResetStatus] = useState('');
   const [resetLink, setResetLink] = useState('');
+  useEffect(() => { const signupTab = document.querySelector('.auth-tabs button:nth-child(2)'); if (signupTab) signupTab.textContent = 'Sign up'; }, [mode]);
   const switchMode = (nextMode) => { setMode(nextMode); setForm({ name: '', email: '', password: '', teaches: '', wants: '' }); setError(''); setResetStatus(''); setResetLink(''); };
   const requestReset = async () => {
     if (!resetEmail.trim()) { setResetStatus('Please enter a valid email.'); return; }
@@ -575,7 +576,7 @@ function AuthGate({ onLogin }) {
   };
   const submit = async (event) => {
     event.preventDefault();
-    setError(''); 
+    setError('');
     setNotice('');
     setLoading(true);
     try {
@@ -687,14 +688,6 @@ function RealExchangesPanel({ user, onClose, onOpenMessages }) {
     getExchanges(user.email).then((items) => { if (!cancelled) setExchanges(Array.isArray(items) ? items : []); }).catch((requestError) => { if (!cancelled) setError(requestError.message || 'Could not load exchanges.'); }).finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, [user?.email]);
-    const [error, setError] = useState('');
-    const [notice, setNotice] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [resetLoading, setResetLoading] = useState(false);
-    const [resetOpen, setResetOpen] = useState(false);
-    const [resetEmail, setResetEmail] = useState('');
-    const [resetStatus, setResetStatus] = useState('');
-    const [resetLink, setResetLink] = useState('');
   const rows = exchanges.map((exchange) => {
     const isRequester = exchange.requesterEmail?.toLowerCase() === normalizedEmail;
     return { ...exchange, participantName: isRequester ? exchange.ownerName : exchange.requesterName, participantEmail: isRequester ? exchange.ownerEmail : exchange.requesterEmail, ownSkill: isRequester ? exchange.requesterSkill : exchange.ownerSkill, participantSkill: isRequester ? exchange.ownerSkill : exchange.requesterSkill };
