@@ -321,9 +321,11 @@ router.delete('/profiles/:email', (request, response) => {
 });
 
 router.post('/reports', (request, response) => {
-  const { reporterEmail, reportedEmail, reason, details = '' } = request.body;
+  const { reporterEmail, reportedEmail, reason, details = '', category = 'Other', priority = 'medium' } = request.body;
   if (!reporterEmail || !reportedEmail || !reason) return response.status(400).json({ message: 'Reporter, reported user and reason are required.' });
-  const report = { _id: `report-${Date.now()}`, reporterEmail, reportedEmail, reason, details, status: 'open', createdAt: new Date().toISOString() };
+  const now = new Date().toISOString();
+  const safePriority = ['low', 'medium', 'high'].includes(String(priority).toLowerCase()) ? String(priority).toLowerCase() : 'medium';
+  const report = { _id: `report-${Date.now()}`, reporterEmail, reportedEmail, reason, details, category, priority: safePriority, assignedTo: '', internalNotes: [], status: 'open', createdAt: now, updatedAt: now, history: [{ action: 'created', status: 'open', at: now, actor: 'system' }] };
   const reports = readCollection('reports.json');
   writeCollection('reports.json', [report, ...reports]);
   return response.status(201).json({ message: 'Report submitted. Our team will review it.', report });
@@ -338,8 +340,16 @@ router.post('/blocks', (request, response) => {
 });
 
 router.get('/admin/reports', (request, response) => {
-  if (!process.env.ADMIN_KEY || request.headers['x-admin-key'] !== process.env.ADMIN_KEY) return response.status(403).json({ message: 'Admin access required.' });
-  return response.json(readCollection('reports.json'));
+  if (!requireAdmin(request, response)) return;
+  const reports = readCollection('reports.json');
+  return response.json(reports.map((report) => ({
+    ...report,
+    priority: report.priority || 'medium',
+    category: report.category || 'Other',
+    assignedTo: report.assignedTo || '',
+    internalNotes: Array.isArray(report.internalNotes) ? report.internalNotes : [],
+    history: Array.isArray(report.history) && report.history.length ? report.history : [{ action: 'legacy', status: report.status || 'open', at: report.createdAt, actor: 'system' }]
+  })));
 });
 
 router.get('/admin/stats', async (request, response) => {
@@ -1011,11 +1021,25 @@ router.patch('/admin/reports/:id', async (request, response) => {
   const reports = readCollection('reports.json');
   const index = reports.findIndex((item) => item._id === request.params.id);
   if (index === -1) return response.status(404).json({ message: 'Report not found.' });
-  const allowed = ['open', 'resolved', 'dismissed'];
-  if (!allowed.includes(request.body.status)) return response.status(400).json({ message: 'Invalid report status.' });
-  reports[index] = { ...reports[index], status: request.body.status, reviewedAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
-  await recordAdminLog(request, { action: 'report_status_updated', targetType: 'report', targetId: reports[index]._id, details: `Report status changed to ${request.body.status}.` });
+  const current = reports[index];
+  const nextStatus = request.body.status || current.status || 'open';
+  if (!['open', 'resolved', 'dismissed'].includes(nextStatus)) return response.status(400).json({ message: 'Invalid report status.' });
+  const priority = request.body.priority && ['low', 'medium', 'high'].includes(request.body.priority) ? request.body.priority : (current.priority || 'medium');
+  const category = request.body.category ? String(request.body.category).trim() : (current.category || 'Other');
+  const assignedTo = request.body.assignedTo !== undefined ? String(request.body.assignedTo || '').trim() : (current.assignedTo || '');
+  const note = request.body.internalNote !== undefined ? String(request.body.internalNote || '').trim() : '';
+  const now = new Date().toISOString();
+  const history = Array.isArray(current.history) ? current.history : [{ action: 'legacy', status: current.status || 'open', at: current.createdAt || now, actor: 'system' }];
+  const changed = current.status !== nextStatus || current.priority !== priority || (current.assignedTo || '') !== assignedTo || (current.category || 'Other') !== category;
+  if (changed) history.push({ action: 'updated', status: nextStatus, priority, category, assignedTo, at: now, actor: adminIdentity(request) });
+  const internalNotes = Array.isArray(current.internalNotes) ? current.internalNotes : [];
+  if (note) {
+    internalNotes.push({ note, at: now, actor: adminIdentity(request) });
+    history.push({ action: 'note_added', at: now, actor: adminIdentity(request) });
+  }
+  reports[index] = { ...current, status: nextStatus, priority, category, assignedTo, internalNotes, history, updatedAt: now, reviewedAt: nextStatus === 'open' ? current.reviewedAt : now };
   writeCollection('reports.json', reports);
+  await recordAdminLog(request, { action: 'report_updated', targetType: 'report', targetId: current._id, details: `Report updated: ${nextStatus}, ${priority}, ${category}, assigned to ${assignedTo || 'unassigned'}.` });
   return response.json(reports[index]);
 });
 
