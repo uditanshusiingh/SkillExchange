@@ -14,6 +14,8 @@ const profileSchema = new mongoose.Schema({
   blockedEmails: [String],
   profileVisible: { type: Boolean, default: true },
   allowMessages: { type: Boolean, default: true },
+  accountBlocked: { type: Boolean, default: false },
+  suspendedUntil: { type: Date, default: null },
   portfolioUrl: String,
   resumeName: String,
   certificates: [{ title: String, issuer: String, year: String }],
