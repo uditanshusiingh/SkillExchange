@@ -125,3 +125,36 @@ export async function getLeaderboard() { const response = await fetch(`${API_URL
 export async function getGroups() { const response = await fetch(`${API_URL}/groups`); return readResponse(response, 'Could not load groups'); }
 export async function joinGroup(id) { const response = await fetch(`${API_URL}/groups/${id}/join`, { method: 'POST' }); return readResponse(response, 'Could not join group'); }
 export async function createVideoRoom() { const response = await fetch(`${API_URL}/video-rooms`, { method: 'POST' }); return readResponse(response, 'Could not create video room'); }
+
+export async function adminLogin(adminKey) {
+  const response = await fetch(`${API_URL}/admin/auth`, { method: 'POST', headers: { 'x-admin-key': adminKey || '' } });
+  return readResponse(response, 'Admin login failed');
+}
+export async function getAdminOverview(adminKey) {
+  const response = await fetch(`${API_URL}/admin/overview`, { headers: { 'x-admin-key': adminKey || '' } });
+  return readResponse(response, 'Could not load admin overview');
+}
+export async function getAdminSkills(adminKey) {
+  const response = await fetch(`${API_URL}/admin/skills`, { headers: { 'x-admin-key': adminKey || '' } });
+  return readResponse(response, 'Could not load admin skills');
+}
+export async function deleteAdminSkill(adminKey, id) {
+  const response = await fetch(`${API_URL}/admin/skills/${encodeURIComponent(id)}`, { method: 'DELETE', headers: { 'x-admin-key': adminKey || '' } });
+  return readResponse(response, 'Could not delete skill');
+}
+export async function getAdminReports(adminKey) {
+  const response = await fetch(`${API_URL}/admin/reports`, { headers: { 'x-admin-key': adminKey || '' } });
+  return readResponse(response, 'Could not load reports');
+}
+export async function updateAdminReport(adminKey, id, status) {
+  const response = await fetch(`${API_URL}/admin/reports/${encodeURIComponent(id)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey || '' }, body: JSON.stringify({ status }) });
+  return readResponse(response, 'Could not update report');
+}
+export async function getAdminExchanges(adminKey) {
+  const response = await fetch(`${API_URL}/admin/exchanges`, { headers: { 'x-admin-key': adminKey || '' } });
+  return readResponse(response, 'Could not load exchanges');
+}
+export async function updateAdminExchange(adminKey, id, status) {
+  const response = await fetch(`${API_URL}/admin/exchanges/${encodeURIComponent(id)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey || '' }, body: JSON.stringify({ status }) });
+  return readResponse(response, 'Could not update exchange');
+}
