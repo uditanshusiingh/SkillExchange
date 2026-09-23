@@ -769,7 +769,8 @@ html[data-theme='dark'] .notification-clear:hover { color: #d9ed67; }
 .admin-summary-card strong { font-size: 24px; letter-spacing: -.04em; }
 .admin-key-row { margin-bottom: 14px; }
 .admin-refresh-button { white-space: nowrap; }
-.admin-notice { position: static; z-index: 120; display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; margin: 0 0 14px; padding: 11px 13px; border: 1px solid #b8cbb9; border-radius: 7px; background: #e5eee2; color: var(--forest); box-shadow: 0 6px 18px rgba(25,53,42,.12); font-size: 11px; line-height: 1.45; animation: modal-in .2s ease both; }
+.admin-user-card { position: relative; }
+.admin-notice { position: absolute; z-index: 120; top: 50%; left: 50%; display: flex; align-items: center; justify-content: space-between; gap: 12px; width: min(420px, calc(100% - 36px)); margin: 0; padding: 13px 15px; transform: translate(-50%, -50%); border: 1px solid #b8cbb9; border-radius: 7px; background: #e5eee2; color: var(--forest); box-shadow: 0 12px 30px rgba(25,53,42,.22); font-size: 11px; line-height: 1.45; animation: modal-in .2s ease both; }
 .admin-notice button { display: grid; place-items: center; flex: 0 0 auto; padding: 3px; color: currentColor; }
 .admin-user-list { display: grid; gap: 14px; overflow-y: auto; padding-right: 6px; }
 .admin-user-card { border: 1px solid #d7ddd4; border-radius: 12px; background: #fffdf9; padding: 15px; box-shadow: 0 6px 18px rgba(25,53,42,.04); }

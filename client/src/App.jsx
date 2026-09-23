@@ -464,7 +464,6 @@ function AdminDashboardPanel({ adminKey, setAdminKey, onClose }) {
         const result = await sendAdminVerification(adminKey, userId);
         const successMessage = result.developmentToken ? `Verification link sent successfully. Token: ${result.developmentToken}` : 'Verification link sent successfully.';
         showNotice(successMessage, userId);
-        window.alert(successMessage);
         return;
       }
       const updated = await updateAdminUser(adminKey, user._id || user.email, updates);
