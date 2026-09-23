@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   Activity, ArrowLeft, BarChart3, CheckCircle2, ChevronRight, CircleAlert,
-  Clock3, Database, Edit3, Eye, EyeOff, FileText, LayoutDashboard, LogOut, MapPin, Menu, MessageSquare, RefreshCw, Search,
+  Bell, Clock3, Database, Edit3, Eye, EyeOff, FileText, LayoutDashboard, LogOut, MapPin, Menu, MessageSquare, RefreshCw, Search,
   Shield, ShieldCheck, Tag, Trash2, UserCheck, Users, X
 } from 'lucide-react';
 import {
   adminLogin, deleteAdminSkill, deleteAdminUser, getAdminExchanges, getAdminReports,
-  getAdminSkills, getAdminOverview, getAdminAnalytics, getAdminUsers, getAdminUserActivity, getAdminLogs, adminLogout, updateAdminExchange,
+  getAdminSkills, getAdminOverview, getAdminAnalytics, getAdminNotifications, getAdminUsers, getAdminUserActivity, getAdminLogs, adminLogout, updateAdminExchange,
   updateAdminReport, updateAdminUser, updateAdminSkillModeration, getAdminSkillCategories, addAdminSkillCategory, deleteAdminSkillCategory, getAdminSkillStatistics
 } from './api';
 import './admin.css';
@@ -67,6 +67,8 @@ export default function AdminApp() {
   const [skills, setSkills] = useState([]);
   const [exchanges, setExchanges] = useState([]);
   const [reports, setReports] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+  const [notificationRead, setNotificationRead] = useState(() => { try { return JSON.parse(localStorage.getItem('skillswap-admin-notification-read') || '[]'); } catch { return []; } });
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [notice, setNotice] = useState('');
@@ -102,9 +104,9 @@ export default function AdminApp() {
     setLoading(true);
     setError('');
     try {
-      const [nextStats, nextUsers, nextSkills, nextAnalytics, nextExchanges, nextReports, nextLogs, nextCategories, nextSkillStats] = await Promise.all([
+      const [nextStats, nextUsers, nextSkills, nextAnalytics, nextExchanges, nextReports, nextLogs, nextCategories, nextSkillStats, nextNotifications] = await Promise.all([
         getAdminOverview(key), getAdminUsers(key), getAdminSkills(key), getAdminAnalytics(key),
-        getAdminExchanges(key), getAdminReports(key), getAdminLogs(key), getAdminSkillCategories(key), getAdminSkillStatistics(key)
+        getAdminExchanges(key), getAdminReports(key), getAdminLogs(key), getAdminSkillCategories(key), getAdminSkillStatistics(key), getAdminNotifications(key)
       ]);
       setStats({ total: nextStats.totalUsers, verified: nextStats.verifiedUsers, discoverable: nextStats.visibleUsers, skills: nextStats.skills, exchanges: nextStats.exchanges, reports: nextStats.openReports });
       setAnalytics(nextAnalytics);
@@ -115,6 +117,7 @@ export default function AdminApp() {
       setAdminLogs(nextLogs);
       setSkillCategories(nextCategories);
       setSkillStats(nextSkillStats);
+      setNotifications(nextNotifications);
       setAuthenticated(true);
     } catch (err) {
       if (/admin access|403|401/i.test(err.message || '')) logout();
@@ -308,6 +311,7 @@ export default function AdminApp() {
     ['overview', LayoutDashboard, 'Overview'],
     ['analytics', BarChart3, 'Analytics'],
     ['security', ShieldCheck, 'Security & Logs'],
+    ['notifications', Bell, 'Notifications'],
     ['users', Users, 'Users'],
     ['skills', BarChart3, 'Skills'],
     ['exchanges', Activity, 'Exchanges'],
@@ -342,6 +346,18 @@ export default function AdminApp() {
 
       {notice && <div className="admin-notice"><CheckCircle2 size={17} />{notice}<button onClick={() => setNotice('')}><X size={15} /></button></div>}
       {error && <div className="admin-error-bar"><CircleAlert size={17} />{error}<button onClick={() => setError('')}><X size={15} /></button></div>}
+
+      {section === 'notifications' && <section className="admin-notifications-page">
+        <div className="admin-section-head"><div><span className="admin-eyebrow">ACTIVITY FEED</span><h2>Admin Notifications</h2><p>Recent platform events that may need administrator attention.</p></div><button className="admin-secondary-button" onClick={() => { const ids = notifications.map((item) => item.id); setNotificationRead(ids); localStorage.setItem('skillswap-admin-notification-read', JSON.stringify(ids)); }}>Mark all as read</button></div>
+        <div className="admin-notification-summary"><div><strong>{notifications.filter((item) => !notificationRead.includes(item.id)).length}</strong><span>Unread</span></div><div><strong>{notifications.length}</strong><span>Recent events</span></div><div><strong>4</strong><span>Event types</span></div></div>
+        <div className="admin-notification-list">{notifications.map((item) => {
+          const unread = !notificationRead.includes(item.id);
+          const Icon = item.type === 'report' ? CircleAlert : item.type === 'user' ? UserCheck : item.type === 'skill' ? Tag : Activity;
+          return <button key={item.id} className={`admin-notification-item ${unread ? 'unread' : ''}`} onClick={() => { const next = Array.from(new Set([...notificationRead, item.id])); setNotificationRead(next); localStorage.setItem('skillswap-admin-notification-read', JSON.stringify(next)); }}>
+            <span className={`admin-notification-icon ${item.type}`}><Icon size={17}/></span><span className="admin-notification-body"><strong>{item.title}</strong><span>{item.detail}</span><small>{new Date(item.createdAt).toLocaleString()}</small></span>{unread && <i className="admin-notification-dot"/>}
+          </button>;
+        })}{!notifications.length && <div className="admin-empty">No recent notifications.</div>}</div>
+      </section>}
 
       {section === 'overview' && <section>
         <div className="admin-stats-grid">
