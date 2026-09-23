@@ -319,7 +319,7 @@ export default function AdminApp() {
           <div className="admin-card-head"><div><span className="admin-eyebrow">NEW USERS</span><h2>{analyticsPeriod[0].toUpperCase() + analyticsPeriod.slice(1)} sign-ups</h2></div><span className="data-chip">{analyticsRows.reduce((sum, item) => sum + (item.users || 0), 0)} total</span></div>
           <div className="admin-user-bars">{analyticsRows.map((item) => <div className="admin-user-bar-wrap" key={item.key} title={`${item.label}: ${item.users} new users`}><div className="admin-user-bar" style={{height: `${((item.users || 0) / maxUsers) * 180}px`}}></div><span>{item.label}</span></div>)}</div>
         </div>
-      </section>
+      </section>}
 
       {section !== 'overview' && <section className="admin-card admin-table-card">
         <div className="admin-card-head">
