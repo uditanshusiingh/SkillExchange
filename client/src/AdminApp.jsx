@@ -7,7 +7,7 @@ import {
 import {
   adminLogin, deleteAdminSkill, deleteAdminUser, getAdminExchanges, getAdminReports,
   getAdminSkills, getAdminOverview, getAdminAnalytics, getAdminUsers, getAdminUserActivity, getAdminLogs, adminLogout, updateAdminExchange,
-  updateAdminReport, updateAdminUser
+  updateAdminReport, updateAdminUser, updateAdminSkillModeration, getAdminSkillCategories, addAdminSkillCategory, deleteAdminSkillCategory, getAdminSkillStatistics
 } from './api';
 import './admin.css';
 
@@ -85,6 +85,9 @@ export default function AdminApp() {
   const [analytics, setAnalytics] = useState(null);
   const [analyticsPeriod, setAnalyticsPeriod] = useState('daily');
   const [adminLogs, setAdminLogs] = useState([]);
+  const [skillCategories, setSkillCategories] = useState([]);
+  const [skillStats, setSkillStats] = useState({ total: 0, pending: 0, approved: 0, rejected: 0, featured: 0, categories: 0, flaggedDuplicates: 0, lowQuality: 0 });
+  const [categoryName, setCategoryName] = useState('');
 
   const logout = () => {
     adminLogout(adminKey).catch(() => {});
@@ -97,9 +100,9 @@ export default function AdminApp() {
     setLoading(true);
     setError('');
     try {
-      const [nextStats, nextUsers, nextSkills, nextAnalytics, nextExchanges, nextReports, nextLogs] = await Promise.all([
+      const [nextStats, nextUsers, nextSkills, nextAnalytics, nextExchanges, nextReports, nextLogs, nextCategories, nextSkillStats] = await Promise.all([
         getAdminOverview(key), getAdminUsers(key), getAdminSkills(key), getAdminAnalytics(key),
-        getAdminExchanges(key), getAdminReports(key), getAdminLogs(key)
+        getAdminExchanges(key), getAdminReports(key), getAdminLogs(key), getAdminSkillCategories(key), getAdminSkillStatistics(key)
       ]);
       setStats({ total: nextStats.totalUsers, verified: nextStats.verifiedUsers, discoverable: nextStats.visibleUsers, skills: nextStats.skills, exchanges: nextStats.exchanges, reports: nextStats.openReports });
       setAnalytics(nextAnalytics);
@@ -108,6 +111,8 @@ export default function AdminApp() {
       setExchanges(nextExchanges);
       setReports(nextReports);
       setAdminLogs(nextLogs);
+      setSkillCategories(nextCategories);
+      setSkillStats(nextSkillStats);
       setAuthenticated(true);
     } catch (err) {
       if (/admin access|403|401/i.test(err.message || '')) logout();
@@ -230,6 +235,39 @@ export default function AdminApp() {
     if (days === 0) return userAction(user, { suspendedUntil: null });
     const until = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
     return userAction(user, { suspendedUntil: until, profileVisible: false });
+  };
+
+  const moderateSkill = async (skill, status, featured = skill.featured) => {
+    try {
+      const updated = await updateAdminSkillModeration(adminKey, skill._id, { status, featured, moderationNote: skill.moderationNote || '' });
+      setSkills((items) => items.map((item) => item._id === skill._id ? { ...item, ...updated } : item));
+      setSkillStats(await getAdminSkillStatistics(adminKey));
+      setNotice('Skill ' + status + '.');
+    } catch (err) { setError(err.message); }
+  };
+
+  const toggleFeaturedSkill = async (skill) => {
+    await moderateSkill(skill, skill.moderationStatus || 'pending', !skill.featured);
+  };
+
+  const addSkillCategory = async () => {
+    const name = categoryName.trim();
+    if (!name) return;
+    try {
+      const created = await addAdminSkillCategory(adminKey, name);
+      setSkillCategories((items) => [...items, created]);
+      setCategoryName('');
+      setNotice('Skill category added.');
+    } catch (err) { setError(err.message); }
+  };
+
+  const removeSkillCategory = async (name) => {
+    if (!window.confirm('Delete the "' + name + '" category?')) return;
+    try {
+      await deleteAdminSkillCategory(adminKey, name);
+      setSkillCategories((items) => items.filter((item) => item !== name));
+      setNotice('Skill category deleted.');
+    } catch (err) { setError(err.message); }
   };
 
   const deleteSkill = async (skill) => {
@@ -368,7 +406,13 @@ export default function AdminApp() {
 
 {section === 'users' && <div className="admin-table-wrap"><table><thead><tr><th>User</th><th>Location</th><th>Status</th><th>Skills</th><th>Actions</th></tr></thead><tbody>{filteredUsers.map((u) => <tr key={u._id || u.email}><td><div className="table-user"><span className="admin-avatar">{(u.name || 'U').slice(0,2).toUpperCase()}</span><div><strong>{u.name || 'Unnamed'}</strong><small>{u.email}</small></div></div></td><td>{u.location || '—'}</td><td><span className={u.emailVerified || u.verified ? 'pill success' : 'pill'}>{u.emailVerified || u.verified ? 'Verified' : 'Unverified'}</span><span className={u.profileVisible === false ? 'pill muted' : 'pill success'}>{u.profileVisible === false ? 'Hidden' : 'Visible'}</span></td><td>{u.teaches?.length ? u.teaches.slice(0,3).join(', ') : '—'}</td><td><div className="table-actions"><button title="View user details & activity" onClick={() => openUserEditor(u)}><Eye size={15} /></button><button title="Edit profile" onClick={() => openUserEditor(u)}><Edit3 size={15} /></button><button title="Verify / unverify" onClick={() => userAction(u, { verified: !(u.emailVerified || u.verified) })}><UserCheck size={15} /></button><button title={u.profileVisible === false ? 'Show profile' : 'Hide profile'} onClick={() => userAction(u, { profileVisible: u.profileVisible === false })}>{u.profileVisible === false ? <Eye size={15} /> : <EyeOff size={15} />}</button><button className={u.accountBlocked ? '' : 'danger'} title={u.accountBlocked ? 'Unblock user' : 'Block user'} onClick={() => toggleUserBlocked(u)}><Shield size={15} /></button><button className="danger" title="Delete permanently" onClick={() => deleteUser(u)}><Trash2 size={15} /></button></div></td></tr>)}</tbody></table>{!filteredUsers.length && <div className="admin-empty">No users found.</div>}</div>}
 
-        {section === 'skills' && <div className="admin-table-wrap"><table><thead><tr><th>Skill</th><th>Category</th><th>Level</th><th>Teacher</th><th>Actions</th></tr></thead><tbody>{filteredSkills.map((s) => <tr key={s._id}><td><div className="table-primary"><span className="table-icon skill"><Tag size={15}/></span><div><strong>{s.title}</strong><small>{s.description || 'No description'}</small></div></div></td><td><span className="data-chip">{s.category || 'General'}</span></td><td><span className="pill">{s.level || '—'}</span></td><td>{s.teacher?.name || '—'}</td><td><div className="table-actions"><button title="View skill" onClick={() => setSkillModal(s)}><Eye size={15}/></button><button className="danger" title="Delete" onClick={() => deleteSkill(s)}><Trash2 size={15} /></button></div></td></tr>)}</tbody></table>{!filteredSkills.length && <div className="admin-empty">No skills found.</div>}</div>}
+        {section === 'skills' && <div className="admin-skill-moderation">
+  <div className="admin-skill-stats-grid">
+    <div className="admin-card"><span>All skills</span><strong>{skillStats.total}</strong></div><div className="admin-card"><span>Pending</span><strong>{skillStats.pending}</strong></div><div className="admin-card"><span>Approved</span><strong>{skillStats.approved}</strong></div><div className="admin-card"><span>Rejected</span><strong>{skillStats.rejected}</strong></div><div className="admin-card"><span>Featured</span><strong>{skillStats.featured}</strong></div><div className="admin-card"><span>Duplicates</span><strong>{skillStats.flaggedDuplicates}</strong></div><div className="admin-card"><span>Low quality</span><strong>{skillStats.lowQuality}</strong></div><div className="admin-card"><span>Categories</span><strong>{skillStats.categories}</strong></div>
+  </div>
+  <div className="admin-card admin-category-manager"><div className="admin-card-head"><div><span className="admin-eyebrow">CATEGORIES</span><h2>Skill categories</h2></div></div><div className="admin-category-add"><input value={categoryName} onChange={(e) => setCategoryName(e.target.value)} placeholder="New category name" onKeyDown={(e) => { if (e.key === 'Enter') addSkillCategory(); }}/><button className="admin-primary-button" onClick={addSkillCategory}>Add</button></div><div className="admin-category-list">{skillCategories.map((category) => <span className="data-chip" key={category}>{category}<button onClick={() => removeSkillCategory(category)} aria-label={'Delete ' + category}><X size={12}/></button></span>)}</div></div>
+  <div className="admin-table-wrap"><table><thead><tr><th>Skill</th><th>Category</th><th>Quality</th><th>Status</th><th>Featured</th><th>Actions</th></tr></thead><tbody>{filteredSkills.map((s) => <tr key={s._id}><td><div className="table-primary"><span className="table-icon skill"><Tag size={15}/></span><div><strong>{s.title}</strong><small>{s.description || 'No description'}</small></div></div></td><td><span className="data-chip">{s.category || 'General'}</span></td><td>{s.moderationFlags?.duplicate && <span className="pill warning">Duplicate</span>}{s.moderationFlags?.lowQuality && <span className="pill danger">Low quality</span>}{!s.moderationFlags?.duplicate && !s.moderationFlags?.lowQuality && <span className="pill success">Looks good</span>}</td><td><span className={'pill ' + (s.moderationStatus === 'approved' ? 'success' : s.moderationStatus === 'rejected' ? 'muted' : 'warning')}>{s.moderationStatus || 'pending'}</span></td><td>{s.featured ? <span className="pill success">Featured</span> : <span className="pill muted">Standard</span>}</td><td><div className="table-actions"><button title="Approve" onClick={() => moderateSkill(s, 'approved')}><CheckCircle2 size={15}/></button><button title="Reject" onClick={() => moderateSkill(s, 'rejected')}><CircleAlert size={15}/></button><button title={s.featured ? 'Remove featured' : 'Mark featured'} onClick={() => toggleFeaturedSkill(s)}><Tag size={15}/></button><button title="View skill" onClick={() => setSkillModal(s)}><Eye size={15}/></button><button className="danger" title="Delete" onClick={() => deleteSkill(s)}><Trash2 size={15}/></button></div></td></tr>)}</tbody></table>{!filteredSkills.length && <div className="admin-empty">No skills found.</div>}</div>
+</div>}
 
         {section === 'exchanges' && <div className="admin-table-wrap"><table><thead><tr><th>Skill</th><th>Requester</th><th>Owner</th><th>Status</th><th>Change</th></tr></thead><tbody>{filteredExchanges.map((e) => <tr key={e._id}><td><div className="table-primary"><span className="table-icon exchange"><Activity size={15}/></span><div><strong>{e.skillTitle || 'Skill exchange'}</strong><small>{e.offer || 'No offer text'}</small></div></div></td><td><strong>{e.requesterName || e.requesterEmail}</strong><small>{e.requesterEmail}</small></td><td><strong>{e.ownerName || e.ownerEmail}</strong><small>{e.ownerEmail}</small></td><td><span className={`pill ${e.status === 'accepted' || e.status === 'completed' ? 'success' : e.status === 'rejected' ? 'muted' : 'warning'}`}>{e.status || 'pending'}</span></td><td><div className="table-actions"><button title="View exchange" onClick={() => setExchangeModal(e)}><Eye size={15}/></button><select value={e.status || 'pending'} onChange={(event) => changeExchangeStatus(e, event.target.value)}><option value="pending">Pending</option><option value="accepted">Accepted</option><option value="rejected">Rejected</option><option value="completed">Completed</option></select></div></td></tr>)}</tbody></table>{!filteredExchanges.length && <div className="admin-empty">No exchanges found.</div>}</div>}
 
