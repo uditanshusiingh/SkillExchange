@@ -79,6 +79,8 @@ export default function AdminApp() {
   const [skillFilter, setSkillFilter] = useState('all');
   const [exchangeFilter, setExchangeFilter] = useState('all');
   const [reportFilter, setReportFilter] = useState('all');
+  const [reportPriorityFilter, setReportPriorityFilter] = useState('all');
+  const [reportCategoryFilter, setReportCategoryFilter] = useState('all');
   const [skillModal, setSkillModal] = useState(null);
   const [exchangeModal, setExchangeModal] = useState(null);
   const [reportModal, setReportModal] = useState(null);
@@ -196,8 +198,8 @@ export default function AdminApp() {
   const filteredReports = useMemo(() => {
     const q = query.trim().toLowerCase();
     return reports.filter((r) => {
-      const matchesQuery = !q || [r.reason, r.reportedEmail, r.reporterEmail, r.details, r.status].filter(Boolean).join(' ').toLowerCase().includes(q);
-      return matchesQuery && (reportFilter === 'all' || r.status === reportFilter);
+      const matchesQuery = !q || [r.reason, r.reportedEmail, r.reporterEmail, r.details, r.status, r.priority, r.category, r.assignedTo].filter(Boolean).join(' ').toLowerCase().includes(q);
+      return matchesQuery && (reportFilter === 'all' || r.status === reportFilter) && (reportPriorityFilter === 'all' || (r.priority || 'medium') === reportPriorityFilter) && (reportCategoryFilter === 'all' || (r.category || 'Other') === reportCategoryFilter);
     });
   }, [reports, query, reportFilter]);
 
@@ -287,12 +289,17 @@ export default function AdminApp() {
     } catch (err) { setError(err.message); }
   };
 
-  const resolveReport = async (report, status) => {
+  const updateReportCase = async (report, payload) => {
     try {
-      await updateAdminReport(adminKey, report._id, status);
-      setNotice(`Report marked ${status}.`);
-      await refresh();
+      const updated = await updateAdminReport(adminKey, report._id, payload);
+      setReports((items) => items.map((item) => item._id === report._id ? updated : item));
+      setReportModal(updated);
+      setNotice('Report updated successfully.');
     } catch (err) { setError(err.message); }
+  };
+
+  const resolveReport = async (report, status) => {
+    return updateReportCase(report, { status });
   };
 
   if (!authenticated) return <AdminLogin onLogin={(key) => { setAdminKey(key); setAuthenticated(true); loadAll(key); }} />;
@@ -398,7 +405,11 @@ export default function AdminApp() {
           {section === 'users' && <select className="admin-filter" value={userFilter} onChange={(e) => setUserFilter(e.target.value)}><option value="all">All users</option><option value="verified">Verified</option><option value="pending">Pending</option><option value="hidden">Hidden profiles</option></select>}
           {section === 'skills' && <select className="admin-filter" value={skillFilter} onChange={(e) => setSkillFilter(e.target.value)}><option value="all">All levels</option><option value="beginner">Beginner</option><option value="intermediate">Intermediate</option><option value="advanced">Advanced</option></select>}
           {section === 'exchanges' && <select className="admin-filter" value={exchangeFilter} onChange={(e) => setExchangeFilter(e.target.value)}><option value="all">All statuses</option><option value="pending">Pending</option><option value="accepted">Accepted</option><option value="rejected">Rejected</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select>}
-          {section === 'reports' && <select className="admin-filter" value={reportFilter} onChange={(e) => setReportFilter(e.target.value)}><option value="all">All reports</option><option value="open">Open</option><option value="resolved">Resolved</option><option value="dismissed">Dismissed</option></select>}
+          {section === 'reports' && <>
+  <select className="admin-filter" value={reportFilter} onChange={(e) => setReportFilter(e.target.value)}><option value="all">All statuses</option><option value="open">Open</option><option value="resolved">Resolved</option><option value="dismissed">Dismissed</option></select>
+  <select className="admin-filter" value={reportPriorityFilter} onChange={(e) => setReportPriorityFilter(e.target.value)}><option value="all">All priorities</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select>
+  <select className="admin-filter" value={reportCategoryFilter} onChange={(e) => setReportCategoryFilter(e.target.value)}><option value="all">All categories</option><option value="Safety">Safety</option><option value="Harassment">Harassment</option><option value="Spam">Spam</option><option value="Fraud">Fraud</option><option value="Skill quality">Skill quality</option><option value="Exchange dispute">Exchange dispute</option><option value="Other">Other</option></select>
+</>}
         </div>
         </div>
 
@@ -427,7 +438,17 @@ export default function AdminApp() {
   </tr>)}</tbody></table>{!filteredExchanges.length && <div className="admin-empty">No exchanges found.</div>}</div>
 </div>}
 
-        {section === 'reports' && <div className="admin-report-grid">{filteredReports.map((r) => <article className="admin-report" key={r._id} onClick={() => setReportModal(r)}><div className="report-header"><span className={r.status === 'resolved' ? 'pill success' : 'pill warning'}>{r.status}</span><small>{new Date(r.createdAt).toLocaleString()}</small></div><h3>{r.reason}</h3><p><strong>Reported:</strong> {r.reportedEmail}</p><p><strong>Reporter:</strong> {r.reporterEmail}</p>{r.details && <p>{r.details}</p>}<div className="report-actions">{r.status !== 'resolved' && <button onClick={() => resolveReport(r, 'resolved')}>Resolve</button>}<button onClick={() => resolveReport(r, 'dismissed')}>Dismiss</button></div></article>)}{!reports.length && <div className="admin-empty">No reports.</div>}</div>}
+        {section === 'reports' && <div className="admin-report-center">
+  <div className="admin-report-priority-strip">
+    {['high','medium','low'].map((priority) => <button key={priority} className={reportPriorityFilter === priority ? 'active' : ''} onClick={() => setReportPriorityFilter(reportPriorityFilter === priority ? 'all' : priority)}><span>{priority}</span><strong>{reports.filter((r) => (r.priority || 'medium') === priority && r.status === 'open').length}</strong><small>open cases</small></button>)}
+  </div>
+  <div className="admin-report-grid">{filteredReports.map((r) => <article className="admin-report" key={r._id} onClick={() => setReportModal(r)}>
+    <div className="report-header"><div className="report-badges"><span className={'pill ' + ((r.priority || 'medium') === 'high' ? 'danger' : (r.priority || 'medium') === 'low' ? 'muted' : 'warning')}>{r.priority || 'medium'} priority</span><span className="data-chip">{r.category || 'Other'}</span></div><small>{r.createdAt ? new Date(r.createdAt).toLocaleString() : '—'}</small></div>
+    <h3>{r.reason}</h3><p><strong>Reported:</strong> {r.reportedEmail}</p><p><strong>Reporter:</strong> {r.reporterEmail}</p>{r.details && <p>{r.details}</p>}
+    <div className="report-card-meta"><span>Assigned: <strong>{r.assignedTo || 'Unassigned'}</strong></span><span className={'pill ' + (r.status === 'resolved' ? 'success' : r.status === 'dismissed' ? 'muted' : 'warning')}>{r.status}</span></div>
+    <div className="report-actions">{r.status !== 'resolved' && <button onClick={(e) => { e.stopPropagation(); resolveReport(r, 'resolved'); }}>Resolve</button>}{r.status !== 'dismissed' && <button onClick={(e) => { e.stopPropagation(); resolveReport(r, 'dismissed'); }}>Dismiss</button>}</div>
+  </article>)}{!filteredReports.length && <div className="admin-empty">No reports match your filters.</div>}</div>
+</div>}
       </section>}
       {skillModal && <div className="admin-modal-backdrop" onMouseDown={(e) => { if (e.target === e.currentTarget) setSkillModal(null); }}><section className="admin-modal compact-modal"><div className="admin-modal-head"><div><span className="admin-eyebrow">SKILL MODERATION</span><h2>{skillModal.title || 'Skill details'}</h2></div><button className="admin-modal-close" onClick={() => setSkillModal(null)}><X size={18}/></button></div><div className="detail-hero"><span className="detail-icon"><Tag size={22}/></span><div><strong>{skillModal.category || 'General'} · {skillModal.level || 'Unspecified'}</strong><small>{skillModal.teacher?.name || skillModal.teacher?.email || 'Unknown teacher'}</small></div></div><div className="detail-block"><span>Description</span><p>{skillModal.description || 'No description provided.'}</p></div><div className="detail-meta"><div><small>Category</small><strong>{skillModal.category || '—'}</strong></div><div><small>Level</small><strong>{skillModal.level || '—'}</strong></div><div><small>Teacher</small><strong>{skillModal.teacher?.name || '—'}</strong></div></div><div className="admin-modal-actions"><button className="admin-secondary-button" onClick={() => setSkillModal(null)}>Close</button><button className="admin-danger-button" onClick={() => { setSkillModal(null); deleteSkill(skillModal); }}><Trash2 size={14}/> Delete skill</button></div></section></div>}
       {exchangeModal && <div className="admin-modal-backdrop" onMouseDown={(e) => { if (e.target === e.currentTarget) setExchangeModal(null); }}><section className="admin-modal compact-modal exchange-detail-modal">
@@ -438,7 +459,22 @@ export default function AdminApp() {
   <div className="detail-block"><span>Complete exchange timeline</span><div className="exchange-timeline">{(exchangeModal.statusHistory || [{status: exchangeModal.status || 'pending', at: exchangeModal.createdAt, source: 'legacy'}]).map((event, index) => <div className="exchange-timeline-item" key={(event.at || 'event') + '-' + index}><span className="exchange-timeline-dot"/><div><strong>{event.status}</strong><small>{event.at ? new Date(event.at).toLocaleString() : 'Date unavailable'} · {event.source || 'system'}</small></div></div>)}</div></div>
   <div className="admin-modal-actions"><button className="admin-secondary-button" onClick={() => setExchangeModal(null)}>Close</button><select className="admin-action-select" value={exchangeModal.status || 'pending'} onChange={async (e) => { const status=e.target.value; await changeExchangeStatus(exchangeModal,status); setExchangeModal({...exchangeModal,status,updatedAt:new Date().toISOString(),statusHistory:[...(exchangeModal.statusHistory || []),{status,at:new Date().toISOString(),source:'admin'}]}); }}><option value="pending">Pending</option><option value="accepted">Accepted</option><option value="rejected">Rejected</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select></div>
 </section></div>}
-      {reportModal && <div className="admin-modal-backdrop" onMouseDown={(e) => { if (e.target === e.currentTarget) setReportModal(null); }}><section className="admin-modal compact-modal"><div className="admin-modal-head"><div><span className="admin-eyebrow">REPORT REVIEW</span><h2>Moderation case</h2></div><button className="admin-modal-close" onClick={() => setReportModal(null)}><X size={18}/></button></div><div className="detail-hero report-hero"><span className="detail-icon"><FileText size={22}/></span><div><strong>{reportModal.reason || 'Report'}</strong><small>{reportModal.createdAt ? new Date(reportModal.createdAt).toLocaleString() : 'Date unavailable'}</small></div><span className={reportModal.status === 'resolved' ? 'pill success' : reportModal.status === 'dismissed' ? 'pill muted' : 'pill warning'}>{reportModal.status}</span></div><div className="detail-meta"><div><small>Reported user</small><strong>{reportModal.reportedEmail || '—'}</strong></div><div><small>Reporter</small><strong>{reportModal.reporterEmail || '—'}</strong></div></div><div className="detail-block"><span>Case details</span><p>{reportModal.details || 'No additional details were submitted.'}</p></div><div className="admin-modal-actions"><button className="admin-secondary-button" onClick={() => setReportModal(null)}>Close</button>{reportModal.status !== 'resolved' && <button className="admin-primary-button modal-save" onClick={async () => { await resolveReport(reportModal,'resolved'); setReportModal(null); }}>Resolve case</button>}<button className="admin-secondary-button" onClick={async () => { await resolveReport(reportModal,'dismissed'); setReportModal(null); }}>Dismiss</button></div></section></div>}
+      {reportModal && <div className="admin-modal-backdrop" onMouseDown={(e) => { if (e.target === e.currentTarget) setReportModal(null); }}><section className="admin-modal compact-modal report-detail-modal">
+  <div className="admin-modal-head"><div><span className="admin-eyebrow">REPORTS CENTER</span><h2>Moderation case</h2></div><button className="admin-modal-close" onClick={() => setReportModal(null)}><X size={18}/></button></div>
+  <div className="detail-hero report-hero"><span className="detail-icon"><FileText size={22}/></span><div><strong>{reportModal.reason || 'Report'}</strong><small>{reportModal._id} · {reportModal.createdAt ? new Date(reportModal.createdAt).toLocaleString() : 'Date unavailable'}</small></div><span className={'pill ' + (reportModal.status === 'resolved' ? 'success' : reportModal.status === 'dismissed' ? 'muted' : 'warning')}>{reportModal.status || 'open'}</span></div>
+  <div className="report-control-grid">
+    <label>Priority<select value={reportModal.priority || 'medium'} onChange={(e) => updateReportCase(reportModal,{priority:e.target.value})}><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></label>
+    <label>Category<select value={reportModal.category || 'Other'} onChange={(e) => updateReportCase(reportModal,{category:e.target.value})}><option>Safety</option><option>Harassment</option><option>Spam</option><option>Fraud</option><option>Skill quality</option><option>Exchange dispute</option><option>Other</option></select></label>
+    <label>Assigned admin<input value={reportModal.assignedTo || ''} onChange={(e) => setReportModal({...reportModal,assignedTo:e.target.value})} onBlur={(e) => updateReportCase(reportModal,{assignedTo:e.target.value})} placeholder="Admin name"/></label>
+    <label>Status<select value={reportModal.status || 'open'} onChange={(e) => updateReportCase(reportModal,{status:e.target.value})}><option value="open">Open</option><option value="resolved">Resolved</option><option value="dismissed">Dismissed</option></select></label>
+  </div>
+  <div className="detail-meta"><div><small>Reported user</small><strong>{reportModal.reportedEmail || '—'}</strong></div><div><small>Reporter</small><strong>{reportModal.reporterEmail || '—'}</strong></div><div><small>Last updated</small><strong>{reportModal.updatedAt ? new Date(reportModal.updatedAt).toLocaleString() : '—'}</strong></div></div>
+  <div className="detail-block"><span>Case details</span><p>{reportModal.details || 'No additional details were submitted.'}</p></div>
+  <div className="detail-block"><span>Internal admin note</span><textarea className="admin-report-note" id="admin-report-note" placeholder="Add an internal note for other admins…" defaultValue="" /></div>
+  <div className="detail-block"><span>Report history</span><div className="report-history">{(reportModal.history || []).map((item,index) => <div className="report-history-item" key={(item.at || 'event')+'-'+index}><span className="report-history-dot"/><div><strong>{String(item.action || 'update').replaceAll('_',' ')}</strong><small>{item.actor || 'system'} · {item.at ? new Date(item.at).toLocaleString() : '—'}{item.status ? ' · '+item.status : ''}</small></div></div>)}{!reportModal.history?.length && <span className="admin-empty">No history available.</span>}</div></div>
+  {reportModal.internalNotes?.length ? <div className="detail-block"><span>Internal notes history</span>{reportModal.internalNotes.map((note,index) => <div className="report-note-history" key={(note.at || 'note')+'-'+index}><strong>{note.actor || 'Admin'}</strong><small>{note.at ? new Date(note.at).toLocaleString() : '—'}</small><p>{note.note}</p></div>)}</div> : null}
+  <div className="admin-modal-actions"><button className="admin-secondary-button" onClick={() => setReportModal(null)}>Close</button><button className="admin-secondary-button" onClick={async () => { const el=document.getElementById('admin-report-note'); if(!el?.value.trim()) return; await updateReportCase(reportModal,{internalNote:el.value.trim()}); el.value=''; }}>Save internal note</button><button className="admin-primary-button modal-save" onClick={() => updateReportCase(reportModal,{status:'resolved'})}>Resolve</button><button className="admin-secondary-button" onClick={() => updateReportCase(reportModal,{status:'dismissed'})}>Dismiss</button></div>
+</section></div>
       {userModal && <div className="admin-modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setUserModal(null); }}>
         <section className="admin-modal admin-user-detail-modal" role="dialog" aria-modal="true">
           <div className="admin-modal-head"><div><span className="admin-eyebrow">USER MANAGEMENT</span><h2>User details</h2></div><button className="admin-modal-close" onClick={() => setUserModal(null)}><X size={18} /></button></div>
