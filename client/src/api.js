@@ -132,8 +132,8 @@ export async function getGroups() { const response = await fetch(`${API_URL}/gro
 export async function joinGroup(id) { const response = await fetch(`${API_URL}/groups/${id}/join`, { method: 'POST' }); return readResponse(response, 'Could not join group'); }
 export async function createVideoRoom() { const response = await fetch(`${API_URL}/video-rooms`, { method: 'POST' }); return readResponse(response, 'Could not create video room'); }
 
-export async function adminLogin(adminSession) {
-  const response = await fetch(`${API_URL}/admin/auth`, { method: 'POST', headers: { 'x-admin-session': adminSession || '' } });
+export async function adminLogin(adminKey) {
+  const response = await fetch(`${API_URL}/admin/auth`, { method: 'POST', headers: { 'x-admin-key': adminKey || '' } });
   return readResponse(response, 'Admin login failed');
 }
 export async function getAdminLogs(adminSession) { const response = await fetch(`${API_URL}/admin/logs`, { headers: { 'x-admin-session': adminSession || '' } }); return readResponse(response, 'Could not load admin logs'); }
