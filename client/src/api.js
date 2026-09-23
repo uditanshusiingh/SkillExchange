@@ -145,6 +145,11 @@ export async function getAdminSkills(adminKey) {
   const response = await fetch(`${API_URL}/admin/skills`, { headers: { 'x-admin-key': adminKey || '' } });
   return readResponse(response, 'Could not load admin skills');
 }
+export async function updateAdminSkillModeration(adminKey, id, payload) { const response = await fetch(`${API_URL}/admin/skills/${encodeURIComponent(id)}/moderation`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey || '' }, body: JSON.stringify(payload) }); return readResponse(response, 'Could not update skill moderation'); }
+export async function getAdminSkillCategories(adminKey) { const response = await fetch(`${API_URL}/admin/skill-categories`, { headers: { 'x-admin-key': adminKey || '' } }); return readResponse(response, 'Could not load skill categories'); }
+export async function addAdminSkillCategory(adminKey, name) { const response = await fetch(`${API_URL}/admin/skill-categories`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey || '' }, body: JSON.stringify({ name }) }); return readResponse(response, 'Could not add skill category'); }
+export async function deleteAdminSkillCategory(adminKey, name) { const response = await fetch(`${API_URL}/admin/skill-categories/${encodeURIComponent(name)}`, { method: 'DELETE', headers: { 'x-admin-key': adminKey || '' } }); return readResponse(response, 'Could not delete skill category'); }
+export async function getAdminSkillStatistics(adminKey) { const response = await fetch(`${API_URL}/admin/skill-statistics`, { headers: { 'x-admin-key': adminKey || '' } }); return readResponse(response, 'Could not load skill statistics'); }
 export async function deleteAdminSkill(adminKey, id) {
   const response = await fetch(`${API_URL}/admin/skills/${encodeURIComponent(id)}`, { method: 'DELETE', headers: { 'x-admin-key': adminKey || '' } });
   return readResponse(response, 'Could not delete skill');
