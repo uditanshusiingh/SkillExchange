@@ -447,20 +447,26 @@ function AdminDashboardPanel({ adminKey, setAdminKey, onClose }) {
     return loadUsers();
   }, [adminKey]);
 
+  const showNotice = (message) => {
+    setNotice(message);
+    window.setTimeout(() => setNotice(''), 5000);
+  };
+
   const updateUser = async (user, updates) => {
     if (!adminKey) return;
     setSaving(true);
     try {
       if (updates.verified === true && !(user.emailVerified || user.verified)) {
+        showNotice('Sending verification link...');
         const result = await sendAdminVerification(adminKey, user._id || user.email);
-        setNotice(result.developmentToken ? `${result.message} Token: ${result.developmentToken}` : result.message);
+        showNotice(result.developmentToken ? `${result.message} Token: ${result.developmentToken}` : result.message);
         return;
       }
       const updated = await updateAdminUser(adminKey, user._id || user.email, updates);
       setUsers((current) => current.map((item) => (item._id === updated._id || item.email === updated.email ? { ...item, ...updated } : item)));
       setError('');
     } catch (requestError) {
-      setError(requestError.message || 'Could not update this user.');
+      showNotice(requestError.message || 'Could not update this user.');
     } finally {
       setSaving(false);
     }
