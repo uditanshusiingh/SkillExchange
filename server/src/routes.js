@@ -869,8 +869,83 @@ router.get('/admin/analytics', async (request, response) => {
 
 router.get('/admin/skills', async (request, response) => {
   if (!requireAdmin(request, response)) return;
-  if (process.env.MONGODB_URI) return response.json(await Skill.find({}).sort({ createdAt: -1 }).lean());
-  return response.json(localSkills);
+  let skills = process.env.MONGODB_URI ? await Skill.find({}).sort({ createdAt: -1 }).lean() : localSkills;
+  const normalized = skills.map((skill) => ({ ...skill, moderationStatus: skill.moderationStatus || 'pending', featured: Boolean(skill.featured) }));
+  const duplicateKeys = new Map();
+  normalized.forEach((skill) => {
+    const key = String(skill.title || '').trim().toLowerCase();
+    if (key) duplicateKeys.set(key, (duplicateKeys.get(key) || 0) + 1);
+  });
+  const items = normalized.map((skill) => {
+    const title = String(skill.title || '').trim();
+    const description = String(skill.description || '').trim();
+    const duplicate = title && duplicateKeys.get(title.toLowerCase()) > 1;
+    const lowQuality = title.length < 4 || description.length < 20;
+    return { ...skill, moderationFlags: { duplicate: Boolean(duplicate), lowQuality: Boolean(lowQuality) } };
+  });
+  return response.json(items);
+});
+
+router.patch('/admin/skills/:id/moderation', async (request, response) => {
+  if (!requireAdmin(request, response)) return;
+  const { status, featured = false, moderationNote = '' } = request.body;
+  if (!['pending', 'approved', 'rejected'].includes(status)) return response.status(400).json({ message: 'Invalid moderation status.' });
+  const lookup = decodeURIComponent(request.params.id);
+  if (process.env.MONGODB_URI) {
+    const updated = await Skill.findByIdAndUpdate(lookup, { moderationStatus: status, featured: Boolean(featured), moderationNote: String(moderationNote || ''), moderatedAt: new Date() }, { new: true }).lean();
+    if (!updated) return response.status(404).json({ message: 'Skill not found.' });
+    await recordAdminLog(request, { action: 'skill_moderation_updated', targetType: 'skill', targetId: lookup, details: 'Skill moderation status or featured state updated.' });
+    return response.json(updated);
+  }
+  const index = localSkills.findIndex((skill) => skill._id === lookup);
+  if (index === -1) return response.status(404).json({ message: 'Skill not found.' });
+  localSkills[index] = { ...localSkills[index], moderationStatus: status, featured: Boolean(featured), moderationNote: String(moderationNote || ''), moderatedAt: new Date().toISOString() };
+  await recordAdminLog(request, { action: 'skill_moderation_updated', targetType: 'skill', targetId: lookup, details: 'Skill moderation status or featured state updated.' });
+  return response.json(localSkills[index]);
+});
+
+router.get('/admin/skill-categories', async (request, response) => {
+  if (!requireAdmin(request, response)) return;
+  const categories = readCollection('skillCategories.json');
+  return response.json(categories.length ? categories : ['Programming', 'Design', 'Languages', 'Business', 'Marketing', 'Music', 'Academic', 'Other']);
+});
+
+router.post('/admin/skill-categories', async (request, response) => {
+  if (!requireAdmin(request, response)) return;
+  const name = String(request.body.name || '').trim();
+  if (!name) return response.status(400).json({ message: 'Category name is required.' });
+  const categories = readCollection('skillCategories.json');
+  if (categories.some((item) => String(item).toLowerCase() === name.toLowerCase())) return response.status(409).json({ message: 'Category already exists.' });
+  writeCollection('skillCategories.json', [...categories, name]);
+  await recordAdminLog(request, { action: 'skill_category_added', targetType: 'category', targetId: name, details: 'Skill category added.' });
+  return response.status(201).json(name);
+});
+
+router.delete('/admin/skill-categories/:name', async (request, response) => {
+  if (!requireAdmin(request, response)) return;
+  const name = decodeURIComponent(request.params.name);
+  const categories = readCollection('skillCategories.json');
+  const next = categories.filter((item) => String(item).toLowerCase() !== name.toLowerCase());
+  if (next.length === categories.length) return response.status(404).json({ message: 'Category not found.' });
+  writeCollection('skillCategories.json', next);
+  await recordAdminLog(request, { action: 'skill_category_deleted', targetType: 'category', targetId: name, details: 'Skill category deleted.' });
+  return response.json({ ok: true });
+});
+
+router.get('/admin/skill-statistics', async (request, response) => {
+  if (!requireAdmin(request, response)) return;
+  const skills = process.env.MONGODB_URI ? await Skill.find({}).lean() : localSkills;
+  const stats = {
+    total: skills.length,
+    pending: skills.filter((s) => (s.moderationStatus || 'pending') === 'pending').length,
+    approved: skills.filter((s) => s.moderationStatus === 'approved').length,
+    rejected: skills.filter((s) => s.moderationStatus === 'rejected').length,
+    featured: skills.filter((s) => s.featured).length,
+    categories: [...new Set(skills.map((s) => s.category).filter(Boolean))].length,
+    flaggedDuplicates: skills.length - new Set(skills.map((s) => String(s.title || '').trim().toLowerCase()).filter(Boolean)).size,
+    lowQuality: skills.filter((s) => String(s.title || '').trim().length < 4 || String(s.description || '').trim().length < 20).length
+  };
+  return response.json(stats);
 });
 
 router.delete('/admin/skills/:id', async (request, response) => {
