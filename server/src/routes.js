@@ -297,6 +297,14 @@ router.post('/skills', async (request, response) => {
   return response.status(201).json(await Skill.create(skill));
 });
 
+router.get('/platform/status', async (_request, response) => {
+  return response.json({
+    maintenanceMode: await getAdminSetting('maintenanceMode', false),
+    registrationEnabled: await getAdminSetting('registrationEnabled', true),
+    announcement: await getAdminSetting('announcement', { enabled: false, title: '', message: '' })
+  });
+});
+
 router.post('/profiles', async (request, response) => {
   if (databaseRequired(response)) return;
   if (await getAdminSetting('registrationEnabled', true) === false) return response.status(403).json({ message: 'Registration is currently disabled by an administrator.' });
