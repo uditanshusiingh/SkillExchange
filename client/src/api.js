@@ -8,6 +8,11 @@ async function readResponse(response, fallbackMessage) {
   return data;
 }
 
+export async function getPlatformStatus() {
+  const response = await fetch(`${API_URL}/platform/status`);
+  return readResponse(response, 'Could not load platform status');
+}
+
 export async function getSkills(filters = {}) {
   const params = new URLSearchParams(filters);
   const response = await fetch(`${API_URL}/skills?${params}`);
