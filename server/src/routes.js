@@ -749,8 +749,8 @@ async function recordAdminLog(request, { action, targetType = '', targetId = '',
 }
 
 const requireAdmin = (request, response) => {
-  const adminKey = process.env.ADMIN_KEY || 'owner-secret';
-  if (request.headers['x-admin-key'] !== adminKey) {
+  const providedKey = String(request.headers['x-admin-key'] || '');
+  if (providedKey !== activeAdminKey && providedKey !== (process.env.ADMIN_KEY || 'owner-secret')) {
     response.status(403).json({ message: 'Admin access required.' });
     return false;
   }
