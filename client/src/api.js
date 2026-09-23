@@ -133,6 +133,11 @@ export async function adminLogin(adminKey) {
 }
 export async function getAdminLogs(adminKey) { const response = await fetch(`${API_URL}/admin/logs`, { headers: { 'x-admin-key': adminKey || '' } }); return readResponse(response, 'Could not load admin logs'); }
 export async function adminLogout(adminKey) { const response = await fetch(`${API_URL}/admin/logout`, { method: 'POST', headers: { 'x-admin-key': adminKey || '' } }); return readResponse(response, 'Could not record admin logout'); }
+export async function getAdminNotifications(adminKey) {
+  const response = await fetch(`${API_URL}/admin/notifications`, { headers: { 'x-admin-key': adminKey || '' } });
+  return readResponse(response, 'Could not load admin notifications');
+}
+
 export async function getAdminOverview(adminKey) {
   const response = await fetch(`${API_URL}/admin/overview`, { headers: { 'x-admin-key': adminKey || '' } });
   return readResponse(response, 'Could not load admin overview');
