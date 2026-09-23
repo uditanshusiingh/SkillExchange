@@ -120,3 +120,21 @@
 .admin-skill-moderation .table-actions button{min-width:30px}
 @media(max-width:1050px){.admin-skill-stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:620px){.admin-skill-stats-grid{grid-template-columns:1fr 1fr}.admin-category-add{flex-direction:column}}
+
+
+/* Exchange management */
+.admin-exchange-summary{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;padding:0 22px 18px}
+.admin-exchange-summary button{border:1px solid var(--admin-line);background:#fff;border-radius:13px;padding:13px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:4px}
+.admin-exchange-summary button:hover,.admin-exchange-summary button.active{border-color:#a9c99a;background:#f3f8ef}
+.admin-exchange-summary span{text-transform:capitalize;color:var(--admin-muted);font-size:10px;font-weight:700}
+.admin-exchange-summary strong{font-size:22px}
+.exchange-detail-modal{width:min(720px,100%)}
+.exchange-detail-modal .detail-hero{align-items:center}
+.exchange-timeline{display:flex;flex-direction:column;gap:0;margin-top:3px}
+.exchange-timeline-item{position:relative;display:grid;grid-template-columns:20px 1fr;gap:10px;padding:0 0 16px}
+.exchange-timeline-item:not(:last-child):after{content:'';position:absolute;left:6px;top:13px;bottom:0;width:1px;background:var(--admin-line)}
+.exchange-timeline-dot{width:13px;height:13px;border-radius:50%;background:#8dbb70;border:3px solid #eaf5e3;z-index:1}
+.exchange-timeline-item strong{display:block;text-transform:capitalize;font-size:12px}
+.exchange-timeline-item small{display:block;color:var(--admin-muted);font-size:10px;margin-top:3px}
+@media(max-width:800px){.admin-exchange-summary{grid-template-columns:repeat(2,1fr);padding-left:16px;padding-right:16px}}
+@media(max-width:620px){.admin-exchange-summary{grid-template-columns:1fr 1fr}.exchange-detail-modal .detail-hero{align-items:flex-start}}
