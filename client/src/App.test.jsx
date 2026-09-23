@@ -65,7 +65,10 @@ describe('SkillSwap app', () => {
     render(<App />);
     fireEvent.click(screen.getByRole('button', { name: /sign up/i }));
 
+    expect(screen.getByRole('button', { name: /^Sign up$/i })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /what can you teach/i }));
     expect(screen.getByLabelText(/search what can you teach/i)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /what do you want to learn/i }));
     expect(screen.getByLabelText(/search what do you want to learn/i)).toBeInTheDocument();
   });
 

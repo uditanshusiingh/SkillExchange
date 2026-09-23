@@ -1,7 +1,7 @@
 /* Advanced discovery controls */
-.auth-gate { min-height: 100vh; display: grid; place-items: center; padding: 28px; background: radial-gradient(circle at 12% 10%, #e8f0d9 0, transparent 30%), radial-gradient(circle at 88% 90%, #f2d8c8 0, transparent 28%), var(--cream); color: var(--forest); }
+.auth-gate { min-height: 100vh; height: 100vh; display: grid; place-items: center; padding: 28px; background: radial-gradient(circle at 12% 10%, #e8f0d9 0, transparent 30%), radial-gradient(circle at 88% 90%, #f2d8c8 0, transparent 28%), var(--cream); color: var(--forest); overflow: hidden; }
 .home-content-hidden { display: none; }
-.dedicated-page { min-height: calc(100vh - 76px); padding: 78px 8vw 100px; background: #e9f0e5; color: var(--forest); }
+.dedicated-page { min-height: calc(100vh - 76px); height: calc(100vh - 76px); overflow: auto; padding: 78px 8vw 100px; background: #e9f0e5; color: var(--forest); }
 .dedicated-page-inner { max-width: 1120px; margin: 0 auto; }
 .dedicated-back { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 45px; color: #718076; font-size: 12px; }
 .dedicated-page h1 { margin: 14px 0 10px; font: 500 clamp(48px, 7vw, 86px)/.95 Fraunces, serif; letter-spacing: -3px; }
@@ -438,7 +438,7 @@ html[data-theme='dark'] .dedicated-page-advanced .dedicated-panels p { color: #c
   .dedicated-page h1 { font-size: 55px; }
   .dedicated-story { padding: 28px; }
 }
-.auth-panel { width: min(1120px, 100%); min-height: 680px; padding: 27px clamp(24px, 5vw, 66px) 54px; border: 1px solid #dbe2d5; border-radius: 18px; background: rgba(251,248,241,.82); box-shadow: 0 24px 70px rgba(25,53,42,.12); }
+.auth-panel { width: min(1120px, 100%); min-height: 680px; max-height: calc(100vh - 60px); padding: 27px clamp(24px, 5vw, 66px) 54px; border: 1px solid #dbe2d5; border-radius: 18px; background: rgba(251,248,241,.82); box-shadow: 0 24px 70px rgba(25,53,42,.12); overflow: hidden; }
 .auth-brand { display: flex; align-items: center; gap: 9px; font-size: 20px; }
 .auth-layout { display: grid; grid-template-columns: 1fr 390px; align-items: center; gap: clamp(42px, 8vw, 120px); max-width: 930px; margin: 75px auto 0; }
 .auth-intro h1 { margin: 22px 0; color: var(--forest); font: 500 clamp(48px, 6vw, 82px)/.94 'DM Sans', sans-serif; letter-spacing: -4px; }
@@ -447,13 +447,23 @@ html[data-theme='dark'] .dedicated-page-advanced .dedicated-panels p { color: #c
 .auth-proof { display: flex; align-items: center; gap: 12px; margin-top: 42px; }
 .auth-proof span { color: #b86e4e; font: 500 28px Fraunces, serif; }
 .auth-proof small { max-width: 115px; color: #718076; font: 10px 'DM Mono', monospace; text-transform: uppercase; }
-.auth-card { padding: 29px; border: 1px solid #d7e0d5; border-radius: 10px; background: #fffdf9; box-shadow: 9px 9px 0 #e5eee2; }
-.auth-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; margin-bottom: 28px; border-radius: 6px; background: #edf2e9; }
+.auth-card { display: flex; flex-direction: column; height: 470px; max-height: 470px; padding: 29px; border: 1px solid #d7e0d5; border-radius: 10px; background: #fffdf9; box-shadow: 9px 9px 0 #e5eee2; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; -ms-overflow-style: none; box-sizing: border-box; }
+.auth-card::-webkit-scrollbar { width: 0; height: 0; display: none; }
+.auth-card.signup-mode { height: 470px; max-height: 470px; }
+.auth-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; margin-bottom: 18px; border-radius: 6px; background: #edf2e9; }
 .auth-tabs button { padding: 9px; border-radius: 4px; color: #718076; font-size: 12px; }
 .auth-tabs button.active { background: var(--forest); color: var(--cream); }
 .auth-card h2 { margin: 13px 0 8px; font: 500 31px Fraunces, serif; }
-.auth-card > p { margin-bottom: 22px; color: #68716b; font-size: 12px; line-height: 1.5; }
-.auth-card form { display: grid; gap: 10px; }
+.auth-card > p { margin-bottom: 18px; color: #68716b; font-size: 12px; line-height: 1.5; }
+.auth-card form { display: grid; gap: 8px; flex: 1; }
+.auth-card.signup-mode form { gap: 7px; }
+.auth-card.signup-mode input,
+.auth-card.signup-mode select,
+.auth-card.signup-mode .skill-picker-search { padding-top: 10px; padding-bottom: 8px; flex: 1; }
+.auth-card.signup-mode form { gap: 7px; }
+.auth-card.signup-mode input,
+.auth-card.signup-mode select,
+.auth-card.signup-mode .skill-picker-search { padding-top: 10px; padding-bottom: 10px; }
 .auth-password { display: block; }
 .password-input-shell { position: relative; display: block; }
 .password-input-shell input { padding-right: 42px; }
@@ -462,8 +472,10 @@ html[data-theme='dark'] .dedicated-page-advanced .dedicated-panels p { color: #c
 .auth-card input { width: 100%; border: 1px solid #d7e0d5; border-radius: 5px; padding: 12px; background: #fffdf9; color: var(--forest); outline: none; font-size: 12px; }
 .auth-card input:focus { border-color: var(--forest); box-shadow: 0 0 0 3px rgba(217,237,103,.3); }
 .auth-submit { width: 100%; margin-top: 5px; }
-.forgot-password-link { margin-top: 14px; color: #718076; font-size: 11px; text-decoration: underline; text-underline-offset: 3px; }
+.auth-links { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+.forgot-password-link { color: #718076; font-size: 11px; text-decoration: underline; text-underline-offset: 3px; }
 .forgot-password-link:hover, .forgot-password-link:focus-visible { color: var(--forest); }
+.resend-verification-link { opacity: 0.92; }
 .reset-backdrop { z-index: 80; }
 .reset-panel { width: min(430px, 100%); }
 .reset-panel form { display: grid; gap: 12px; margin-top: 22px; }
@@ -864,30 +876,40 @@ html[data-theme='dark'] .saved-item { background: #eff3ed; border-color: #b8cbb9
 .password-toggle[aria-label='Hide password']::after { width: 19px; height: 1.7px; border-radius: 0; transform: rotate(-45deg); background: currentColor; }
 .password-toggle:hover, .password-toggle:focus-visible { color: var(--forest); }
 .skill-picker { display: grid; gap: 6px; }
+.skill-picker-field { position: relative; }
+.skill-picker-field.is-open { z-index: 5; }
 .skill-picker-label { color: #718076; font: 10px 'DM Mono', monospace; text-transform: uppercase; letter-spacing: .05em; }
-.skill-picker-search { display: flex; align-items: center; gap: 7px; min-height: 36px; padding: 0 8px 0 11px; border: 1px solid #d7e0d5; border-radius: 5px; background: #fffdf9; color: #718076; }
+.skill-picker-trigger { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 47px; padding: 10px 11px 10px 18px; border: 1px solid #d7e0d5; border-radius: 5px; background: #fffdf9; color: var(--forest); text-align: left; font-size: 11px; }
+.skill-picker-trigger:hover, .skill-picker-field.is-open .skill-picker-trigger { border-color: var(--forest); }
+.skill-picker-menu { position: absolute; top: calc(100% + 5px); left: 0; right: 0; overflow: hidden; border: 1px solid #d7e0d5; border-radius: 5px; background: #fffdf9; box-shadow: 0 12px 24px rgba(25,53,42,.14); }
+.skill-picker-search { display: flex; align-items: center; gap: 7px; min-height: 36px; padding: 0 11px; border-bottom: 1px solid #e5e9e3; background: #fffdf9; color: #718076; }
 .skill-picker-search input { min-width: 0; flex: 1; padding: 8px 0; border: 0; outline: 0; background: transparent; color: var(--forest); font-size: 11px; }
 .skill-picker-search input::placeholder { color: #718076; }
 .skill-picker-search-input { width: 100%; border: 1px solid #d7e0d5; border-radius: 5px; padding: 10px 11px; background: #fffdf9; color: var(--forest); font-size: 11px; }
-.skill-picker-search button { width: 25px; height: 25px; display: grid; place-items: center; border-radius: 4px; background: var(--forest); color: var(--cream); }
-.skill-picker select { width: 100%; border: 1px solid #d7e0d5; border-radius: 5px; padding: 10px 11px; background: #fffdf9; color: var(--forest); font-size: 11px; }
+.skill-picker-options { display: grid; max-height: 170px; overflow-y: auto; }
+.skill-picker-options button { padding: 10px 11px; background: #fffdf9; color: var(--forest); text-align: left; font-size: 11px; }
+.skill-picker-options button:hover, .skill-picker-options button.selected { background: #e9f0e5; }
+.skill-picker-empty { padding: 12px 11px; color: #718076; font-size: 11px; }
 html[data-theme='dark'] .skill-picker-label { color: #aebdb1; }
-html[data-theme='dark'] .skill-picker-search,
-html[data-theme='dark'] .skill-picker select { border-color: #466050; background: #102019; color: #eef4ed; }
+html[data-theme='dark'] .skill-picker-trigger,
+html[data-theme='dark'] .skill-picker-menu,
+html[data-theme='dark'] .skill-picker-search { border-color: #466050; background: #102019; color: #eef4ed; }
+html[data-theme='dark'] .skill-picker-options button { background: #102019; color: #eef4ed; }
+html[data-theme='dark'] .skill-picker-options button:hover, html[data-theme='dark'] .skill-picker-options button.selected { background: #1f3b30; }
 html[data-theme='dark'] .skill-picker-search input { color: #eef4ed; }
 html[data-theme='dark'] .skill-picker-search input::placeholder { color: #9fb7a5; }
 html[data-theme='dark'] .skill-picker-search-input { border-color: #466050; background: #102019; color: #eef4ed; }
 html[data-theme='dark'] .skill-picker-search-input::placeholder { color: #9fb7a5; }
-html[data-theme='dark'] .skill-picker-search button { background: #d9ed67; color: #19352a; }
 html[data-theme='dark'] .skill-picker-label { color: #718076 !important; }
+html[data-theme='dark'] .skill-picker-trigger,
+html[data-theme='dark'] .skill-picker-menu,
 html[data-theme='dark'] .skill-picker-search,
 html[data-theme='dark'] .skill-picker-search-input,
-html[data-theme='dark'] .skill-picker select { background: #fffdf9 !important; border-color: #d7e0d5 !important; color: #19352a !important; }
+html[data-theme='dark'] .skill-picker-options button { background: #fffdf9 !important; border-color: #d7e0d5 !important; color: #19352a !important; }
 html[data-theme='dark'] .skill-picker-search input,
 html[data-theme='dark'] .skill-picker-search-input { color: #19352a !important; }
 html[data-theme='dark'] .skill-picker-search input::placeholder,
 html[data-theme='dark'] .skill-picker-search-input::placeholder { color: #718076 !important; }
-html[data-theme='dark'] .skill-picker-search button { background: #19352a; color: #fbf8f1; }
 .advanced-panel > p { max-width: 560px; }
 .advanced-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 24px 0 12px; }
 .advanced-card { display: grid; gap: 10px; padding: 16px; border: 1px solid #d7e0d5; border-radius: 8px; background: #fffdf9; }
