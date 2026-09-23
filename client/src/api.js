@@ -134,6 +134,10 @@ export async function getAdminOverview(adminKey) {
   const response = await fetch(`${API_URL}/admin/overview`, { headers: { 'x-admin-key': adminKey || '' } });
   return readResponse(response, 'Could not load admin overview');
 }
+export async function getAdminAnalytics(adminKey) {
+  const response = await fetch(`${API_URL}/admin/analytics`, { headers: { 'x-admin-key': adminKey || '' } });
+  return readResponse(response, 'Could not load admin analytics');
+}
 export async function getAdminSkills(adminKey) {
   const response = await fetch(`${API_URL}/admin/skills`, { headers: { 'x-admin-key': adminKey || '' } });
   return readResponse(response, 'Could not load admin skills');
