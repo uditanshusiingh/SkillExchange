@@ -750,6 +750,43 @@ router.get('/admin/logs', async (request, response) => {
   return response.json(readCollection('adminLogs.json').sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)).slice(0, 500));
 });
 
+router.get('/admin/notifications', async (request, response) => {
+  if (!requireAdmin(request, response)) return;
+
+  const notifications = [];
+  const add = (type, title, detail, createdAt, targetId = '') => {
+    if (!createdAt) return;
+    notifications.push({
+      id: `${type}-${targetId || createdAt}-${String(title).slice(0, 20)}`,
+      type,
+      title,
+      detail,
+      createdAt: new Date(createdAt).toISOString(),
+      targetId
+    });
+  };
+
+  const reports = readCollection('reports.json');
+  reports.forEach((item) => add('report', 'New report received', item.reason || 'A new report needs review.', item.createdAt, item._id));
+
+  const exchanges = readCollection('exchanges.json');
+  exchanges.forEach((item) => add('exchange', 'New exchange requested', `${item.skillTitle || 'Skill exchange'} · ${item.requesterEmail || 'A user'}`, item.createdAt, item._id));
+
+  if (process.env.MONGODB_URI) {
+    const profiles = await Profile.find({}).select('email name createdAt').sort({ createdAt: -1 }).limit(100).lean();
+    profiles.forEach((item) => add('user', 'New user registered', item.name || item.email || 'A new member joined SkillSwap.', item.createdAt, item._id));
+
+    const skills = await Skill.find({}).select('title category createdAt').sort({ createdAt: -1 }).limit(100).lean();
+    skills.forEach((item) => add('skill', 'New skill submitted', `${item.title || 'Untitled skill'} · ${item.category || 'Uncategorized'}`, item.createdAt, item._id));
+  } else {
+    readProfiles().forEach((item) => add('user', 'New user registered', item.name || item.email || 'A new member joined SkillSwap.', item.createdAt, item._id || item.email));
+    localSkills.forEach((item) => add('skill', 'New skill submitted', `${item.title || 'Untitled skill'} · ${item.category || 'Uncategorized'}`, item.createdAt, item._id || item.id));
+  }
+
+  notifications.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  return response.json(notifications.slice(0, 100));
+});
+
 router.get('/admin/overview', async (request, response) => {
   if (!requireAdmin(request, response)) return;
   const reports = readCollection('reports.json');
