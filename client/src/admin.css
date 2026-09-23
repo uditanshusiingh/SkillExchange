@@ -104,3 +104,19 @@
 .admin-log-meta time{font-size:10px;color:#89908d;white-space:nowrap}
 @media(max-width:900px){.admin-security-grid{grid-template-columns:1fr}}
 @media(max-width:620px){.admin-log-row{grid-template-columns:32px minmax(0,1fr)}.admin-log-meta{grid-column:2;align-items:flex-start}.admin-log-row small{max-width:100%}}
+
+
+/* Skill moderation */
+.admin-skill-stats-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.admin-skill-stats-grid .admin-card{padding:16px}
+.admin-skill-stats-grid span{display:block;color:#737b77;font-size:11px}
+.admin-skill-stats-grid strong{display:block;font-size:24px;margin-top:5px}
+.admin-category-manager{margin-bottom:16px}
+.admin-category-add{display:flex;gap:8px}
+.admin-category-add input{flex:1;min-width:0;border:1px solid var(--admin-border,#e5e7eb);border-radius:10px;padding:10px 12px;background:#fff}
+.admin-category-list{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
+.admin-category-list .data-chip{display:inline-flex;align-items:center;gap:6px}
+.admin-category-list button{border:0;background:transparent;padding:0;display:grid;place-items:center;cursor:pointer;color:#7b827f}
+.admin-skill-moderation .table-actions button{min-width:30px}
+@media(max-width:1050px){.admin-skill-stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:620px){.admin-skill-stats-grid{grid-template-columns:1fr 1fr}.admin-category-add{flex-direction:column}}
