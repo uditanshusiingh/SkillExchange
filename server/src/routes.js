@@ -654,4 +654,100 @@ router.patch('/notifications/:email/read', (request, response) => {
 
 router.post('/contact', (request, response) => response.status(201).json({ message: 'Thanks, we will be in touch soon.', ...request.body }));
 
+const requireAdmin = (request, response) => {
+  const adminKey = process.env.ADMIN_KEY || 'owner-secret';
+  if (request.headers['x-admin-key'] !== adminKey) {
+    response.status(403).json({ message: 'Admin access required.' });
+    return false;
+  }
+  return true;
+};
+
+router.post('/admin/auth', (request, response) => {
+  if (!requireAdmin(request, response)) return;
+  return response.json({ ok: true, message: 'Admin authenticated.' });
+});
+
+router.get('/admin/overview', async (request, response) => {
+  if (!requireAdmin(request, response)) return;
+  const reports = readCollection('reports.json');
+  const exchanges = readCollection('exchanges.json');
+  let totalUsers = 0;
+  let verifiedUsers = 0;
+  let visibleUsers = 0;
+  let skills = localSkills.length;
+
+  if (process.env.MONGODB_URI) {
+    [totalUsers, verifiedUsers, visibleUsers, skills] = await Promise.all([
+      Profile.countDocuments(),
+      Profile.countDocuments({ emailVerified: true }),
+      Profile.countDocuments(discoverableProfileQuery()),
+      Skill.countDocuments()
+    ]);
+  } else {
+    const profiles = readProfiles();
+    totalUsers = profiles.length;
+    verifiedUsers = profiles.filter((profile) => profile.emailVerified || profile.verified).length;
+    visibleUsers = profiles.filter(isDiscoverableProfile).length;
+  }
+
+  return response.json({
+    totalUsers,
+    verifiedUsers,
+    visibleUsers,
+    skills,
+    exchanges: exchanges.length,
+    openReports: reports.filter((report) => report.status === 'open').length
+  });
+});
+
+router.get('/admin/skills', async (request, response) => {
+  if (!requireAdmin(request, response)) return;
+  if (process.env.MONGODB_URI) return response.json(await Skill.find({}).sort({ createdAt: -1 }).lean());
+  return response.json(localSkills);
+});
+
+router.delete('/admin/skills/:id', async (request, response) => {
+  if (!requireAdmin(request, response)) return;
+  const lookup = decodeURIComponent(request.params.id);
+  if (process.env.MONGODB_URI) {
+    const deleted = await Skill.findByIdAndDelete(lookup);
+    if (!deleted) return response.status(404).json({ message: 'Skill not found.' });
+    return response.json({ ok: true });
+  }
+  const index = localSkills.findIndex((skill) => skill._id === lookup);
+  if (index === -1) return response.status(404).json({ message: 'Skill not found.' });
+  localSkills = localSkills.filter((_, itemIndex) => itemIndex !== index);
+  return response.json({ ok: true });
+});
+
+router.get('/admin/exchanges', (request, response) => {
+  if (!requireAdmin(request, response)) return;
+  return response.json(readCollection('exchanges.json'));
+});
+
+router.patch('/admin/exchanges/:id', (request, response) => {
+  if (!requireAdmin(request, response)) return;
+  const exchanges = readCollection('exchanges.json');
+  const index = exchanges.findIndex((item) => item._id === request.params.id);
+  if (index === -1) return response.status(404).json({ message: 'Exchange not found.' });
+  const allowed = ['pending', 'accepted', 'rejected', 'completed'];
+  if (!allowed.includes(request.body.status)) return response.status(400).json({ message: 'Invalid exchange status.' });
+  exchanges[index] = { ...exchanges[index], status: request.body.status };
+  writeCollection('exchanges.json', exchanges);
+  return response.json(exchanges[index]);
+});
+
+router.patch('/admin/reports/:id', (request, response) => {
+  if (!requireAdmin(request, response)) return;
+  const reports = readCollection('reports.json');
+  const index = reports.findIndex((item) => item._id === request.params.id);
+  if (index === -1) return response.status(404).json({ message: 'Report not found.' });
+  const allowed = ['open', 'resolved', 'dismissed'];
+  if (!allowed.includes(request.body.status)) return response.status(400).json({ message: 'Invalid report status.' });
+  reports[index] = { ...reports[index], status: request.body.status, reviewedAt: new Date().toISOString() };
+  writeCollection('reports.json', reports);
+  return response.json(reports[index]);
+});
+
 export default router;
