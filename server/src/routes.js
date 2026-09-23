@@ -7,12 +7,41 @@ import Profile from './models/Profile.js';
 import Exchange from './models/Exchange.js';
 import Review from './models/Review.js';
 import AdminLog from './models/AdminLog.js';
+import AdminSetting from './models/AdminSetting.js';
 import { seedSkills } from './data/seedSkills.js';
 import { readProfiles, writeProfiles } from './data/localProfiles.js';
 import { readMessages, writeMessages } from './data/localMessages.js';
 import { readCollection, writeCollection } from './data/localCollections.js';
 
 const router = express.Router();
+let activeAdminKey = process.env.ADMIN_KEY || 'owner-secret';
+
+function readAdminSetting(key, fallback = null) {
+  const item = readCollection('adminSettings.json').find((entry) => entry.key === key);
+  return item ? item.value : fallback;
+}
+
+function writeAdminSetting(key, value) {
+  const settings = readCollection('adminSettings.json').filter((entry) => entry.key !== key);
+  writeCollection('adminSettings.json', [{ key, value, updatedAt: new Date().toISOString() }, ...settings]);
+}
+
+async function getAdminSetting(key, fallback = null) {
+  if (process.env.MONGODB_URI) {
+    const item = await AdminSetting.findOne({ key }).lean();
+    return item ? item.value : fallback;
+  }
+  return readAdminSetting(key, fallback);
+}
+
+async function setAdminSetting(key, value) {
+  if (process.env.MONGODB_URI) {
+    await AdminSetting.findOneAndUpdate({ key }, { $set: { value } }, { upsert: true, new: true });
+    return;
+  }
+  writeAdminSetting(key, value);
+}
+
 // Admin API enabled: deployed route group for SkillSwap control center.
 // Analytics endpoint is part of the deployed admin API.
 let localSkills = seedSkills;
@@ -270,6 +299,8 @@ router.post('/skills', async (request, response) => {
 
 router.post('/profiles', async (request, response) => {
   if (databaseRequired(response)) return;
+  if (await getAdminSetting('registrationEnabled', true) === false) return response.status(403).json({ message: 'Registration is currently disabled by an administrator.' });
+  if (await getAdminSetting('maintenanceMode', false) === true) return response.status(503).json({ message: 'SkillSwap is currently under maintenance. Please try again later.' });
   const { name, email, password, teaches = [], wants = [] } = request.body;
   if (!name || !email || !password || password.length < 8) {
     return response.status(400).json({ message: 'Name, email and a password of at least 8 characters are required.' });
@@ -727,15 +758,25 @@ const requireAdmin = (request, response) => {
 };
 
 router.post('/admin/auth', async (request, response) => {
-  const adminKey = process.env.ADMIN_KEY || 'owner-secret';
-  if (request.headers['x-admin-key'] !== adminKey) {
+  const providedKey = String(request.headers['x-admin-key'] || '');
+  const bootstrapKey = process.env.ADMIN_KEY || 'owner-secret';
+  let valid = providedKey === activeAdminKey || providedKey === bootstrapKey;
+  if (!valid && process.env.MONGODB_URI) {
+    const storedHash = await AdminSetting.findOne({ key: 'adminKeyHash' }).lean();
+    valid = Boolean(storedHash?.value && await bcrypt.compare(providedKey, storedHash.value));
+  }
+  if (!valid && !process.env.MONGODB_URI) {
+    const storedHash = readAdminSetting('adminKeyHash', '');
+    valid = Boolean(storedHash && await bcrypt.compare(providedKey, storedHash));
+  }
+  if (!valid) {
     await recordAdminLog(request, { action: 'admin_login_failed', details: 'Invalid admin key.', success: false });
     return response.status(403).json({ message: 'Admin access required.' });
   }
+  activeAdminKey = providedKey || bootstrapKey;
   await recordAdminLog(request, { action: 'admin_login', details: 'Admin authenticated successfully.' });
   return response.json({ ok: true, message: 'Admin authenticated.' });
 });
-
 router.post('/admin/logout', async (request, response) => {
   if (!requireAdmin(request, response)) return;
   await recordAdminLog(request, { action: 'admin_logout', details: 'Admin session ended.' });
@@ -785,6 +826,37 @@ router.get('/admin/notifications', async (request, response) => {
 
   notifications.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   return response.json(notifications.slice(0, 100));
+});
+
+router.get('/admin/settings', async (request, response) => {
+  if (!requireAdmin(request, response)) return;
+  return response.json({
+    profile: await getAdminSetting('adminProfile', { name: 'SkillSwap Admin', email: '' }),
+    dashboard: await getAdminSetting('dashboardPreferences', { compactMode: false, defaultSection: 'overview', refreshInterval: 0 }),
+    maintenanceMode: await getAdminSetting('maintenanceMode', false),
+    registrationEnabled: await getAdminSetting('registrationEnabled', true),
+    announcement: await getAdminSetting('announcement', { enabled: false, title: '', message: '', updatedAt: null }),
+    keyConfigured: Boolean(await getAdminSetting('adminKeyHash', ''))
+  });
+});
+
+router.patch('/admin/settings', async (request, response) => {
+  if (!requireAdmin(request, response)) return;
+  const body = request.body || {};
+  if (body.profile) await setAdminSetting('adminProfile', { name: String(body.profile.name || '').trim() || 'SkillSwap Admin', email: String(body.profile.email || '').trim() });
+  if (body.dashboard) await setAdminSetting('dashboardPreferences', { compactMode: Boolean(body.dashboard.compactMode), defaultSection: String(body.dashboard.defaultSection || 'overview'), refreshInterval: Number(body.dashboard.refreshInterval || 0) });
+  if (body.maintenanceMode !== undefined) await setAdminSetting('maintenanceMode', Boolean(body.maintenanceMode));
+  if (body.registrationEnabled !== undefined) await setAdminSetting('registrationEnabled', Boolean(body.registrationEnabled));
+  if (body.announcement) await setAdminSetting('announcement', { enabled: Boolean(body.announcement.enabled), title: String(body.announcement.title || '').trim(), message: String(body.announcement.message || '').trim(), updatedAt: new Date().toISOString() });
+  if (body.newAdminKey) {
+    const newKey = String(body.newAdminKey).trim();
+    if (newKey.length < 8) return response.status(400).json({ message: 'Admin key must be at least 8 characters.' });
+    await setAdminSetting('adminKeyHash', await bcrypt.hash(newKey, 12));
+    activeAdminKey = newKey;
+    await recordAdminLog(request, { action: 'admin_key_changed', details: 'Admin key was changed.' });
+  }
+  await recordAdminLog(request, { action: 'admin_settings_updated', details: 'Admin settings updated.' });
+  return response.json({ ok: true, message: 'Admin settings saved.' });
 });
 
 router.get('/admin/overview', async (request, response) => {
