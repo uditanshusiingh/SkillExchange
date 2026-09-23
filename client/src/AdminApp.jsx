@@ -140,7 +140,7 @@ export default function AdminApp() {
 
   useEffect(() => {
     // Admin access is intentionally memory-only: every page load/refresh requires the key again.
-    localStorage.removeItem('skillswap-admin-key');
+    // No admin credential is persisted in browser storage.
   }, []);
 
   const filteredUsers = useMemo(() => {
