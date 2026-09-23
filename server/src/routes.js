@@ -6,6 +6,7 @@ import Skill from './models/Skill.js';
 import Profile from './models/Profile.js';
 import Exchange from './models/Exchange.js';
 import Review from './models/Review.js';
+import AdminLog from './models/AdminLog.js';
 import { seedSkills } from './data/seedSkills.js';
 import { readProfiles, writeProfiles } from './data/localProfiles.js';
 import { readMessages, writeMessages } from './data/localMessages.js';
@@ -417,14 +418,16 @@ router.put('/admin/users/:id', async (request, response) => {
     const profiles = readProfiles();
     const index = profiles.findIndex((profile) => profile._id === lookup || profile.email === lookup);
     if (index === -1) return response.status(404).json({ message: 'Profile not found.' });
-    const updated = { ...profiles[index], ...safeProfile };
+    const updated = { ...profiles[index], ...safeProfile, updatedAt: new Date().toISOString() };
+    await recordAdminLog(request, { action: 'user_updated', targetType: 'user', targetId: updated._id || updated.email, details: 'User profile or moderation settings updated.' });
     const nextProfiles = [...profiles]; nextProfiles[index] = updated; writeProfiles(nextProfiles);
     return response.json(updated);
   }
 
   const query = mongoose.isValidObjectId(lookup) ? { _id: lookup } : { email: lookup };
-  const updated = await Profile.findOneAndUpdate(query, safeProfile, { new: true, runValidators: true });
+  const updated = await Profile.findOneAndUpdate(query, { ...safeProfile, updatedAt: new Date() }, { new: true, runValidators: true });
   if (!updated) return response.status(404).json({ message: 'Profile not found.' });
+  await recordAdminLog(request, { action: 'user_updated', targetType: 'user', targetId: updated._id || updated.email, details: 'User profile or moderation settings updated.' });
   return response.json(updated);
 });
 
@@ -460,12 +463,14 @@ router.delete('/admin/users/:id', async (request, response) => {
     const next = profiles.filter((profile) => profile._id !== lookup && profile.email !== lookup);
     if (next.length === profiles.length) return response.status(404).json({ message: 'Profile not found.' });
     writeProfiles(next);
+    await recordAdminLog(request, { action: 'user_deleted', targetType: 'user', targetId: lookup, details: 'User permanently deleted.' });
     return response.json({ message: 'User deleted successfully.' });
   }
 
   const query = mongoose.isValidObjectId(lookup) ? { _id: lookup } : { email: lookup };
   const result = await Profile.deleteOne(query);
   if (!result.deletedCount) return response.status(404).json({ message: 'Profile not found.' });
+  await recordAdminLog(request, { action: 'user_deleted', targetType: 'user', targetId: lookup, details: 'User permanently deleted.' });
   return response.json({ message: 'User deleted successfully.' });
 });
 
@@ -595,7 +600,8 @@ router.patch('/exchanges/:id', (request, response) => {
   const exchanges = readCollection('exchanges.json');
   const index = exchanges.findIndex((item) => item._id === request.params.id);
   if (index === -1) return response.status(404).json({ message: 'Exchange not found.' });
-  exchanges[index] = { ...exchanges[index], status: request.body.status };
+  exchanges[index] = { ...exchanges[index], status: request.body.status, updatedAt: new Date().toISOString() };
+  await recordAdminLog(request, { action: 'exchange_status_updated', targetType: 'exchange', targetId: exchanges[index]._id, details: `Status changed to ${request.body.status}.` });
   writeCollection('exchanges.json', exchanges);
   return response.json(exchanges[index]);
 });
@@ -684,6 +690,19 @@ router.patch('/notifications/:email/read', (request, response) => {
 
 router.post('/contact', (request, response) => response.status(201).json({ message: 'Thanks, we will be in touch soon.', ...request.body }));
 
+const adminIdentity = (request) => request.headers['x-admin-name'] || process.env.ADMIN_NAME || 'Admin';
+
+async function recordAdminLog(request, { action, targetType = '', targetId = '', details = '', success = true } = {}) {
+  const entry = { action, admin: adminIdentity(request), targetType, targetId: String(targetId || ''), details, success, createdAt: new Date().toISOString() };
+  if (process.env.MONGODB_URI) {
+    await AdminLog.create(entry);
+  } else {
+    const logs = readCollection('adminLogs.json');
+    writeCollection('adminLogs.json', [entry, ...logs].slice(0, 1000));
+  }
+  return entry;
+}
+
 const requireAdmin = (request, response) => {
   const adminKey = process.env.ADMIN_KEY || 'owner-secret';
   if (request.headers['x-admin-key'] !== adminKey) {
@@ -693,9 +712,28 @@ const requireAdmin = (request, response) => {
   return true;
 };
 
-router.post('/admin/auth', (request, response) => {
-  if (!requireAdmin(request, response)) return;
+router.post('/admin/auth', async (request, response) => {
+  const adminKey = process.env.ADMIN_KEY || 'owner-secret';
+  if (request.headers['x-admin-key'] !== adminKey) {
+    await recordAdminLog(request, { action: 'admin_login_failed', details: 'Invalid admin key.', success: false });
+    return response.status(403).json({ message: 'Admin access required.' });
+  }
+  await recordAdminLog(request, { action: 'admin_login', details: 'Admin authenticated successfully.' });
   return response.json({ ok: true, message: 'Admin authenticated.' });
+});
+
+router.post('/admin/logout', async (request, response) => {
+  if (!requireAdmin(request, response)) return;
+  await recordAdminLog(request, { action: 'admin_logout', details: 'Admin session ended.' });
+  return response.json({ ok: true });
+});
+
+router.get('/admin/logs', async (request, response) => {
+  if (!requireAdmin(request, response)) return;
+  if (process.env.MONGODB_URI) {
+    return response.json(await AdminLog.find({}).sort({ createdAt: -1 }).limit(500).lean());
+  }
+  return response.json(readCollection('adminLogs.json').sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)).slice(0, 500));
 });
 
 router.get('/admin/overview', async (request, response) => {
@@ -841,6 +879,7 @@ router.delete('/admin/skills/:id', async (request, response) => {
   if (process.env.MONGODB_URI) {
     const deleted = await Skill.findByIdAndDelete(lookup);
     if (!deleted) return response.status(404).json({ message: 'Skill not found.' });
+    await recordAdminLog(request, { action: 'skill_deleted', targetType: 'skill', targetId: lookup, details: `Deleted skill ${deleted.title || lookup}.` });
     return response.json({ ok: true });
   }
   const index = localSkills.findIndex((skill) => skill._id === lookup);
@@ -873,7 +912,8 @@ router.patch('/admin/reports/:id', (request, response) => {
   if (index === -1) return response.status(404).json({ message: 'Report not found.' });
   const allowed = ['open', 'resolved', 'dismissed'];
   if (!allowed.includes(request.body.status)) return response.status(400).json({ message: 'Invalid report status.' });
-  reports[index] = { ...reports[index], status: request.body.status, reviewedAt: new Date().toISOString() };
+  reports[index] = { ...reports[index], status: request.body.status, reviewedAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+  await recordAdminLog(request, { action: 'report_status_updated', targetType: 'report', targetId: reports[index]._id, details: `Report status changed to ${request.body.status}.` });
   writeCollection('reports.json', reports);
   return response.json(reports[index]);
 });
