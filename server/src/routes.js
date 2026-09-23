@@ -468,7 +468,7 @@ router.post('/blocks', (request, response) => {
   return response.json({ message: 'User blocked.' });
 });
 
-router.get('/admin/reports', (request, response) => {
+router.get('/admin/reports', async (request, response) => {
   if (!await requireAdmin(request, response)) return;
   const reports = readCollection('reports.json');
   return response.json(reports.map((report) => ({
