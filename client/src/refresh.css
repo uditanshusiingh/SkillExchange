@@ -1297,6 +1297,66 @@ html[data-theme='dark'] .main-nav.open { background: #111c17; }
   .nav-cta { justify-content: center; margin: 8px 0 0; }
 }
 
+/* Final responsive pass for shared workspaces and forms. */
+@media (max-width: 900px) {
+  .auth-gate { min-height: 100%; height: auto; overflow-y: auto; place-items: stretch; }
+  .auth-panel { width: 100%; max-height: none; }
+  .dedicated-page { height: auto; min-height: calc(100vh - 66px); padding: 54px 6vw 80px; }
+  .dedicated-skill-grid, .stories-grid, .people-directory-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .community-groups-grid, .community-feed-grid, .community-events-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .admin-panel { width: min(760px, 100%); }
+}
+
+@media (max-width: 640px) {
+  .site-header { padding: 0 16px; }
+  .brand { font-size: 18px; }
+  .main-nav.open { max-height: calc(100vh - 66px); overflow-y: auto; }
+  .auth-gate { padding: 0; }
+  .auth-panel { padding: 20px 16px 30px; }
+  .auth-layout { gap: 24px; margin-top: 38px; }
+  .auth-intro h1 { font-size: clamp(42px, 13vw, 58px); letter-spacing: -2px; }
+  .auth-card, .auth-card.signup-mode { width: 100%; height: min(520px, calc(100vh - 170px)); max-height: none; padding: 18px 16px; }
+  .auth-card h2 { font-size: 27px; }
+  .auth-card > p { margin-bottom: 13px; }
+  .dedicated-page { padding: 38px 16px 64px; }
+  .dedicated-page h1 { font-size: clamp(42px, 14vw, 58px); letter-spacing: -2px; }
+  .dedicated-explore-toolbar, .people-directory-toolbar { grid-template-columns: 1fr; }
+  .people-directory-toolbar .search-box, .people-directory-toolbar .search-box { grid-column: auto; }
+  .dedicated-skill-grid, .stories-grid, .people-directory-grid, .community-groups-grid, .community-feed-grid, .community-events-grid, .dedicated-panels { grid-template-columns: 1fr; }
+  .stories-featured, .stories-submit, .community-room-section { padding: 20px; }
+  .stories-impact, .people-profile-facts, .story-before-after, .story-detail-facts { grid-template-columns: 1fr 1fr; }
+  .stories-featured { grid-template-columns: 1fr; }
+  .featured-stat { margin-top: 18px; padding: 15px 0 0; border-top: 1px solid rgba(25,53,42,.2); border-left: 0; }
+  .community-stats { grid-template-columns: 1fr 1fr; }
+  .community-section-heading { display: block; }
+  .community-section-heading small { display: block; margin-top: 8px; }
+  .community-leader { grid-template-columns: 25px 35px 1fr auto; }
+  .community-leader small { display: none; }
+  .skill-detail-hero, .story-detail-cover { height: 105px; margin: -23px -23px 20px; }
+  .skill-detail-hero strong, .story-detail-cover strong { font-size: 64px; }
+  .modal-backdrop { padding: 74px 10px 14px; align-items: flex-start; }
+  .modal-panel { width: 100%; max-width: 100%; padding: 24px 18px; }
+  .messages-workspace { display: block; width: 100%; height: calc(100vh - 88px); max-height: calc(100vh - 88px); overflow-y: auto; }
+  .messages-sidebar, .chat-pane, .chat-details { padding: 18px; }
+  .conversation-list { grid-template-columns: 1fr; max-height: 190px; overflow-y: auto; }
+  .chat-pane { min-height: 410px; }
+  .admin-panel { max-height: calc(100vh - 88px); }
+  .admin-summary { grid-template-columns: 1fr 1fr; }
+  .admin-user-meta { grid-template-columns: 1fr 1fr; }
+  .admin-user-actions { display: grid; grid-template-columns: 1fr 1fr; }
+  .admin-user-actions .button { min-width: 0; width: 100%; }
+  .admin-notice { width: calc(100% - 24px); }
+  .notification-popover { top: 76px; right: 12px; }
+}
+
+@media (max-width: 390px) {
+  .auth-panel { padding-left: 12px; padding-right: 12px; }
+  .auth-card, .auth-card.signup-mode { padding-left: 13px; padding-right: 13px; }
+  .admin-summary, .admin-user-meta, .admin-user-actions { grid-template-columns: 1fr; }
+  .stories-impact, .people-profile-facts, .story-before-after, .story-detail-facts { grid-template-columns: 1fr; }
+  .modal-panel { padding-left: 15px; padding-right: 15px; }
+}
+
 /* The hero now explains the exchange at a glance instead of relying on an abstract orbit. */
 .exchange-visual {
   padding: 25px;
