@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowDown, ArrowLeftRight, ArrowUp, ArrowUpRight, Award, Bell, Bookmark, BriefcaseBusiness, CalendarDays, Check, CheckCircle2, ChevronDown, Clock3, Eye, EyeOff, Languages, Menu, MessageCircle, Moon, Search, Settings, Share2, ShieldCheck, Sparkles, Star, Sun, Target, Repeat2, UserRound, UsersRound, Video, X, XCircle } from 'lucide-react';
-import { blockUser, changePassword, createProfile, createVideoRoom, deleteAccount, deleteAdminUser, forgotPassword, getAdminUsers, getExchanges, getGroups, getLeaderboard, getMessages, getNotifications, getPeople, getPublicProfile, getRecommendations, getSkillMatches, getSkills, joinGroup, loginProfile, markMessageRead, markNotificationsRead, reportUser, resetPassword, scheduleExchange, sendAdminVerification, sendMessage, sendVerification, updateExchange, updatePortfolio, updateProfile, verifyEmail } from './api';
+import { blockUser, changePassword, createProfile, createVideoRoom, deleteAccount, deleteAdminUser, forgotPassword, getAdminUsers, getExchanges, getGroups, getLeaderboard, getMessages, getNotifications, getPeople, getPublicProfile, getRecommendations, getSkillMatches, getSkills, joinGroup, loginProfile, markMessageRead, markNotificationsRead, reportUser, resetPassword, scheduleExchange, sendAdminVerification, sendMessage, sendVerification, updateExchange, updatePortfolio, updateProfile, verifyEmail, getPlatformStatus } from './api';
 import { connectChat } from './socket';
 
 const categories = ['All', 'Technology', 'Creative', 'Food & home', 'Wellbeing'];
@@ -99,6 +99,11 @@ function App() {
   const [showOnboarding, setShowOnboarding] = useState(() => localStorage.getItem('skillswap-onboarding-done') !== 'true');
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [notificationHistory, setNotificationHistory] = useState([]);
+  const [platformStatus, setPlatformStatus] = useState({ maintenanceMode: false, registrationEnabled: true, announcement: { enabled: false, title: '', message: '' } });
+
+  useEffect(() => {
+    getPlatformStatus().then(setPlatformStatus).catch(() => {});
+  }, []);
 
   useEffect(() => {
     document.documentElement.dataset.theme = darkMode ? 'dark' : 'light';
@@ -245,6 +250,8 @@ function App() {
   if (!currentUser) return <AuthGate onLogin={(user) => { setCurrentUser(user); localStorage.setItem('skillswap-user', JSON.stringify(user)); }} />;
 
   return <><div className={darkMode ? 'app-shell dark-mode' : 'app-shell'}>
+    {platformStatus.maintenanceMode && <div className="platform-banner maintenance"><strong>Maintenance mode</strong><span>SkillSwap is temporarily under maintenance. Some account features may be unavailable.</span></div>}
+    {!platformStatus.maintenanceMode && platformStatus.announcement?.enabled && platformStatus.announcement?.message && <div className="platform-banner"><strong>{platformStatus.announcement.title || 'SkillSwap announcement'}</strong><span>{platformStatus.announcement.message}</span></div>}
     <header className="site-header">
       <a className="brand" href="#top" onClick={() => scrollTo('top')}><span className="brand-mark"><ArrowLeftRight size={17} strokeWidth={2.4} /></span> skillswap</a>
       <button className="menu-toggle" onClick={() => setMobileOpen(!mobileOpen)} aria-label="Toggle navigation">{mobileOpen ? <X size={20} /> : <Menu size={20} />}</button>
