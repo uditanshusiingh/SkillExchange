@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import {
   deleteAdminSkill, deleteAdminUser, getAdminExchanges, getAdminReports,
-  getAdminSkills, getAdminOverview, getAdminUsers, updateAdminExchange,
+  getAdminSkills, getAdminOverview, getAdminAnalytics, getAdminUsers, updateAdminExchange,
   updateAdminReport, updateAdminUser
 } from './api';
 import './admin.css';
@@ -80,7 +80,7 @@ export default function AdminApp() {
   const [reportFilter, setReportFilter] = useState('all');
   const [skillModal, setSkillModal] = useState(null);
   const [exchangeModal, setExchangeModal] = useState(null);
-  const [reportModal, setReportModal] = useState(null);
+  const [reportModal, setReportModal] = useState(null);\n  const [analytics, setAnalytics] = useState(null);\n  const [analyticsPeriod, setAnalyticsPeriod] = useState('daily');
 
   const logout = () => {
     localStorage.removeItem('skillswap-admin-key');
@@ -92,11 +92,11 @@ export default function AdminApp() {
     setLoading(true);
     setError('');
     try {
-      const [nextStats, nextUsers, nextSkills, nextExchanges, nextReports] = await Promise.all([
-        getAdminOverview(key), getAdminUsers(key), getAdminSkills(key),
+      const [nextStats, nextUsers, nextSkills, nextAnalytics, nextExchanges, nextReports] = await Promise.all([
+        getAdminOverview(key), getAdminUsers(key), getAdminSkills(key), getAdminAnalytics(key),
         getAdminExchanges(key), getAdminReports(key)
       ]);
-      setStats({ total: nextStats.totalUsers, verified: nextStats.verifiedUsers, discoverable: nextStats.visibleUsers, skills: nextStats.skills, exchanges: nextStats.exchanges, reports: nextStats.openReports });
+      setStats({ total: nextStats.totalUsers, verified: nextStats.verifiedUsers, discoverable: nextStats.visibleUsers, skills: nextStats.skills, exchanges: nextStats.exchanges, reports: nextStats.openReports });\n      setAnalytics(nextAnalytics);
       setUsers(nextUsers);
       setSkills(nextSkills);
       setExchanges(nextExchanges);
@@ -226,12 +226,19 @@ export default function AdminApp() {
   if (!authenticated) return <AdminLogin onLogin={(key) => { setAdminKey(key); setAuthenticated(true); loadAll(key); }} />;
 
   const nav = [
-    ['overview', LayoutDashboard, 'Overview'],
+    ['overview', LayoutDashboard, 'Overview'],\n    ['analytics', BarChart3, 'Analytics'],
     ['users', Users, 'Users'],
     ['skills', BarChart3, 'Skills'],
     ['exchanges', Activity, 'Exchanges'],
     ['reports', CircleAlert, 'Reports']
   ];
+
+  const analyticsRows = analytics?.[analyticsPeriod] || [];
+  const maxUsers = Math.max(1, ...analyticsRows.map((item) => item.users || 0));
+  const maxActivity = Math.max(1, ...analyticsRows.map((item) => (item.skills || 0) + (item.exchanges || 0) + (item.reports || 0)));
+  const latestGrowth = analyticsRows[analyticsRows.length - 1]?.growth ?? stats.total;
+  const previousGrowth = analyticsRows[analyticsRows.length - 2]?.growth ?? latestGrowth;
+  const growthDelta = latestGrowth - previousGrowth;
 
   return <div className="admin-shell">
     <aside className={`admin-sidebar ${sidebarOpen ? 'open' : ''}`}>
@@ -273,6 +280,42 @@ export default function AdminApp() {
           </div>
         </div>
       </section>}
+
+      {section === 'analytics' && <section>
+        <div className="admin-analytics-toolbar">
+          <div><span className="admin-eyebrow">PLATFORM INSIGHTS</span><h2>Advanced analytics</h2><p>Track growth, activity and moderation trends from your SkillSwap data.</p></div>
+          <div className="admin-period-switcher">
+            {['daily', 'weekly', 'monthly'].map((period) => <button key={period} className={analyticsPeriod === period ? 'active' : ''} onClick={() => setAnalyticsPeriod(period)}>{period}</button>)}
+          </div>
+        </div>
+        <div className="admin-analytics-kpis">
+          <div className="admin-analytics-kpi"><span>Active users</span><strong>{analytics?.activeUsers ?? 0}</strong><small>Unique users active in the last 30 days</small></div>
+          <div className="admin-analytics-kpi"><span>User growth</span><strong>{latestGrowth}</strong><small>{growthDelta >= 0 ? '+' : ''}{growthDelta} from previous period</small></div>
+          <div className="admin-analytics-kpi"><span>New skills</span><strong>{analyticsRows.reduce((sum, item) => sum + (item.skills || 0), 0)}</strong><small>In selected period</small></div>
+          <div className="admin-analytics-kpi"><span>Exchange activity</span><strong>{analyticsRows.reduce((sum, item) => sum + (item.exchanges || 0), 0)}</strong><small>Created exchanges</small></div>
+        </div>
+        <div className="admin-analytics-grid">
+          <div className="admin-card admin-chart-card">
+            <div className="admin-card-head"><div><span className="admin-eyebrow">USER GROWTH</span><h2>New users & cumulative growth</h2></div><span className="data-chip">{analyticsPeriod}</span></div>
+            <div className="admin-growth-chart">
+              <svg viewBox="0 0 900 280" role="img" aria-label="User growth chart" preserveAspectRatio="none">
+                <polyline fill="none" points={analyticsRows.map((item, index) => `${(index / Math.max(1, analyticsRows.length - 1)) * 880 + 10},${265 - ((item.growth / Math.max(1, latestGrowth || 1)) * 235)}`).join(' ')} />
+                {analyticsRows.map((item, index) => <circle key={item.key} cx={(index / Math.max(1, analyticsRows.length - 1)) * 880 + 10} cy={265 - ((item.growth / Math.max(1, latestGrowth || 1)) * 235)} r="3.5"><title>{item.label}: {item.growth} users</title></circle>)}
+              </svg>
+              <div className="admin-chart-axis">{analyticsRows.filter((_, index) => index % Math.max(1, Math.ceil(analyticsRows.length / 6)) === 0).map((item) => <span key={item.key}>{item.label}</span>)}</div>
+            </div>
+          </div>
+          <div className="admin-card admin-chart-card">
+            <div className="admin-card-head"><div><span className="admin-eyebrow">ACTIVITY MIX</span><h2>Skills, exchanges & reports</h2></div></div>
+            <div className="admin-activity-bars">{analyticsRows.map((item) => <div className="admin-activity-group" key={item.key} title={item.label}><div className="admin-activity-stack"><span style={{height: `${((item.skills || 0) / maxActivity) * 100}%`}}></span><span style={{height: `${((item.exchanges || 0) / maxActivity) * 100}%`}}></span><span style={{height: `${((item.reports || 0) / maxActivity) * 100}%`}}></span></div></div>)}</div>
+            <div className="admin-chart-legend"><span><i/>Skills</span><span><i/>Exchanges</span><span><i/>Reports</span></div>
+          </div>
+        </div>
+        <div className="admin-card admin-chart-card">
+          <div className="admin-card-head"><div><span className="admin-eyebrow">NEW USERS</span><h2>{analyticsPeriod[0].toUpperCase() + analyticsPeriod.slice(1)} sign-ups</h2></div><span className="data-chip">{analyticsRows.reduce((sum, item) => sum + (item.users || 0), 0)} total</span></div>
+          <div className="admin-user-bars">{analyticsRows.map((item) => <div className="admin-user-bar-wrap" key={item.key} title={`${item.label}: ${item.users} new users`}><div className="admin-user-bar" style={{height: `${((item.users || 0) / maxUsers) * 180}px`}}></div><span>{item.label}</span></div>)}</div>
+        </div>
+      </section>
 
       {section !== 'overview' && <section className="admin-card admin-table-card">
         <div className="admin-card-head">
