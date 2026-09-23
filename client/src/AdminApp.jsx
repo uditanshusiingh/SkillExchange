@@ -330,7 +330,7 @@ export default function AdminApp() {
   const previousGrowth = analyticsRows[analyticsRows.length - 2]?.growth ?? latestGrowth;
   const growthDelta = latestGrowth - previousGrowth;
 
-  return <div className="admin-shell">
+  return <div className={`admin-shell ${adminSettings.dashboard?.compactMode ? 'compact' : ''}`}>
     <aside className={`admin-sidebar ${sidebarOpen ? 'open' : ''}`}>
       <div className="admin-sidebar-brand"><div className="admin-brand-mark small"><Shield size={18} /></div><div><strong>SkillSwap</strong><span>Admin Panel</span></div></div>
       <nav>{nav.map(([id, Icon, label]) => <button key={id} className={section === id ? 'active' : ''} onClick={() => { setSection(id); setQuery(''); setSidebarOpen(false); }}><Icon size={18} /><span>{label}</span>{id === 'notifications' && notifications.filter((item) => !notificationRead.includes(item.id)).length > 0 && <b className="admin-nav-badge">{notifications.filter((item) => !notificationRead.includes(item.id)).length > 99 ? '99+' : notifications.filter((item) => !notificationRead.includes(item.id)).length}</b>}<ChevronRight size={14} /></button>)}</nav>
