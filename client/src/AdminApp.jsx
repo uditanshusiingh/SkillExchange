@@ -328,7 +328,7 @@ export default function AdminApp() {
   return <div className="admin-shell">
     <aside className={`admin-sidebar ${sidebarOpen ? 'open' : ''}`}>
       <div className="admin-sidebar-brand"><div className="admin-brand-mark small"><Shield size={18} /></div><div><strong>SkillSwap</strong><span>Admin Panel</span></div></div>
-      <nav>{nav.map(([id, Icon, label]) => <button key={id} className={section === id ? 'active' : ''} onClick={() => { setSection(id); setQuery(''); setSidebarOpen(false); }}><Icon size={18} /><span>{label}</span><ChevronRight size={14} /></button>)}</nav>
+      <nav>{nav.map(([id, Icon, label]) => <button key={id} className={section === id ? 'active' : ''} onClick={() => { setSection(id); setQuery(''); setSidebarOpen(false); }}><Icon size={18} /><span>{label}</span>{id === 'notifications' && notifications.filter((item) => !notificationRead.includes(item.id)).length > 0 && <b className="admin-nav-badge">{notifications.filter((item) => !notificationRead.includes(item.id)).length > 99 ? '99+' : notifications.filter((item) => !notificationRead.includes(item.id)).length}</b>}<ChevronRight size={14} /></button>)}</nav>
       <div className="admin-sidebar-bottom">
         <a href="/"><ArrowLeft size={17} /> Back to website</a>
         <button onClick={logout}><LogOut size={17} /> Logout</button>
