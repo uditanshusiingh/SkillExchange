@@ -584,7 +584,8 @@ router.put('/profiles/:id', async (request, response) => {
 router.post('/exchanges', async (request, response) => {
   const emails = await discoverableEmails();
   if (!hasDiscoverableParticipants(request.body, emails, ['requesterEmail', 'ownerEmail'])) return response.status(403).json({ message: 'Exchanges are available only between verified community members.' });
-  const exchange = { _id: `exchange-${Date.now()}`, ...request.body, status: 'pending', createdAt: new Date().toISOString() };
+  const now = new Date().toISOString();
+  const exchange = { _id: `exchange-${Date.now()}`, ...request.body, status: 'pending', createdAt: now, updatedAt: now, statusHistory: [{ status: 'pending', at: now, source: 'system' }] };
   const exchanges = readCollection('exchanges.json');
   writeCollection('exchanges.json', [exchange, ...exchanges]);
   return response.status(201).json(exchange);
@@ -965,9 +966,24 @@ router.delete('/admin/skills/:id', async (request, response) => {
   return response.json({ ok: true });
 });
 
-router.get('/admin/exchanges', (request, response) => {
+router.get('/admin/exchanges', async (request, response) => {
   if (!requireAdmin(request, response)) return;
-  return response.json(readCollection('exchanges.json'));
+  const exchanges = readCollection('exchanges.json');
+  const emails = [...new Set(exchanges.flatMap((item) => [item.requesterEmail, item.ownerEmail]).filter(Boolean))];
+  let profiles = [];
+  if (process.env.MONGODB_URI && emails.length) profiles = await Profile.find({ email: { $in: emails } }).select('name email location avatar verified emailVerified teaches wants').lean();
+  else if (!process.env.MONGODB_URI && emails.length) profiles = readProfiles().filter((profile) => emails.includes(profile.email));
+  const byEmail = new Map(profiles.map((profile) => [profile.email.toLowerCase(), publicProfile(profile)]));
+  return response.json(exchanges.map((item) => {
+    const requester = byEmail.get(String(item.requesterEmail || '').toLowerCase());
+    const owner = byEmail.get(String(item.ownerEmail || '').toLowerCase());
+    return {
+      ...item,
+      statusHistory: Array.isArray(item.statusHistory) && item.statusHistory.length ? item.statusHistory : [{ status: item.status || 'pending', at: item.updatedAt || item.createdAt, source: 'legacy' }],
+      requester: requester ? { name: requester.name, email: requester.email, location: requester.location, avatar: requester.avatar, verified: requester.verified || requester.emailVerified, teaches: requester.teaches || [], wants: requester.wants || [] } : null,
+      owner: owner ? { name: owner.name, email: owner.email, location: owner.location, avatar: owner.avatar, verified: owner.verified || owner.emailVerified, teaches: owner.teaches || [], wants: owner.wants || [] } : null
+    };
+  }));
 });
 
 router.patch('/admin/exchanges/:id', async (request, response) => {
@@ -975,10 +991,15 @@ router.patch('/admin/exchanges/:id', async (request, response) => {
   const exchanges = readCollection('exchanges.json');
   const index = exchanges.findIndex((item) => item._id === request.params.id);
   if (index === -1) return response.status(404).json({ message: 'Exchange not found.' });
-  const allowed = ['pending', 'accepted', 'rejected', 'completed'];
+  const allowed = ['pending', 'accepted', 'rejected', 'completed', 'cancelled'];
   if (!allowed.includes(request.body.status)) return response.status(400).json({ message: 'Invalid exchange status.' });
-  exchanges[index] = { ...exchanges[index], status: request.body.status };
+  const now = new Date().toISOString();
+  const previous = exchanges[index].status || 'pending';
+  const history = Array.isArray(exchanges[index].statusHistory) ? exchanges[index].statusHistory : [{ status: previous, at: exchanges[index].createdAt || now, source: 'legacy' }];
+  if (previous !== request.body.status) history.push({ status: request.body.status, at: now, source: 'admin' });
+  exchanges[index] = { ...exchanges[index], status: request.body.status, updatedAt: now, statusHistory: history };
   writeCollection('exchanges.json', exchanges);
+  await recordAdminLog(request, { action: 'exchange_status_updated', targetType: 'exchange', targetId: exchanges[index]._id, details: `Status changed from ${previous} to ${request.body.status}.` });
   return response.json(exchanges[index]);
 });
 
