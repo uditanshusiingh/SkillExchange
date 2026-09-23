@@ -445,6 +445,7 @@ router.delete('/profiles/:email', (request, response) => {
   const next = profiles.filter((profile) => profile.email !== email);
   if (next.length === profiles.length) return response.status(404).json({ message: 'Profile not found.' });
   writeProfiles(next);
+  localSkills = localSkills.filter((skill) => String(skill.teacher?.email || '').toLowerCase() !== email);
   return response.json({ message: 'Account deleted successfully.' });
 });
 
