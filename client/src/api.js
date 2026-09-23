@@ -22,33 +22,33 @@ export async function getSkills(filters = {}) {
 
 export async function getPeople(filters = {}) { const params = new URLSearchParams(filters); const response = await fetch(`${API_URL}/profiles?${params}`); return readResponse(response, 'Could not load people'); }
 
-export async function getAdminUsers(adminKey) {
-  const response = await fetch(`${API_URL}/admin/users`, { headers: { 'x-admin-key': adminKey || '' } });
+export async function getAdminUsers(adminSession) {
+  const response = await fetch(`${API_URL}/admin/users`, { headers: { 'x-admin-session': adminSession || '' } });
   return readResponse(response, 'Could not load admin users');
 }
 
-export async function updateAdminUser(adminKey, id, profile) {
+export async function updateAdminUser(adminSession, id, profile) {
   const response = await fetch(`${API_URL}/admin/users/${encodeURIComponent(id)}`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey || '' },
+    headers: { 'Content-Type': 'application/json', 'x-admin-session': adminSession || '' },
     body: JSON.stringify(profile)
   });
   return readResponse(response, 'Could not update user');
 }
 
-export async function sendAdminVerification(adminKey, id) {
+export async function sendAdminVerification(adminSession, id) {
   const response = await fetch(`${API_URL}/admin/users/${encodeURIComponent(id)}/send-verification`, {
     method: 'POST',
-    headers: { 'x-admin-key': adminKey || '' }
+    headers: { 'x-admin-session': adminSession || '' }
   });
   return readResponse(response, 'Could not send verification');
 }
 
-export async function getAdminUserActivity(adminKey, id) { const response = await fetch(`${API_URL}/admin/users/${encodeURIComponent(id)}/activity`, { headers: { 'x-admin-key': adminKey || '' } }); return readResponse(response, 'Could not load user activity'); }
-export async function deleteAdminUser(adminKey, id) {
+export async function getAdminUserActivity(adminSession, id) { const response = await fetch(`${API_URL}/admin/users/${encodeURIComponent(id)}/activity`, { headers: { 'x-admin-session': adminSession || '' } }); return readResponse(response, 'Could not load user activity'); }
+export async function deleteAdminUser(adminSession, id) {
   const response = await fetch(`${API_URL}/admin/users/${encodeURIComponent(id)}`, {
     method: 'DELETE',
-    headers: { 'x-admin-key': adminKey || '' }
+    headers: { 'x-admin-session': adminSession || '' }
   });
   return readResponse(response, 'Could not delete user');
 }
@@ -132,66 +132,66 @@ export async function getGroups() { const response = await fetch(`${API_URL}/gro
 export async function joinGroup(id) { const response = await fetch(`${API_URL}/groups/${id}/join`, { method: 'POST' }); return readResponse(response, 'Could not join group'); }
 export async function createVideoRoom() { const response = await fetch(`${API_URL}/video-rooms`, { method: 'POST' }); return readResponse(response, 'Could not create video room'); }
 
-export async function adminLogin(adminKey) {
-  const response = await fetch(`${API_URL}/admin/auth`, { method: 'POST', headers: { 'x-admin-key': adminKey || '' } });
+export async function adminLogin(adminSession) {
+  const response = await fetch(`${API_URL}/admin/auth`, { method: 'POST', headers: { 'x-admin-session': adminSession || '' } });
   return readResponse(response, 'Admin login failed');
 }
-export async function getAdminLogs(adminKey) { const response = await fetch(`${API_URL}/admin/logs`, { headers: { 'x-admin-key': adminKey || '' } }); return readResponse(response, 'Could not load admin logs'); }
-export async function adminLogout(adminKey) { const response = await fetch(`${API_URL}/admin/logout`, { method: 'POST', headers: { 'x-admin-key': adminKey || '' } }); return readResponse(response, 'Could not record admin logout'); }
-export async function getAdminNotifications(adminKey) {
-  const response = await fetch(`${API_URL}/admin/notifications`, { headers: { 'x-admin-key': adminKey || '' } });
+export async function getAdminLogs(adminSession) { const response = await fetch(`${API_URL}/admin/logs`, { headers: { 'x-admin-session': adminSession || '' } }); return readResponse(response, 'Could not load admin logs'); }
+export async function adminLogout(adminSession) { const response = await fetch(`${API_URL}/admin/logout`, { method: 'POST', headers: { 'x-admin-session': adminSession || '' } }); return readResponse(response, 'Could not record admin logout'); }
+export async function getAdminNotifications(adminSession) {
+  const response = await fetch(`${API_URL}/admin/notifications`, { headers: { 'x-admin-session': adminSession || '' } });
   return readResponse(response, 'Could not load admin notifications');
 }
 
-export async function getAdminSettings(adminKey) {
-  const response = await fetch(`${API_URL}/admin/settings`, { headers: { 'x-admin-key': adminKey || '' } });
+export async function getAdminSettings(adminSession) {
+  const response = await fetch(`${API_URL}/admin/settings`, { headers: { 'x-admin-session': adminSession || '' } });
   return readResponse(response, 'Could not load admin settings');
 }
 
-export async function updateAdminSettings(adminKey, settings) {
+export async function updateAdminSettings(adminSession, settings) {
   const response = await fetch(`${API_URL}/admin/settings`, {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey || '' },
+    headers: { 'Content-Type': 'application/json', 'x-admin-session': adminSession || '' },
     body: JSON.stringify(settings)
   });
   return readResponse(response, 'Could not save admin settings');
 }
 
-export async function getAdminOverview(adminKey) {
-  const response = await fetch(`${API_URL}/admin/overview`, { headers: { 'x-admin-key': adminKey || '' } });
+export async function getAdminOverview(adminSession) {
+  const response = await fetch(`${API_URL}/admin/overview`, { headers: { 'x-admin-session': adminSession || '' } });
   return readResponse(response, 'Could not load admin overview');
 }
-export async function getAdminAnalytics(adminKey) {
-  const response = await fetch(`${API_URL}/admin/analytics`, { headers: { 'x-admin-key': adminKey || '' } });
+export async function getAdminAnalytics(adminSession) {
+  const response = await fetch(`${API_URL}/admin/analytics`, { headers: { 'x-admin-session': adminSession || '' } });
   return readResponse(response, 'Could not load admin analytics');
 }
-export async function getAdminSkills(adminKey) {
-  const response = await fetch(`${API_URL}/admin/skills`, { headers: { 'x-admin-key': adminKey || '' } });
+export async function getAdminSkills(adminSession) {
+  const response = await fetch(`${API_URL}/admin/skills`, { headers: { 'x-admin-session': adminSession || '' } });
   return readResponse(response, 'Could not load admin skills');
 }
-export async function updateAdminSkillModeration(adminKey, id, payload) { const response = await fetch(`${API_URL}/admin/skills/${encodeURIComponent(id)}/moderation`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey || '' }, body: JSON.stringify(payload) }); return readResponse(response, 'Could not update skill moderation'); }
-export async function getAdminSkillCategories(adminKey) { const response = await fetch(`${API_URL}/admin/skill-categories`, { headers: { 'x-admin-key': adminKey || '' } }); return readResponse(response, 'Could not load skill categories'); }
-export async function addAdminSkillCategory(adminKey, name) { const response = await fetch(`${API_URL}/admin/skill-categories`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey || '' }, body: JSON.stringify({ name }) }); return readResponse(response, 'Could not add skill category'); }
-export async function deleteAdminSkillCategory(adminKey, name) { const response = await fetch(`${API_URL}/admin/skill-categories/${encodeURIComponent(name)}`, { method: 'DELETE', headers: { 'x-admin-key': adminKey || '' } }); return readResponse(response, 'Could not delete skill category'); }
-export async function getAdminSkillStatistics(adminKey) { const response = await fetch(`${API_URL}/admin/skill-statistics`, { headers: { 'x-admin-key': adminKey || '' } }); return readResponse(response, 'Could not load skill statistics'); }
-export async function deleteAdminSkill(adminKey, id) {
-  const response = await fetch(`${API_URL}/admin/skills/${encodeURIComponent(id)}`, { method: 'DELETE', headers: { 'x-admin-key': adminKey || '' } });
+export async function updateAdminSkillModeration(adminSession, id, payload) { const response = await fetch(`${API_URL}/admin/skills/${encodeURIComponent(id)}/moderation`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'x-admin-session': adminSession || '' }, body: JSON.stringify(payload) }); return readResponse(response, 'Could not update skill moderation'); }
+export async function getAdminSkillCategories(adminSession) { const response = await fetch(`${API_URL}/admin/skill-categories`, { headers: { 'x-admin-session': adminSession || '' } }); return readResponse(response, 'Could not load skill categories'); }
+export async function addAdminSkillCategory(adminSession, name) { const response = await fetch(`${API_URL}/admin/skill-categories`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-admin-session': adminSession || '' }, body: JSON.stringify({ name }) }); return readResponse(response, 'Could not add skill category'); }
+export async function deleteAdminSkillCategory(adminSession, name) { const response = await fetch(`${API_URL}/admin/skill-categories/${encodeURIComponent(name)}`, { method: 'DELETE', headers: { 'x-admin-session': adminSession || '' } }); return readResponse(response, 'Could not delete skill category'); }
+export async function getAdminSkillStatistics(adminSession) { const response = await fetch(`${API_URL}/admin/skill-statistics`, { headers: { 'x-admin-session': adminSession || '' } }); return readResponse(response, 'Could not load skill statistics'); }
+export async function deleteAdminSkill(adminSession, id) {
+  const response = await fetch(`${API_URL}/admin/skills/${encodeURIComponent(id)}`, { method: 'DELETE', headers: { 'x-admin-session': adminSession || '' } });
   return readResponse(response, 'Could not delete skill');
 }
-export async function getAdminReports(adminKey) {
-  const response = await fetch(`${API_URL}/admin/reports`, { headers: { 'x-admin-key': adminKey || '' } });
+export async function getAdminReports(adminSession) {
+  const response = await fetch(`${API_URL}/admin/reports`, { headers: { 'x-admin-session': adminSession || '' } });
   return readResponse(response, 'Could not load reports');
 }
-export async function updateAdminReport(adminKey, id, payload) {
+export async function updateAdminReport(adminSession, id, payload) {
   const body = typeof payload === 'string' ? { status: payload } : payload;
-  const response = await fetch(`${API_URL}/admin/reports/${encodeURIComponent(id)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey || '' }, body: JSON.stringify(body) });
+  const response = await fetch(`${API_URL}/admin/reports/${encodeURIComponent(id)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'x-admin-session': adminSession || '' }, body: JSON.stringify(body) });
   return readResponse(response, 'Could not update report');
 }
-export async function getAdminExchanges(adminKey) {
-  const response = await fetch(`${API_URL}/admin/exchanges`, { headers: { 'x-admin-key': adminKey || '' } });
+export async function getAdminExchanges(adminSession) {
+  const response = await fetch(`${API_URL}/admin/exchanges`, { headers: { 'x-admin-session': adminSession || '' } });
   return readResponse(response, 'Could not load exchanges');
 }
-export async function updateAdminExchange(adminKey, id, status) {
-  const response = await fetch(`${API_URL}/admin/exchanges/${encodeURIComponent(id)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey || '' }, body: JSON.stringify({ status }) });
+export async function updateAdminExchange(adminSession, id, status) {
+  const response = await fetch(`${API_URL}/admin/exchanges/${encodeURIComponent(id)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'x-admin-session': adminSession || '' }, body: JSON.stringify({ status }) });
   return readResponse(response, 'Could not update exchange');
 }
