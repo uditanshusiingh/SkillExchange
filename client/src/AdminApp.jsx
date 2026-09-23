@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   Activity, ArrowLeft, BarChart3, CheckCircle2, ChevronRight, CircleAlert,
-  Clock3, Database, Eye, EyeOff, LayoutDashboard, LogOut, Menu, RefreshCw, Search,
+  Clock3, Database, Edit3, Eye, EyeOff, LayoutDashboard, LogOut, MapPin, Menu, MessageSquare, RefreshCw, Search,
   Shield, ShieldCheck, Trash2, UserCheck, Users, X
 } from 'lucide-react';
 import {
@@ -27,6 +27,9 @@ function AdminLogin({ onLogin }) {
   const [key, setKey] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [userModal, setUserModal] = useState(null);
+  const [userFilter, setUserFilter] = useState('all');
+  const [savingUser, setSavingUser] = useState(false);
 
   const submit = async (event) => {
     event.preventDefault();
@@ -107,9 +110,41 @@ export default function AdminApp() {
 
   const filteredUsers = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return users;
-    return users.filter((u) => [u.name, u.email, u.location, ...(u.teaches || []), ...(u.wants || [])].filter(Boolean).join(' ').toLowerCase().includes(q));
-  }, [users, query]);
+    return users.filter((u) => {
+      const matchesQuery = !q || [u.name, u.email, u.location, ...(u.teaches || []), ...(u.wants || [])].filter(Boolean).join(' ').toLowerCase().includes(q);
+      const verified = Boolean(u.emailVerified || u.verified);
+      const visible = u.profileVisible !== false;
+      const matchesFilter = userFilter === 'all' || (userFilter === 'verified' && verified) || (userFilter === 'pending' && !verified) || (userFilter === 'hidden' && !visible);
+      return matchesQuery && matchesFilter;
+    });
+  }, [users, query, userFilter]);
+
+  const openUserEditor = (user) => {
+    setUserModal({ ...user, teachesText: (user.teaches || []).join(', '), wantsText: (user.wants || []).join(', ') });
+  };
+
+  const saveUser = async () => {
+    if (!userModal) return;
+    setSavingUser(true);
+    try {
+      const payload = {
+        name: userModal.name,
+        location: userModal.location,
+        bio: userModal.bio,
+        teaches: userModal.teachesText.split(',').map((item) => item.trim()).filter(Boolean),
+        wants: userModal.wantsText.split(',').map((item) => item.trim()).filter(Boolean),
+        profileVisible: userModal.profileVisible !== false,
+        allowMessages: userModal.allowMessages !== false,
+        verified: Boolean(userModal.emailVerified || userModal.verified)
+      };
+      const updated = await updateAdminUser(adminKey, userModal._id || userModal.email, payload);
+      setUsers((items) => items.map((item) => (item._id || item.email) === (userModal._id || userModal.email) ? updated : item));
+      setUserModal(null);
+      setNotice('User profile updated successfully.');
+      await refresh();
+    } catch (err) { setError(err.message); }
+    finally { setSavingUser(false); }
+  };
 
   const filteredSkills = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -223,10 +258,10 @@ export default function AdminApp() {
       {section !== 'overview' && <section className="admin-card admin-table-card">
         <div className="admin-card-head">
           <div><span className="admin-eyebrow">MANAGEMENT</span><h2>{nav.find(([id]) => id === section)?.[2]}</h2></div>
-          <label className="admin-search"><Search size={17} /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={`Search ${section}…`} /></label>
+          <div className="admin-table-tools"><label className="admin-search"><Search size={17} /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={"Search " + section + "…"} /></label>{section === 'users' && <select className="admin-filter" value={userFilter} onChange={(e) => setUserFilter(e.target.value)}><option value="all">All users</option><option value="verified">Verified</option><option value="pending">Pending</option><option value="hidden">Hidden profiles</option></select>}</div>
         </div>
 
-        {section === 'users' && <div className="admin-table-wrap"><table><thead><tr><th>User</th><th>Location</th><th>Status</th><th>Skills</th><th>Actions</th></tr></thead><tbody>{filteredUsers.map((u) => <tr key={u._id || u.email}><td><div className="table-user"><span className="admin-avatar">{(u.name || 'U').slice(0,2).toUpperCase()}</span><div><strong>{u.name || 'Unnamed'}</strong><small>{u.email}</small></div></div></td><td>{u.location || '—'}</td><td><span className={u.emailVerified || u.verified ? 'pill success' : 'pill'}>{u.emailVerified || u.verified ? 'Verified' : 'Unverified'}</span><span className={u.profileVisible === false ? 'pill muted' : 'pill success'}>{u.profileVisible === false ? 'Hidden' : 'Visible'}</span></td><td>{u.teaches?.length ? u.teaches.slice(0,3).join(', ') : '—'}</td><td><div className="table-actions"><button title="Verify / unverify" onClick={() => userAction(u, { verified: !(u.emailVerified || u.verified) })}><UserCheck size={15} /></button><button title="Hide / show profile" onClick={() => userAction(u, { profileVisible: u.profileVisible === false })}>{u.profileVisible === false ? <Eye size={15} /> : <EyeOff size={15} />}</button><button className="danger" title="Delete" onClick={() => deleteUser(u)}><Trash2 size={15} /></button></div></td></tr>)}</tbody></table>{!filteredUsers.length && <div className="admin-empty">No users found.</div>}</div>}
+        {section === 'users' && <div className="admin-table-wrap"><table><thead><tr><th>User</th><th>Location</th><th>Status</th><th>Skills</th><th>Actions</th></tr></thead><tbody>{filteredUsers.map((u) => <tr key={u._id || u.email}><td><div className="table-user"><span className="admin-avatar">{(u.name || 'U').slice(0,2).toUpperCase()}</span><div><strong>{u.name || 'Unnamed'}</strong><small>{u.email}</small></div></div></td><td>{u.location || '—'}</td><td><span className={u.emailVerified || u.verified ? 'pill success' : 'pill'}>{u.emailVerified || u.verified ? 'Verified' : 'Unverified'}</span><span className={u.profileVisible === false ? 'pill muted' : 'pill success'}>{u.profileVisible === false ? 'Hidden' : 'Visible'}</span></td><td>{u.teaches?.length ? u.teaches.slice(0,3).join(', ') : '—'}</td><td><div className="table-actions"><button title="View / edit user" onClick={() => openUserEditor(u)}><Edit3 size={15} /></button><button title="Verify / unverify" onClick={() => userAction(u, { verified: !(u.emailVerified || u.verified) })}><UserCheck size={15} /></button><button title="Hide / show profile" onClick={() => userAction(u, { profileVisible: u.profileVisible === false })}>{u.profileVisible === false ? <Eye size={15} /> : <EyeOff size={15} />}</button><button className="danger" title="Delete" onClick={() => deleteUser(u)}><Trash2 size={15} /></button></div></td></tr>)}</tbody></table>{!filteredUsers.length && <div className="admin-empty">No users found.</div>}</div>}
 
         {section === 'skills' && <div className="admin-table-wrap"><table><thead><tr><th>Skill</th><th>Category</th><th>Level</th><th>Teacher</th><th>Actions</th></tr></thead><tbody>{filteredSkills.map((s) => <tr key={s._id}><td><strong>{s.title}</strong><small>{s.description}</small></td><td>{s.category}</td><td>{s.level}</td><td>{s.teacher?.name || '—'}</td><td><div className="table-actions"><button className="danger" title="Delete" onClick={() => deleteSkill(s)}><Trash2 size={15} /></button></div></td></tr>)}</tbody></table>{!filteredSkills.length && <div className="admin-empty">No skills found.</div>}</div>}
 
@@ -234,6 +269,25 @@ export default function AdminApp() {
 
         {section === 'reports' && <div className="admin-report-grid">{reports.map((r) => <article className="admin-report" key={r._id}><div className="report-header"><span className={r.status === 'resolved' ? 'pill success' : 'pill warning'}>{r.status}</span><small>{new Date(r.createdAt).toLocaleString()}</small></div><h3>{r.reason}</h3><p><strong>Reported:</strong> {r.reportedEmail}</p><p><strong>Reporter:</strong> {r.reporterEmail}</p>{r.details && <p>{r.details}</p>}<div className="report-actions">{r.status !== 'resolved' && <button onClick={() => resolveReport(r, 'resolved')}>Resolve</button>}<button onClick={() => resolveReport(r, 'dismissed')}>Dismiss</button></div></article>)}{!reports.length && <div className="admin-empty">No reports.</div>}</div>}
       </section>}
+      {userModal && <div className="admin-modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setUserModal(null); }}>
+        <section className="admin-modal" role="dialog" aria-modal="true">
+          <div className="admin-modal-head"><div><span className="admin-eyebrow">USER MANAGEMENT</span><h2>Edit profile</h2></div><button className="admin-modal-close" onClick={() => setUserModal(null)}><X size={18} /></button></div>
+          <div className="admin-profile-hero"><span className="admin-avatar large">{(userModal.name || 'U').slice(0,2).toUpperCase()}</span><div><strong>{userModal.name || 'Unnamed'}</strong><small>{userModal.email}</small></div><span className={userModal.emailVerified || userModal.verified ? 'pill success' : 'pill warning'}>{userModal.emailVerified || userModal.verified ? 'Verified' : 'Pending'}</span></div>
+          <div className="admin-form-grid">
+            <label>Name<input value={userModal.name || ''} onChange={(e) => setUserModal({...userModal,name:e.target.value})} /></label>
+            <label>Location<div className="admin-input-icon"><MapPin size={14}/><input value={userModal.location || ''} onChange={(e) => setUserModal({...userModal,location:e.target.value})} /></div></label>
+            <label className="full">Bio<textarea rows="3" value={userModal.bio || ''} onChange={(e) => setUserModal({...userModal,bio:e.target.value})} /></label>
+            <label>Teaches <small>comma separated</small><input value={userModal.teachesText || ''} onChange={(e) => setUserModal({...userModal,teachesText:e.target.value})} /></label>
+            <label>Wants to learn <small>comma separated</small><input value={userModal.wantsText || ''} onChange={(e) => setUserModal({...userModal,wantsText:e.target.value})} /></label>
+          </div>
+          <div className="admin-toggle-grid">
+            <label><span><Eye size={15}/> Profile visible</span><input type="checkbox" checked={userModal.profileVisible !== false} onChange={(e) => setUserModal({...userModal,profileVisible:e.target.checked})}/></label>
+            <label><span><MessageSquare size={15}/> Direct messages</span><input type="checkbox" checked={userModal.allowMessages !== false} onChange={(e) => setUserModal({...userModal,allowMessages:e.target.checked})}/></label>
+            <label><span><UserCheck size={15}/> Mark verified</span><input type="checkbox" checked={Boolean(userModal.emailVerified || userModal.verified)} onChange={(e) => setUserModal({...userModal,verified:e.target.checked,emailVerified:e.target.checked})}/></label>
+          </div>
+          <div className="admin-modal-actions"><button className="admin-secondary-button" onClick={() => setUserModal(null)}>Cancel</button><button className="admin-primary-button modal-save" onClick={saveUser} disabled={savingUser}>{savingUser ? 'Saving…' : 'Save changes'}</button></div>
+        </section>
+      </div>}
     </main>
   </div>;
 }
