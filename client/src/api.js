@@ -31,6 +31,14 @@ export async function updateAdminUser(adminKey, id, profile) {
   return readResponse(response, 'Could not update user');
 }
 
+export async function sendAdminVerification(adminKey, id) {
+  const response = await fetch(`${API_URL}/admin/users/${encodeURIComponent(id)}/send-verification`, {
+    method: 'POST',
+    headers: { 'x-admin-key': adminKey || '' }
+  });
+  return readResponse(response, 'Could not send verification');
+}
+
 export async function deleteAdminUser(adminKey, id) {
   const response = await fetch(`${API_URL}/admin/users/${encodeURIComponent(id)}`, {
     method: 'DELETE',

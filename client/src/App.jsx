@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowDown, ArrowLeftRight, ArrowUp, ArrowUpRight, Award, Bell, Bookmark, BriefcaseBusiness, CalendarDays, Check, CheckCircle2, ChevronDown, Clock3, Eye, EyeOff, Languages, Menu, MessageCircle, Moon, Search, Settings, Share2, ShieldCheck, Sparkles, Star, Sun, Target, Repeat2, UserRound, UsersRound, Video, X, XCircle } from 'lucide-react';
-import { blockUser, changePassword, createProfile, createVideoRoom, deleteAccount, deleteAdminUser, forgotPassword, getAdminUsers, getExchanges, getGroups, getLeaderboard, getMessages, getNotifications, getPeople, getPublicProfile, getRecommendations, getSkillMatches, getSkills, joinGroup, loginProfile, markMessageRead, markNotificationsRead, reportUser, resetPassword, scheduleExchange, sendMessage, sendVerification, updateExchange, updatePortfolio, updateProfile, verifyEmail } from './api';
+import { blockUser, changePassword, createProfile, createVideoRoom, deleteAccount, deleteAdminUser, forgotPassword, getAdminUsers, getExchanges, getGroups, getLeaderboard, getMessages, getNotifications, getPeople, getPublicProfile, getRecommendations, getSkillMatches, getSkills, joinGroup, loginProfile, markMessageRead, markNotificationsRead, reportUser, resetPassword, scheduleExchange, sendAdminVerification, sendMessage, sendVerification, updateExchange, updatePortfolio, updateProfile, verifyEmail } from './api';
 import { connectChat } from './socket';
 
 const categories = ['All', 'Technology', 'Creative', 'Food & home', 'Wellbeing'];
@@ -450,6 +450,11 @@ function AdminDashboardPanel({ adminKey, setAdminKey, onClose }) {
     if (!adminKey) return;
     setSaving(true);
     try {
+      if (updates.verified === true && !(user.emailVerified || user.verified)) {
+        const result = await sendAdminVerification(adminKey, user._id || user.email);
+        setError(result.developmentToken ? `${result.message} Token: ${result.developmentToken}` : result.message);
+        return;
+      }
       const updated = await updateAdminUser(adminKey, user._id || user.email, updates);
       setUsers((current) => current.map((item) => (item._id === updated._id || item.email === updated.email ? { ...item, ...updated } : item)));
       setError('');

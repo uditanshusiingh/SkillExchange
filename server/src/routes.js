@@ -369,6 +369,28 @@ router.get('/admin/users', async (request, response) => {
   return response.json(profiles.map(({ passwordHash, ...profile }) => profile));
 });
 
+router.post('/admin/users/:id/send-verification', async (request, response) => {
+  const adminKey = process.env.ADMIN_KEY || 'owner-secret';
+  if (request.headers['x-admin-key'] !== adminKey) return response.status(403).json({ message: 'Admin access required.' });
+  const lookup = decodeURIComponent(request.params.id);
+  let profile;
+  if (process.env.MONGODB_URI) {
+    profile = await Profile.findOne(mongoose.isValidObjectId(lookup) ? { _id: lookup } : { email: lookup }).lean();
+  } else {
+    profile = readProfiles().find((item) => item._id === lookup || item.email === lookup);
+  }
+  if (!profile) return response.status(404).json({ message: 'Profile not found.' });
+  const token = createVerificationToken(profile.email);
+  try {
+    await sendVerificationEmail(profile.email, token);
+    const result = { message: 'Verification link sent to the user email.' };
+    if (!mailer && !brevoApiKey) result.developmentToken = token;
+    return response.json(result);
+  } catch (error) {
+    return response.status(503).json({ message: error.message || 'Could not send verification email.' });
+  }
+});
+
 router.put('/admin/users/:id', async (request, response) => {
   const adminKey = process.env.ADMIN_KEY || 'owner-secret';
   if (request.headers['x-admin-key'] !== adminKey) return response.status(403).json({ message: 'Admin access required.' });
