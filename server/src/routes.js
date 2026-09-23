@@ -407,7 +407,7 @@ router.put('/admin/users/:id', async (request, response) => {
     ...(wants !== undefined && { wants: Array.isArray(wants) ? wants.map((item) => String(item).trim()).filter(Boolean) : [] }),
     ...(profileVisible !== undefined && { profileVisible: Boolean(profileVisible) }),
     ...(allowMessages !== undefined && { allowMessages: Boolean(allowMessages) }),
-    ...(verified !== undefined && { verified: Boolean(verified), emailVerified: true }),
+    ...(verified !== undefined && { verified: Boolean(verified), emailVerified: Boolean(verified) }),
     ...(blockedEmails !== undefined && { blockedEmails: Array.isArray(blockedEmails) ? blockedEmails.map((item) => String(item).trim().toLowerCase()).filter(Boolean) : [] }),
     ...(accountBlocked !== undefined && { accountBlocked: Boolean(accountBlocked) }),
     ...(suspendedUntil !== undefined && { suspendedUntil: suspendedUntil ? new Date(suspendedUntil) : null })
