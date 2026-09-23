@@ -5,7 +5,7 @@ import {
   Shield, ShieldCheck, Tag, Trash2, UserCheck, Users, X
 } from 'lucide-react';
 import {
-  deleteAdminSkill, deleteAdminUser, getAdminExchanges, getAdminReports,
+  adminLogin, deleteAdminSkill, deleteAdminUser, getAdminExchanges, getAdminReports,
   getAdminSkills, getAdminOverview, getAdminAnalytics, getAdminUsers, getAdminUserActivity, getAdminLogs, adminLogout, updateAdminExchange,
   updateAdminReport, updateAdminUser
 } from './api';
@@ -34,7 +34,7 @@ function AdminLogin({ onLogin }) {
     setLoading(true);
     setError('');
     try {
-      await getAdminOverview(key.trim());
+      await adminLogin(key.trim());
       onLogin(key.trim());
     } catch (err) {
       setError(err.message || 'Invalid admin key.');
