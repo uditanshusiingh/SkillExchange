@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import {
   deleteAdminSkill, deleteAdminUser, getAdminExchanges, getAdminReports,
-  getAdminSkills, getAdminOverview, getAdminAnalytics, getAdminUsers, getAdminUserActivity, updateAdminExchange,
+  getAdminSkills, getAdminOverview, getAdminAnalytics, getAdminUsers, getAdminUserActivity, getAdminLogs, adminLogout, updateAdminExchange,
   updateAdminReport, updateAdminUser
 } from './api';
 import './admin.css';
@@ -84,8 +84,10 @@ export default function AdminApp() {
   const [reportModal, setReportModal] = useState(null);
   const [analytics, setAnalytics] = useState(null);
   const [analyticsPeriod, setAnalyticsPeriod] = useState('daily');
+  const [adminLogs, setAdminLogs] = useState([]);
 
   const logout = () => {
+    adminLogout(adminKey).catch(() => {});
     localStorage.removeItem('skillswap-admin-key');
     setAdminKey('');
     setAuthenticated(false);
@@ -95,9 +97,9 @@ export default function AdminApp() {
     setLoading(true);
     setError('');
     try {
-      const [nextStats, nextUsers, nextSkills, nextAnalytics, nextExchanges, nextReports] = await Promise.all([
+      const [nextStats, nextUsers, nextSkills, nextAnalytics, nextExchanges, nextReports, nextLogs] = await Promise.all([
         getAdminOverview(key), getAdminUsers(key), getAdminSkills(key), getAdminAnalytics(key),
-        getAdminExchanges(key), getAdminReports(key)
+        getAdminExchanges(key), getAdminReports(key), getAdminLogs(key)
       ]);
       setStats({ total: nextStats.totalUsers, verified: nextStats.verifiedUsers, discoverable: nextStats.visibleUsers, skills: nextStats.skills, exchanges: nextStats.exchanges, reports: nextStats.openReports });
       setAnalytics(nextAnalytics);
@@ -105,6 +107,7 @@ export default function AdminApp() {
       setSkills(nextSkills);
       setExchanges(nextExchanges);
       setReports(nextReports);
+      setAdminLogs(nextLogs);
       setAuthenticated(true);
     } catch (err) {
       if (/admin access|403|401/i.test(err.message || '')) logout();
@@ -259,6 +262,7 @@ export default function AdminApp() {
   const nav = [
     ['overview', LayoutDashboard, 'Overview'],
     ['analytics', BarChart3, 'Analytics'],
+    ['security', ShieldCheck, 'Security & Logs'],
     ['users', Users, 'Users'],
     ['skills', BarChart3, 'Skills'],
     ['exchanges', Activity, 'Exchanges'],
@@ -360,7 +364,9 @@ export default function AdminApp() {
         </div>
         </div>
 
-        {section === 'users' && <div className="admin-table-wrap"><table><thead><tr><th>User</th><th>Location</th><th>Status</th><th>Skills</th><th>Actions</th></tr></thead><tbody>{filteredUsers.map((u) => <tr key={u._id || u.email}><td><div className="table-user"><span className="admin-avatar">{(u.name || 'U').slice(0,2).toUpperCase()}</span><div><strong>{u.name || 'Unnamed'}</strong><small>{u.email}</small></div></div></td><td>{u.location || '—'}</td><td><span className={u.emailVerified || u.verified ? 'pill success' : 'pill'}>{u.emailVerified || u.verified ? 'Verified' : 'Unverified'}</span><span className={u.profileVisible === false ? 'pill muted' : 'pill success'}>{u.profileVisible === false ? 'Hidden' : 'Visible'}</span></td><td>{u.teaches?.length ? u.teaches.slice(0,3).join(', ') : '—'}</td><td><div className="table-actions"><button title="View user details & activity" onClick={() => openUserEditor(u)}><Eye size={15} /></button><button title="Edit profile" onClick={() => openUserEditor(u)}><Edit3 size={15} /></button><button title="Verify / unverify" onClick={() => userAction(u, { verified: !(u.emailVerified || u.verified) })}><UserCheck size={15} /></button><button title={u.profileVisible === false ? 'Show profile' : 'Hide profile'} onClick={() => userAction(u, { profileVisible: u.profileVisible === false })}>{u.profileVisible === false ? <Eye size={15} /> : <EyeOff size={15} />}</button><button className={u.accountBlocked ? '' : 'danger'} title={u.accountBlocked ? 'Unblock user' : 'Block user'} onClick={() => toggleUserBlocked(u)}><Shield size={15} /></button><button className="danger" title="Delete permanently" onClick={() => deleteUser(u)}><Trash2 size={15} /></button></div></td></tr>)}</tbody></table>{!filteredUsers.length && <div className="admin-empty">No users found.</div>}</div>}
+        {section === 'security' && <div className="admin-security-grid"><div className="admin-card admin-security-summary"><div className="admin-card-head"><div><span className="admin-eyebrow">SECURITY</span><h2>Admin activity</h2></div><span className="data-chip">{adminLogs.length} events</span></div><div className="admin-security-stats"><div><strong>{adminLogs.filter((log) => log.action === 'admin_login').length}</strong><span>Successful logins</span></div><div><strong>{adminLogs.filter((log) => log.action === 'admin_login_failed').length}</strong><span>Failed attempts</span></div><div><strong>{adminLogs.filter((log) => /updated|deleted/.test(log.action || '')).length}</strong><span>Admin changes</span></div><div><strong>{adminLogs.filter((log) => log.action === 'admin_logout').length}</strong><span>Logouts</span></div></div></div><div className="admin-card admin-log-card"><div className="admin-card-head"><div><span className="admin-eyebrow">AUDIT LOG</span><h2>Who changed what</h2></div><button className="admin-secondary-button" onClick={refresh}><RefreshCw size={14}/> Refresh</button></div>{adminLogs.length ? <div className="admin-log-list">{adminLogs.map((log, index) => <div className="admin-log-row" key={log._id || (log.createdAt + '-' + index)}><span className={log.success === false ? 'admin-log-icon failed' : 'admin-log-icon'}><ShieldCheck size={15}/></span><div><strong>{String(log.action || '').replaceAll('_', ' ')}</strong><small>{log.details || 'No additional details'}{log.targetId ? ' · ' + log.targetType + ': ' + log.targetId : ''}</small></div><div className="admin-log-meta"><b>{log.admin || 'Admin'}</b><time>{log.createdAt ? new Date(log.createdAt).toLocaleString() : 'Date unavailable'}</time></div></div>)}</div> : <div className="admin-empty">No admin events recorded yet.</div>}</div></div>}
+
+{section === 'users' && <div className="admin-table-wrap"><table><thead><tr><th>User</th><th>Location</th><th>Status</th><th>Skills</th><th>Actions</th></tr></thead><tbody>{filteredUsers.map((u) => <tr key={u._id || u.email}><td><div className="table-user"><span className="admin-avatar">{(u.name || 'U').slice(0,2).toUpperCase()}</span><div><strong>{u.name || 'Unnamed'}</strong><small>{u.email}</small></div></div></td><td>{u.location || '—'}</td><td><span className={u.emailVerified || u.verified ? 'pill success' : 'pill'}>{u.emailVerified || u.verified ? 'Verified' : 'Unverified'}</span><span className={u.profileVisible === false ? 'pill muted' : 'pill success'}>{u.profileVisible === false ? 'Hidden' : 'Visible'}</span></td><td>{u.teaches?.length ? u.teaches.slice(0,3).join(', ') : '—'}</td><td><div className="table-actions"><button title="View user details & activity" onClick={() => openUserEditor(u)}><Eye size={15} /></button><button title="Edit profile" onClick={() => openUserEditor(u)}><Edit3 size={15} /></button><button title="Verify / unverify" onClick={() => userAction(u, { verified: !(u.emailVerified || u.verified) })}><UserCheck size={15} /></button><button title={u.profileVisible === false ? 'Show profile' : 'Hide profile'} onClick={() => userAction(u, { profileVisible: u.profileVisible === false })}>{u.profileVisible === false ? <Eye size={15} /> : <EyeOff size={15} />}</button><button className={u.accountBlocked ? '' : 'danger'} title={u.accountBlocked ? 'Unblock user' : 'Block user'} onClick={() => toggleUserBlocked(u)}><Shield size={15} /></button><button className="danger" title="Delete permanently" onClick={() => deleteUser(u)}><Trash2 size={15} /></button></div></td></tr>)}</tbody></table>{!filteredUsers.length && <div className="admin-empty">No users found.</div>}</div>}
 
         {section === 'skills' && <div className="admin-table-wrap"><table><thead><tr><th>Skill</th><th>Category</th><th>Level</th><th>Teacher</th><th>Actions</th></tr></thead><tbody>{filteredSkills.map((s) => <tr key={s._id}><td><div className="table-primary"><span className="table-icon skill"><Tag size={15}/></span><div><strong>{s.title}</strong><small>{s.description || 'No description'}</small></div></div></td><td><span className="data-chip">{s.category || 'General'}</span></td><td><span className="pill">{s.level || '—'}</span></td><td>{s.teacher?.name || '—'}</td><td><div className="table-actions"><button title="View skill" onClick={() => setSkillModal(s)}><Eye size={15}/></button><button className="danger" title="Delete" onClick={() => deleteSkill(s)}><Trash2 size={15} /></button></div></td></tr>)}</tbody></table>{!filteredSkills.length && <div className="admin-empty">No skills found.</div>}</div>}
 
