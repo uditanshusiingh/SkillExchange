@@ -974,6 +974,7 @@ router.patch('/admin/settings', async (request, response) => {
 
 router.get('/admin/overview', async (request, response) => {
   if (!await requireAdmin(request, response)) return;
+  await syncAllProfileSkills();
   const reports = readCollection('reports.json');
   const exchanges = readCollection('exchanges.json');
   let totalUsers = 0;
@@ -1008,6 +1009,7 @@ router.get('/admin/overview', async (request, response) => {
 
 router.get('/admin/analytics', async (request, response) => {
   if (!await requireAdmin(request, response)) return;
+  await syncAllProfileSkills();
 
   const profiles = process.env.MONGODB_URI
     ? await Profile.find({}).select('email createdAt').lean()
@@ -1105,6 +1107,7 @@ router.get('/admin/analytics', async (request, response) => {
 
 router.get('/admin/skills', async (request, response) => {
   if (!await requireAdmin(request, response)) return;
+  await syncAllProfileSkills();
   let skills = process.env.MONGODB_URI ? await Skill.find({}).sort({ createdAt: -1 }).lean() : localSkills;
   const normalized = skills.map((skill) => ({ ...skill, moderationStatus: skill.moderationStatus || 'pending', featured: Boolean(skill.featured) }));
   const duplicateKeys = new Map();
@@ -1170,6 +1173,7 @@ router.delete('/admin/skill-categories/:name', async (request, response) => {
 
 router.get('/admin/skill-statistics', async (request, response) => {
   if (!await requireAdmin(request, response)) return;
+  await syncAllProfileSkills();
   const skills = process.env.MONGODB_URI ? await Skill.find({}).lean() : localSkills;
   const stats = {
     total: skills.length,
