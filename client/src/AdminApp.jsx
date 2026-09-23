@@ -27,9 +27,6 @@ function AdminLogin({ onLogin }) {
   const [key, setKey] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [userModal, setUserModal] = useState(null);
-  const [userFilter, setUserFilter] = useState('all');
-  const [savingUser, setSavingUser] = useState(false);
 
   const submit = async (event) => {
     event.preventDefault();
@@ -75,6 +72,9 @@ export default function AdminApp() {
   const [loading, setLoading] = useState(false);
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
+  const [userModal, setUserModal] = useState(null);
+  const [userFilter, setUserFilter] = useState('all');
+  const [savingUser, setSavingUser] = useState(false);
 
   const logout = () => {
     localStorage.removeItem('skillswap-admin-key');
