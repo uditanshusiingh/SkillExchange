@@ -384,8 +384,7 @@ router.get('/admin/reports', (request, response) => {
 });
 
 router.get('/admin/stats', async (request, response) => {
-  const adminKey = process.env.ADMIN_KEY || 'owner-secret';
-  if (request.headers['x-admin-key'] !== adminKey) return response.status(403).json({ message: 'Admin access required.' });
+  if (!requireAdmin(request, response)) return;
   if (process.env.MONGODB_URI) {
     const [total, verified, discoverable] = await Promise.all([
       Profile.countDocuments(),
@@ -403,8 +402,7 @@ router.get('/admin/stats', async (request, response) => {
 });
 
 router.get('/admin/users', async (request, response) => {
-  const adminKey = process.env.ADMIN_KEY || 'owner-secret';
-  if (request.headers['x-admin-key'] !== adminKey) return response.status(403).json({ message: 'Admin access required.' });
+  if (!requireAdmin(request, response)) return;
   if (process.env.MONGODB_URI) {
     const profiles = await Profile.find({}).select('-passwordHash').sort({ createdAt: -1 }).lean();
     return response.json(profiles);
@@ -414,8 +412,7 @@ router.get('/admin/users', async (request, response) => {
 });
 
 router.post('/admin/users/:id/send-verification', async (request, response) => {
-  const adminKey = process.env.ADMIN_KEY || 'owner-secret';
-  if (request.headers['x-admin-key'] !== adminKey) return response.status(403).json({ message: 'Admin access required.' });
+  if (!requireAdmin(request, response)) return;
   const lookup = decodeURIComponent(request.params.id);
   let profile;
   if (process.env.MONGODB_URI) {
@@ -436,8 +433,7 @@ router.post('/admin/users/:id/send-verification', async (request, response) => {
 });
 
 router.put('/admin/users/:id', async (request, response) => {
-  const adminKey = process.env.ADMIN_KEY || 'owner-secret';
-  if (request.headers['x-admin-key'] !== adminKey) return response.status(403).json({ message: 'Admin access required.' });
+  if (!requireAdmin(request, response)) return;
   const lookup = decodeURIComponent(request.params.id);
   const { name, email, location = '', bio = '', teaches = [], wants = [], profileVisible, allowMessages, verified, blockedEmails = [], accountBlocked, suspendedUntil } = request.body;
   const safeProfile = {
@@ -495,8 +491,7 @@ router.get('/admin/users/:id/activity', async (request, response) => {
 });
 
 router.delete('/admin/users/:id', async (request, response) => {
-  const adminKey = process.env.ADMIN_KEY || 'owner-secret';
-  if (request.headers['x-admin-key'] !== adminKey) return response.status(403).json({ message: 'Admin access required.' });
+  if (!requireAdmin(request, response)) return;
   const lookup = decodeURIComponent(request.params.id);
 
   if (!process.env.MONGODB_URI) {
