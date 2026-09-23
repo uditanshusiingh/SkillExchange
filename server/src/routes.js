@@ -601,8 +601,11 @@ router.patch('/exchanges/:id', async (request, response) => {
   const exchanges = readCollection('exchanges.json');
   const index = exchanges.findIndex((item) => item._id === request.params.id);
   if (index === -1) return response.status(404).json({ message: 'Exchange not found.' });
-  exchanges[index] = { ...exchanges[index], status: request.body.status, updatedAt: new Date().toISOString() };
-  await recordAdminLog(request, { action: 'exchange_status_updated', targetType: 'exchange', targetId: exchanges[index]._id, details: `Status changed to ${request.body.status}.` });
+  const now = new Date().toISOString();
+  const previous = exchanges[index].status || 'pending';
+  const history = Array.isArray(exchanges[index].statusHistory) ? exchanges[index].statusHistory : [{ status: previous, at: exchanges[index].createdAt || now, source: 'legacy' }];
+  if (previous !== request.body.status) history.push({ status: request.body.status, at: now, source: 'participant' });
+  exchanges[index] = { ...exchanges[index], status: request.body.status, updatedAt: now, statusHistory: history };
   writeCollection('exchanges.json', exchanges);
   return response.json(exchanges[index]);
 });
