@@ -6,8 +6,8 @@ import {
 } from 'lucide-react';
 import {
   adminLogin, deleteAdminSkill, deleteAdminUser, getAdminExchanges, getAdminReports,
-  getAdminSkills, getAdminOverview, getAdminAnalytics, getAdminNotifications, getAdminUsers, getAdminUserActivity, getAdminLogs, adminLogout, updateAdminExchange,
-  updateAdminReport, updateAdminUser, updateAdminSkillModeration, getAdminSkillCategories, addAdminSkillCategory, deleteAdminSkillCategory, getAdminSkillStatistics
+  getAdminSkills, getAdminOverview, getAdminAnalytics, getAdminNotifications, getAdminSettings, getAdminUsers, getAdminUserActivity, getAdminLogs, adminLogout, updateAdminExchange,
+  updateAdminReport, updateAdminUser, updateAdminSkillModeration, getAdminSkillCategories, addAdminSkillCategory, deleteAdminSkillCategory, getAdminSkillStatistics, updateAdminSettings
 } from './api';
 import './admin.css';
 
@@ -92,6 +92,9 @@ export default function AdminApp() {
   const [skillCategories, setSkillCategories] = useState([]);
   const [skillStats, setSkillStats] = useState({ total: 0, pending: 0, approved: 0, rejected: 0, featured: 0, categories: 0, flaggedDuplicates: 0, lowQuality: 0 });
   const [categoryName, setCategoryName] = useState('');
+  const [adminSettings, setAdminSettings] = useState({ profile: { name: 'SkillSwap Admin', email: '' }, dashboard: { compactMode: false, defaultSection: 'overview', refreshInterval: 0 }, maintenanceMode: false, registrationEnabled: true, announcement: { enabled: false, title: '', message: '' }, keyConfigured: false });
+  const [newAdminKey, setNewAdminKey] = useState('');
+  const [settingsSaving, setSettingsSaving] = useState(false);
 
   const logout = () => {
     adminLogout(adminKey).catch(() => {});
@@ -104,9 +107,9 @@ export default function AdminApp() {
     setLoading(true);
     setError('');
     try {
-      const [nextStats, nextUsers, nextSkills, nextAnalytics, nextExchanges, nextReports, nextLogs, nextCategories, nextSkillStats, nextNotifications] = await Promise.all([
+      const [nextStats, nextUsers, nextSkills, nextAnalytics, nextExchanges, nextReports, nextLogs, nextCategories, nextSkillStats, nextNotifications, nextSettings] = await Promise.all([
         getAdminOverview(key), getAdminUsers(key), getAdminSkills(key), getAdminAnalytics(key),
-        getAdminExchanges(key), getAdminReports(key), getAdminLogs(key), getAdminSkillCategories(key), getAdminSkillStatistics(key), getAdminNotifications(key)
+        getAdminExchanges(key), getAdminReports(key), getAdminLogs(key), getAdminSkillCategories(key), getAdminSkillStatistics(key), getAdminNotifications(key), getAdminSettings(key)
       ]);
       setStats({ total: nextStats.totalUsers, verified: nextStats.verifiedUsers, discoverable: nextStats.visibleUsers, skills: nextStats.skills, exchanges: nextStats.exchanges, reports: nextStats.openReports });
       setAnalytics(nextAnalytics);
@@ -118,6 +121,7 @@ export default function AdminApp() {
       setSkillCategories(nextCategories);
       setSkillStats(nextSkillStats);
       setNotifications(nextNotifications);
+      setAdminSettings(nextSettings);
       setAuthenticated(true);
     } catch (err) {
       if (/admin access|403|401/i.test(err.message || '')) logout();
@@ -312,6 +316,361 @@ export default function AdminApp() {
     ['analytics', BarChart3, 'Analytics'],
     ['security', ShieldCheck, 'Security & Logs'],
     ['notifications', Bell, 'Notifications'],
+    ['settings', Shield, 'Admin Settings'],
+    ['users', Users, 'Users'],
+    ['skills', BarChart3, 'Skills'],
+    ['exchanges', Activity, 'Exchanges'],
+    ['reports', CircleAlert, 'Reports']
+  ];
+
+  const analyticsRows = analytics?.[analyticsPeriod] || [];
+  const maxUsers = Math.max(1, ...analyticsRows.map((item) => item.users || 0));
+  const maxActivity = Math.max(1, ...analyticsRows.map((item) => (item.skills || 0) + (item.exchanges || 0) + (item.reports || 0)));
+  const latestGrowth = analyticsRows[analyticsRows.length - 1]?.growth ?? stats.total;
+  const previousGrowth = analyticsRows[analyticsRows.length - 2]?.growth ?? latestGrowth;
+  const growthDelta = latestGrowth - previousGrowth;
+
+  return <div className="admin-shell">
+    <aside className={`admin-sidebar ${sidebarOpen ? 'open' : ''}`}>
+      <div className="admin-sidebar-brand"><div className="admin-brand-mark small"><Shield size={18} /></div><div><strong>SkillSwap</strong><span>Admin Panel</span></div></div>
+      <nav>{nav.map(([id, Icon, label]) => <button key={id} className={section === id ? 'active' : ''} onClick={() => { setSection(id); setQuery(''); setSidebarOpen(false); }}><Icon size={18} /><span>{label}</span>{id === 'notifications' && notifications.filter((item) => !notificationRead.includes(item.id)).length > 0 && <b className="admin-nav-badge">{notifications.filter((item) => !notificationRead.includes(item.id)).length > 99 ? '99+' : notifications.filter((item) => !notificationRead.includes(item.id)).length}</b>}<ChevronRight size={14} /></button>)}</nav>
+      <div className="admin-sidebar-bottom">
+        <a href="/"><ArrowLeft size={17} /> Back to website</a>
+        <button onClick={logout}><LogOut size={17} /> Logout</button>
+      </div>
+    </aside>
+
+    {sidebarOpen && <button className="admin-sidebar-overlay" onClick={() => setSidebarOpen(false)} aria-label="Close menu" />}
+
+    <main className="admin-main">
+      <header className="admin-topbar">
+        <button className="admin-menu-button" onClick={() => setSidebarOpen(true)}><Menu size={21} /></button>
+        <div><span className="admin-eyebrow">CONTROL CENTER</span><h1>{nav.find(([id]) => id === section)?.[2]}</h1></div>
+        <div className="admin-top-actions"><div className="admin-system-status"><span className="status-dot" /> System online</div><button onClick={refresh} disabled={loading} title="Refresh"><RefreshCw size={18} className={loading ? 'spin' : ''} /></button><button onClick={logout} title="Logout"><LogOut size={18} /></button></div>
+      </header>
+
+      {notice && <div className="admin-notice"><CheckCircle2 size={17} />{notice}<button onClick={() => setNotice('')}><X size={15} /></button></div>}
+      {error && <div className="admin-error-bar"><CircleAlert size={17} />{error}<button onClick={() => setError('')}><X size={15} /></button></div>}
+
+      {section === 'notifications' && <section className="admin-notifications-page">import { useEffect, useMemo, useState } from 'react';
+import {
+  Activity, ArrowLeft, BarChart3, CheckCircle2, ChevronRight, CircleAlert,
+  Bell, Clock3, Database, Edit3, Eye, EyeOff, FileText, LayoutDashboard, LogOut, MapPin, Menu, MessageSquare, RefreshCw, Search,
+  Shield, ShieldCheck, Tag, Trash2, UserCheck, Users, X
+} from 'lucide-react';
+import {
+  adminLogin, deleteAdminSkill, deleteAdminUser, getAdminExchanges, getAdminReports,
+  getAdminSkills, getAdminOverview, getAdminAnalytics, getAdminNotifications, getAdminSettings, getAdminUsers, getAdminUserActivity, getAdminLogs, adminLogout, updateAdminExchange,
+  updateAdminReport, updateAdminUser, updateAdminSkillModeration, getAdminSkillCategories, addAdminSkillCategory, deleteAdminSkillCategory, getAdminSkillStatistics, updateAdminSettings
+} from './api';
+import './admin.css';
+
+const emptyStats = {
+  total: 0, verified: 0, discoverable: 0, hidden: 0, blocked: 0,
+  skills: 0, exchanges: 0, reports: 0
+};
+
+function StatCard({ icon: Icon, label, value, tone = '' }) {
+  return <div className={`admin-stat-card ${tone}`}>
+    <div className="admin-stat-icon"><Icon size={19} /></div>
+    <div className="admin-stat-copy"><span>{label}</span><strong>{value ?? 0}</strong></div><span className="admin-stat-arrow"><ChevronRight size={14} /></span>
+  </div>;
+}
+
+function AdminLogin({ onLogin }) {
+  const [key, setKey] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const submit = async (event) => {
+    event.preventDefault();
+    if (!key.trim()) return setError('Enter your admin key.');
+    setLoading(true);
+    setError('');
+    try {
+      await adminLogin(key.trim());
+      onLogin(key.trim());
+    } catch (err) {
+      setError(err.message || 'Invalid admin key.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return <main className="admin-login-page">
+    <form className="admin-login-card" onSubmit={submit}>
+      <div className="admin-brand-mark"><Shield size={24} /></div>
+      <span className="admin-eyebrow">SKILLSWAP ADMIN</span>
+      <h1>Admin control center</h1>
+      <p>Sign in with the private admin key configured on your API server.</p>
+      <label>Admin key<input type="password" value={key} onChange={(e) => setKey(e.target.value)} placeholder="Enter admin key" autoFocus /></label>
+      {error && <div className="admin-error">{error}</div>}
+      <button className="admin-primary-button" disabled={loading}>{loading ? 'Checking…' : 'Enter dashboard'}</button>
+      <a className="admin-back-link" href="/">← Back to SkillSwap</a>
+    </form>
+  </main>;
+}
+
+export default function AdminApp() {
+  const [adminKey, setAdminKey] = useState('');
+  const [authenticated, setAuthenticated] = useState(false);
+  const [section, setSection] = useState('overview');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [stats, setStats] = useState(emptyStats);
+  const [users, setUsers] = useState([]);
+  const [skills, setSkills] = useState([]);
+  const [exchanges, setExchanges] = useState([]);
+  const [reports, setReports] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+  const [notificationRead, setNotificationRead] = useState(() => { try { return JSON.parse(localStorage.getItem('skillswap-admin-notification-read') || '[]'); } catch { return []; } });
+  const [query, setQuery] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [notice, setNotice] = useState('');
+  const [error, setError] = useState('');
+  const [userModal, setUserModal] = useState(null);
+  const [userActivity, setUserActivity] = useState([]);
+  const [activityLoading, setActivityLoading] = useState(false);
+  const [userFilter, setUserFilter] = useState('all');
+  const [savingUser, setSavingUser] = useState(false);
+  const [skillFilter, setSkillFilter] = useState('all');
+  const [exchangeFilter, setExchangeFilter] = useState('all');
+  const [reportFilter, setReportFilter] = useState('all');
+  const [reportPriorityFilter, setReportPriorityFilter] = useState('all');
+  const [reportCategoryFilter, setReportCategoryFilter] = useState('all');
+  const [skillModal, setSkillModal] = useState(null);
+  const [exchangeModal, setExchangeModal] = useState(null);
+  const [reportModal, setReportModal] = useState(null);
+  const [analytics, setAnalytics] = useState(null);
+  const [analyticsPeriod, setAnalyticsPeriod] = useState('daily');
+  const [adminLogs, setAdminLogs] = useState([]);
+  const [skillCategories, setSkillCategories] = useState([]);
+  const [skillStats, setSkillStats] = useState({ total: 0, pending: 0, approved: 0, rejected: 0, featured: 0, categories: 0, flaggedDuplicates: 0, lowQuality: 0 });
+  const [categoryName, setCategoryName] = useState('');
+  const [adminSettings, setAdminSettings] = useState({ profile: { name: 'SkillSwap Admin', email: '' }, dashboard: { compactMode: false, defaultSection: 'overview', refreshInterval: 0 }, maintenanceMode: false, registrationEnabled: true, announcement: { enabled: false, title: '', message: '' }, keyConfigured: false });
+  const [newAdminKey, setNewAdminKey] = useState('');
+  const [settingsSaving, setSettingsSaving] = useState(false);
+
+  const logout = () => {
+    adminLogout(adminKey).catch(() => {});
+    localStorage.removeItem('skillswap-admin-key');
+    setAdminKey('');
+    setAuthenticated(false);
+  };
+
+  const loadAll = async (key = adminKey) => {
+    setLoading(true);
+    setError('');
+    try {
+      const [nextStats, nextUsers, nextSkills, nextAnalytics, nextExchanges, nextReports, nextLogs, nextCategories, nextSkillStats, nextNotifications, nextSettings] = await Promise.all([
+        getAdminOverview(key), getAdminUsers(key), getAdminSkills(key), getAdminAnalytics(key),
+        getAdminExchanges(key), getAdminReports(key), getAdminLogs(key), getAdminSkillCategories(key), getAdminSkillStatistics(key), getAdminNotifications(key), getAdminSettings(key)
+      ]);
+      setStats({ total: nextStats.totalUsers, verified: nextStats.verifiedUsers, discoverable: nextStats.visibleUsers, skills: nextStats.skills, exchanges: nextStats.exchanges, reports: nextStats.openReports });
+      setAnalytics(nextAnalytics);
+      setUsers(nextUsers);
+      setSkills(nextSkills);
+      setExchanges(nextExchanges);
+      setReports(nextReports);
+      setAdminLogs(nextLogs);
+      setSkillCategories(nextCategories);
+      setSkillStats(nextSkillStats);
+      setNotifications(nextNotifications);
+      setAdminSettings(nextSettings);
+      setAuthenticated(true);
+    } catch (err) {
+      if (/admin access|403|401/i.test(err.message || '')) logout();
+      setError(err.message || 'Could not load admin data.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    // Admin access is intentionally memory-only: every page load/refresh requires the key again.
+    localStorage.removeItem('skillswap-admin-key');
+  }, []);
+
+  const filteredUsers = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return users.filter((u) => {
+      const matchesQuery = !q || [u.name, u.email, u.location, ...(u.teaches || []), ...(u.wants || [])].filter(Boolean).join(' ').toLowerCase().includes(q);
+      const verified = Boolean(u.emailVerified || u.verified);
+      const visible = u.profileVisible !== false;
+      const matchesFilter = userFilter === 'all' || (userFilter === 'verified' && verified) || (userFilter === 'pending' && !verified) || (userFilter === 'hidden' && !visible);
+      return matchesQuery && matchesFilter;
+    });
+  }, [users, query, userFilter]);
+
+  const openUserEditor = async (user) => {
+    const details = { ...user, teachesText: (user.teaches || []).join(', '), wantsText: (user.wants || []).join(', ') };
+    setUserModal(details);
+    setUserActivity([]);
+    setActivityLoading(true);
+    try {
+      const activity = await getAdminUserActivity(adminKey, user._id || user.email);
+      setUserActivity(activity);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setActivityLoading(false);
+    }
+  };
+
+  const saveUser = async () => {
+    if (!userModal) return;
+    setSavingUser(true);
+    try {
+      const payload = {
+        name: userModal.name,
+        location: userModal.location,
+        bio: userModal.bio,
+        teaches: userModal.teachesText.split(',').map((item) => item.trim()).filter(Boolean),
+        wants: userModal.wantsText.split(',').map((item) => item.trim()).filter(Boolean),
+        profileVisible: userModal.profileVisible !== false,
+        allowMessages: userModal.allowMessages !== false,
+        verified: Boolean(userModal.emailVerified || userModal.verified)
+      };
+      const updated = await updateAdminUser(adminKey, userModal._id || userModal.email, payload);
+      setUsers((items) => items.map((item) => (item._id || item.email) === (userModal._id || userModal.email) ? updated : item));
+      setUserModal(null);
+      setNotice('User profile updated successfully.');
+      await refresh();
+    } catch (err) { setError(err.message); }
+    finally { setSavingUser(false); }
+  };
+
+  const filteredSkills = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return skills.filter((s) => {
+      const matchesQuery = !q || [s.title, s.category, s.level, s.teacher?.name, s.description].filter(Boolean).join(' ').toLowerCase().includes(q);
+      const matchesFilter = skillFilter === 'all' || String(s.level || '').toLowerCase() === skillFilter;
+      return matchesQuery && matchesFilter;
+    });
+  }, [skills, query, skillFilter]);
+
+  const filteredExchanges = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return exchanges.filter((e) => {
+      const matchesQuery = !q || [e.skillTitle, e.requesterName, e.ownerName, e.requesterEmail, e.ownerEmail, e.status, e.offer].filter(Boolean).join(' ').toLowerCase().includes(q);
+      return matchesQuery && (exchangeFilter === 'all' || e.status === exchangeFilter);
+    });
+  }, [exchanges, query, exchangeFilter]);
+
+  const filteredReports = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return reports.filter((r) => {
+      const matchesQuery = !q || [r.reason, r.reportedEmail, r.reporterEmail, r.details, r.status, r.priority, r.category, r.assignedTo].filter(Boolean).join(' ').toLowerCase().includes(q);
+      return matchesQuery && (reportFilter === 'all' || r.status === reportFilter) && (reportPriorityFilter === 'all' || (r.priority || 'medium') === reportPriorityFilter) && (reportCategoryFilter === 'all' || (r.category || 'Other') === reportCategoryFilter);
+    });
+  }, [reports, query, reportFilter]);
+
+  const refresh = () => loadAll();
+
+  const userAction = async (user, updates) => {
+    try {
+      const id = user._id || user.email;
+      const updated = await updateAdminUser(adminKey, id, updates);
+      setUsers((items) => items.map((item) => (item._id || item.email) === id ? updated : item));
+      setNotice('User updated successfully.');
+      await refresh();
+    } catch (err) { setError(err.message); }
+  };
+
+  const deleteUser = async (user) => {
+    const typed = window.prompt(`Type DELETE to permanently delete ${user.name || user.email}.`);
+    if (typed !== 'DELETE') return;
+    try {
+      await deleteAdminUser(adminKey, user._id || user.email);
+      setUserModal(null);
+      setNotice('User deleted permanently.');
+      await refresh();
+    } catch (err) { setError(err.message); }
+  };
+
+  const toggleUserBlocked = async (user) => {
+    const blocked = Boolean(user.accountBlocked);
+    if (blocked) return userAction(user, { accountBlocked: false });
+    if (!window.confirm(`Block ${user.name || user.email}? They will be unable to log in and their profile will be hidden.`)) return;
+    return userAction(user, { accountBlocked: true, profileVisible: false });
+  };
+
+  const setUserSuspension = async (user, days) => {
+    if (days === 0) return userAction(user, { suspendedUntil: null });
+    const until = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
+    return userAction(user, { suspendedUntil: until, profileVisible: false });
+  };
+
+  const moderateSkill = async (skill, status, featured = skill.featured) => {
+    try {
+      const updated = await updateAdminSkillModeration(adminKey, skill._id, { status, featured, moderationNote: skill.moderationNote || '' });
+      setSkills((items) => items.map((item) => item._id === skill._id ? { ...item, ...updated } : item));
+      setSkillStats(await getAdminSkillStatistics(adminKey));
+      setNotice('Skill ' + status + '.');
+    } catch (err) { setError(err.message); }
+  };
+
+  const toggleFeaturedSkill = async (skill) => {
+    await moderateSkill(skill, skill.moderationStatus || 'pending', !skill.featured);
+  };
+
+  const addSkillCategory = async () => {
+    const name = categoryName.trim();
+    if (!name) return;
+    try {
+      const created = await addAdminSkillCategory(adminKey, name);
+      setSkillCategories((items) => [...items, created]);
+      setCategoryName('');
+      setNotice('Skill category added.');
+    } catch (err) { setError(err.message); }
+  };
+
+  const removeSkillCategory = async (name) => {
+    if (!window.confirm('Delete the "' + name + '" category?')) return;
+    try {
+      await deleteAdminSkillCategory(adminKey, name);
+      setSkillCategories((items) => items.filter((item) => item !== name));
+      setNotice('Skill category deleted.');
+    } catch (err) { setError(err.message); }
+  };
+
+  const deleteSkill = async (skill) => {
+    if (!window.confirm(`Delete skill "${skill.title}"?`)) return;
+    try {
+      await deleteAdminSkill(adminKey, skill._id);
+      setNotice('Skill deleted.');
+      await refresh();
+    } catch (err) { setError(err.message); }
+  };
+
+  const changeExchangeStatus = async (exchange, status) => {
+    try {
+      await updateAdminExchange(adminKey, exchange._id, status);
+      setNotice('Exchange status updated.');
+      await refresh();
+    } catch (err) { setError(err.message); }
+  };
+
+  const updateReportCase = async (report, payload) => {
+    try {
+      const updated = await updateAdminReport(adminKey, report._id, payload);
+      setReports((items) => items.map((item) => item._id === report._id ? updated : item));
+      setReportModal(updated);
+      setNotice('Report updated successfully.');
+    } catch (err) { setError(err.message); }
+  };
+
+  const resolveReport = async (report, status) => {
+    return updateReportCase(report, { status });
+  };
+
+  if (!authenticated) return <AdminLogin onLogin={(key) => { setAdminKey(key); setAuthenticated(true); loadAll(key); }} />;
+
+  const nav = [
+    ['overview', LayoutDashboard, 'Overview'],
+    ['analytics', BarChart3, 'Analytics'],
+    ['security', ShieldCheck, 'Security & Logs'],
+    ['notifications', Bell, 'Notifications'],
+    ['settings', Shield, 'Admin Settings'],
     ['users', Users, 'Users'],
     ['skills', BarChart3, 'Skills'],
     ['exchanges', Activity, 'Exchanges'],
