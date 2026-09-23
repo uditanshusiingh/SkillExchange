@@ -138,6 +138,20 @@ export async function getAdminNotifications(adminKey) {
   return readResponse(response, 'Could not load admin notifications');
 }
 
+export async function getAdminSettings(adminKey) {
+  const response = await fetch(`${API_URL}/admin/settings`, { headers: { 'x-admin-key': adminKey || '' } });
+  return readResponse(response, 'Could not load admin settings');
+}
+
+export async function updateAdminSettings(adminKey, settings) {
+  const response = await fetch(`${API_URL}/admin/settings`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey || '' },
+    body: JSON.stringify(settings)
+  });
+  return readResponse(response, 'Could not save admin settings');
+}
+
 export async function getAdminOverview(adminKey) {
   const response = await fetch(`${API_URL}/admin/overview`, { headers: { 'x-admin-key': adminKey || '' } });
   return readResponse(response, 'Could not load admin overview');
