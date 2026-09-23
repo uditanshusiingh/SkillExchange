@@ -596,7 +596,7 @@ router.get('/exchanges/:email', async (request, response) => {
   return response.json(readCollection('exchanges.json').filter((item) => (item.requesterEmail === email || item.ownerEmail === email) && hasDiscoverableParticipants(item, emails, ['requesterEmail', 'ownerEmail'])));
 });
 
-router.patch('/exchanges/:id', (request, response) => {
+router.patch('/exchanges/:id', async (request, response) => {
   const exchanges = readCollection('exchanges.json');
   const index = exchanges.findIndex((item) => item._id === request.params.id);
   if (index === -1) return response.status(404).json({ message: 'Exchange not found.' });
@@ -884,7 +884,9 @@ router.delete('/admin/skills/:id', async (request, response) => {
   }
   const index = localSkills.findIndex((skill) => skill._id === lookup);
   if (index === -1) return response.status(404).json({ message: 'Skill not found.' });
+  const deleted = localSkills[index];
   localSkills = localSkills.filter((_, itemIndex) => itemIndex !== index);
+  await recordAdminLog(request, { action: 'skill_deleted', targetType: 'skill', targetId: lookup, details: `Deleted skill ${deleted.title || lookup}.` });
   return response.json({ ok: true });
 });
 
@@ -893,7 +895,7 @@ router.get('/admin/exchanges', (request, response) => {
   return response.json(readCollection('exchanges.json'));
 });
 
-router.patch('/admin/exchanges/:id', (request, response) => {
+router.patch('/admin/exchanges/:id', async (request, response) => {
   if (!requireAdmin(request, response)) return;
   const exchanges = readCollection('exchanges.json');
   const index = exchanges.findIndex((item) => item._id === request.params.id);
@@ -905,7 +907,7 @@ router.patch('/admin/exchanges/:id', (request, response) => {
   return response.json(exchanges[index]);
 });
 
-router.patch('/admin/reports/:id', (request, response) => {
+router.patch('/admin/reports/:id', async (request, response) => {
   if (!requireAdmin(request, response)) return;
   const reports = readCollection('reports.json');
   const index = reports.findIndex((item) => item._id === request.params.id);
