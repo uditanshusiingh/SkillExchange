@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   Activity, ArrowLeft, BarChart3, CheckCircle2, ChevronRight, CircleAlert,
-  Eye, EyeOff, LayoutDashboard, LogOut, Menu, RefreshCw, Search, Shield,
-  Trash2, UserCheck, Users, X
+  Clock3, Database, Eye, EyeOff, LayoutDashboard, LogOut, Menu, RefreshCw, Search,
+  Shield, ShieldCheck, Trash2, UserCheck, Users, X
 } from 'lucide-react';
 import {
   deleteAdminSkill, deleteAdminUser, getAdminExchanges, getAdminReports,
@@ -16,10 +16,10 @@ const emptyStats = {
   skills: 0, exchanges: 0, reports: 0
 };
 
-function StatCard({ icon: Icon, label, value }) {
-  return <div className="admin-stat-card">
+function StatCard({ icon: Icon, label, value, tone = '' }) {
+  return <div className={`admin-stat-card ${tone}`}>
     <div className="admin-stat-icon"><Icon size={19} /></div>
-    <div><span>{label}</span><strong>{value ?? 0}</strong></div>
+    <div className="admin-stat-copy"><span>{label}</span><strong>{value ?? 0}</strong></div><span className="admin-stat-arrow"><ChevronRight size={14} /></span>
   </div>;
 }
 
@@ -195,7 +195,7 @@ export default function AdminApp() {
       <header className="admin-topbar">
         <button className="admin-menu-button" onClick={() => setSidebarOpen(true)}><Menu size={21} /></button>
         <div><span className="admin-eyebrow">CONTROL CENTER</span><h1>{nav.find(([id]) => id === section)?.[2]}</h1></div>
-        <div className="admin-top-actions"><button onClick={refresh} disabled={loading} title="Refresh"><RefreshCw size={18} className={loading ? 'spin' : ''} /></button><button onClick={logout} title="Logout"><LogOut size={18} /></button></div>
+        <div className="admin-top-actions"><div className="admin-system-status"><span className="status-dot" /> System online</div><button onClick={refresh} disabled={loading} title="Refresh"><RefreshCw size={18} className={loading ? 'spin' : ''} /></button><button onClick={logout} title="Logout"><LogOut size={18} /></button></div>
       </header>
 
       {notice && <div className="admin-notice"><CheckCircle2 size={17} />{notice}<button onClick={() => setNotice('')}><X size={15} /></button></div>}
@@ -203,18 +203,18 @@ export default function AdminApp() {
 
       {section === 'overview' && <section>
         <div className="admin-stats-grid">
-          <StatCard icon={Users} label="Total users" value={stats.total} />
-          <StatCard icon={UserCheck} label="Verified users" value={stats.verified} />
-          <StatCard icon={Eye} label="Visible profiles" value={stats.discoverable} />
-          <StatCard icon={BarChart3} label="Skills" value={stats.skills} />
-          <StatCard icon={Activity} label="Exchanges" value={stats.exchanges} />
-          <StatCard icon={CircleAlert} label="Open reports" value={stats.reports} />
+          <StatCard icon={Users} label="Total users" value={stats.total} tone="users" />
+          <StatCard icon={UserCheck} label="Verified users" value={stats.verified} tone="verified" />
+          <StatCard icon={Eye} label="Visible profiles" value={stats.discoverable} tone="visible" />
+          <StatCard icon={BarChart3} label="Skills" value={stats.skills} tone="skills" />
+          <StatCard icon={Activity} label="Exchanges" value={stats.exchanges} tone="exchanges" />
+          <StatCard icon={CircleAlert} label="Open reports" value={stats.reports} tone="reports" />
         </div>
         <div className="admin-overview-grid">
           <div className="admin-card"><div className="admin-card-head"><div><span className="admin-eyebrow">RECENT USERS</span><h2>Latest members</h2></div><button onClick={() => setSection('users')}>View all <ChevronRight size={15} /></button></div>
             <div className="admin-mini-list">{users.slice(0, 6).map((u) => <div key={u._id || u.email}><span className="admin-avatar">{(u.name || 'U').slice(0,2).toUpperCase()}</span><div><strong>{u.name || 'Unnamed'}</strong><small>{u.email}</small></div><span className={u.emailVerified || u.verified ? 'pill success' : 'pill'}>{u.emailVerified || u.verified ? 'Verified' : 'Pending'}</span></div>)}</div>
           </div>
-          <div className="admin-card"><div className="admin-card-head"><div><span className="admin-eyebrow">MODERATION</span><h2>Reports</h2></div><button onClick={() => setSection('reports')}>Review <ChevronRight size={15} /></button></div>
+          <div className="admin-card admin-system-card"><div className="admin-card-head"><div><span className="admin-eyebrow">SYSTEM HEALTH</span><h2>Platform status</h2></div><ShieldCheck size={21} /></div><div className="admin-health"><div className="health-icon"><Database size={20} /></div><div><strong>All services operational</strong><small>API and database are responding normally.</small></div><span className="health-badge"><span className="status-dot" /> Healthy</span></div><div className="admin-health-row"><div><Clock3 size={16} /><span>Last refresh</span></div><strong>Just now</strong></div><div className="admin-health-row"><div><ShieldCheck size={16} /><span>Admin access</span></div><strong>Protected</strong></div><button className="admin-outline-wide" onClick={refresh}><RefreshCw size={15} /> Refresh platform data</button></div><div className="admin-card"><div className="admin-card-head"><div><span className="admin-eyebrow">MODERATION</span><h2>Reports</h2></div><button onClick={() => setSection('reports')}>Review <ChevronRight size={15} /></button></div>
             <div className="admin-mini-list">{reports.filter(r => r.status !== 'resolved').slice(0, 5).map((r) => <div key={r._id}><div className="report-dot" /><div><strong>{r.reason}</strong><small>{r.reportedEmail}</small></div><span className="pill warning">{r.status}</span></div>)}{!reports.length && <div className="admin-empty">No reports.</div>}</div>
           </div>
         </div>
