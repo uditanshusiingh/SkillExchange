@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import {
   deleteAdminSkill, deleteAdminUser, getAdminExchanges, getAdminReports,
-  getAdminSkills, getAdminOverview, getAdminAnalytics, getAdminUsers, updateAdminExchange,
+  getAdminSkills, getAdminOverview, getAdminAnalytics, getAdminUsers, getAdminUserActivity, updateAdminExchange,
   updateAdminReport, updateAdminUser
 } from './api';
 import './admin.css';
@@ -73,6 +73,8 @@ export default function AdminApp() {
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
   const [userModal, setUserModal] = useState(null);
+  const [userActivity, setUserActivity] = useState([]);
+  const [activityLoading, setActivityLoading] = useState(false);
   const [userFilter, setUserFilter] = useState('all');
   const [savingUser, setSavingUser] = useState(false);
   const [skillFilter, setSkillFilter] = useState('all');
@@ -128,8 +130,19 @@ export default function AdminApp() {
     });
   }, [users, query, userFilter]);
 
-  const openUserEditor = (user) => {
-    setUserModal({ ...user, teachesText: (user.teaches || []).join(', '), wantsText: (user.wants || []).join(', ') });
+  const openUserEditor = async (user) => {
+    const details = { ...user, teachesText: (user.teaches || []).join(', '), wantsText: (user.wants || []).join(', ') };
+    setUserModal(details);
+    setUserActivity([]);
+    setActivityLoading(true);
+    try {
+      const activity = await getAdminUserActivity(adminKey, user._id || user.email);
+      setUserActivity(activity);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setActivityLoading(false);
+    }
   };
 
   const saveUser = async () => {
@@ -193,12 +206,27 @@ export default function AdminApp() {
   };
 
   const deleteUser = async (user) => {
-    if (!window.confirm(`Delete ${user.name || user.email}? This cannot be undone.`)) return;
+    const typed = window.prompt(`Type DELETE to permanently delete ${user.name || user.email}.`);
+    if (typed !== 'DELETE') return;
     try {
       await deleteAdminUser(adminKey, user._id || user.email);
-      setNotice('User deleted.');
+      setUserModal(null);
+      setNotice('User deleted permanently.');
       await refresh();
     } catch (err) { setError(err.message); }
+  };
+
+  const toggleUserBlocked = async (user) => {
+    const blocked = Boolean(user.accountBlocked);
+    if (blocked) return userAction(user, { accountBlocked: false });
+    if (!window.confirm(`Block ${user.name || user.email}? They will be unable to log in and their profile will be hidden.`)) return;
+    return userAction(user, { accountBlocked: true, profileVisible: false });
+  };
+
+  const setUserSuspension = async (user, days) => {
+    if (days === 0) return userAction(user, { suspendedUntil: null });
+    const until = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
+    return userAction(user, { suspendedUntil: until, profileVisible: false });
   };
 
   const deleteSkill = async (skill) => {
@@ -332,7 +360,7 @@ export default function AdminApp() {
         </div>
         </div>
 
-        {section === 'users' && <div className="admin-table-wrap"><table><thead><tr><th>User</th><th>Location</th><th>Status</th><th>Skills</th><th>Actions</th></tr></thead><tbody>{filteredUsers.map((u) => <tr key={u._id || u.email}><td><div className="table-user"><span className="admin-avatar">{(u.name || 'U').slice(0,2).toUpperCase()}</span><div><strong>{u.name || 'Unnamed'}</strong><small>{u.email}</small></div></div></td><td>{u.location || '—'}</td><td><span className={u.emailVerified || u.verified ? 'pill success' : 'pill'}>{u.emailVerified || u.verified ? 'Verified' : 'Unverified'}</span><span className={u.profileVisible === false ? 'pill muted' : 'pill success'}>{u.profileVisible === false ? 'Hidden' : 'Visible'}</span></td><td>{u.teaches?.length ? u.teaches.slice(0,3).join(', ') : '—'}</td><td><div className="table-actions"><button title="View / edit user" onClick={() => openUserEditor(u)}><Edit3 size={15} /></button><button title="Verify / unverify" onClick={() => userAction(u, { verified: !(u.emailVerified || u.verified) })}><UserCheck size={15} /></button><button title="Hide / show profile" onClick={() => userAction(u, { profileVisible: u.profileVisible === false })}>{u.profileVisible === false ? <Eye size={15} /> : <EyeOff size={15} />}</button><button className="danger" title="Delete" onClick={() => deleteUser(u)}><Trash2 size={15} /></button></div></td></tr>)}</tbody></table>{!filteredUsers.length && <div className="admin-empty">No users found.</div>}</div>}
+        {section === 'users' && <div className="admin-table-wrap"><table><thead><tr><th>User</th><th>Location</th><th>Status</th><th>Skills</th><th>Actions</th></tr></thead><tbody>{filteredUsers.map((u) => <tr key={u._id || u.email}><td><div className="table-user"><span className="admin-avatar">{(u.name || 'U').slice(0,2).toUpperCase()}</span><div><strong>{u.name || 'Unnamed'}</strong><small>{u.email}</small></div></div></td><td>{u.location || '—'}</td><td><span className={u.emailVerified || u.verified ? 'pill success' : 'pill'}>{u.emailVerified || u.verified ? 'Verified' : 'Unverified'}</span><span className={u.profileVisible === false ? 'pill muted' : 'pill success'}>{u.profileVisible === false ? 'Hidden' : 'Visible'}</span></td><td>{u.teaches?.length ? u.teaches.slice(0,3).join(', ') : '—'}</td><td><div className="table-actions"><button title="View user details & activity" onClick={() => openUserEditor(u)}><Eye size={15} /></button><button title="Edit profile" onClick={() => openUserEditor(u)}><Edit3 size={15} /></button><button title="Verify / unverify" onClick={() => userAction(u, { verified: !(u.emailVerified || u.verified) })}><UserCheck size={15} /></button><button title={u.profileVisible === false ? 'Show profile' : 'Hide profile'} onClick={() => userAction(u, { profileVisible: u.profileVisible === false })}>{u.profileVisible === false ? <Eye size={15} /> : <EyeOff size={15} />}</button><button className={u.accountBlocked ? '' : 'danger'} title={u.accountBlocked ? 'Unblock user' : 'Block user'} onClick={() => toggleUserBlocked(u)}><Shield size={15} /></button><button className="danger" title="Delete permanently" onClick={() => deleteUser(u)}><Trash2 size={15} /></button></div></td></tr>)}</tbody></table>{!filteredUsers.length && <div className="admin-empty">No users found.</div>}</div>}
 
         {section === 'skills' && <div className="admin-table-wrap"><table><thead><tr><th>Skill</th><th>Category</th><th>Level</th><th>Teacher</th><th>Actions</th></tr></thead><tbody>{filteredSkills.map((s) => <tr key={s._id}><td><div className="table-primary"><span className="table-icon skill"><Tag size={15}/></span><div><strong>{s.title}</strong><small>{s.description || 'No description'}</small></div></div></td><td><span className="data-chip">{s.category || 'General'}</span></td><td><span className="pill">{s.level || '—'}</span></td><td>{s.teacher?.name || '—'}</td><td><div className="table-actions"><button title="View skill" onClick={() => setSkillModal(s)}><Eye size={15}/></button><button className="danger" title="Delete" onClick={() => deleteSkill(s)}><Trash2 size={15} /></button></div></td></tr>)}</tbody></table>{!filteredSkills.length && <div className="admin-empty">No skills found.</div>}</div>}
 
@@ -344,9 +372,14 @@ export default function AdminApp() {
       {exchangeModal && <div className="admin-modal-backdrop" onMouseDown={(e) => { if (e.target === e.currentTarget) setExchangeModal(null); }}><section className="admin-modal compact-modal"><div className="admin-modal-head"><div><span className="admin-eyebrow">EXCHANGE MODERATION</span><h2>Exchange details</h2></div><button className="admin-modal-close" onClick={() => setExchangeModal(null)}><X size={18}/></button></div><div className="detail-hero"><span className="detail-icon"><Activity size={22}/></span><div><strong>{exchangeModal.skillTitle || 'Skill exchange'}</strong><small>{exchangeModal.status || 'pending'} · {exchangeModal.createdAt ? new Date(exchangeModal.createdAt).toLocaleString() : 'Date unavailable'}</small></div></div><div className="exchange-participants"><div><span>REQUESTER</span><strong>{exchangeModal.requesterName || 'Unknown'}</strong><small>{exchangeModal.requesterEmail || '—'}</small></div><div className="exchange-arrow">→</div><div><span>SKILL OWNER</span><strong>{exchangeModal.ownerName || 'Unknown'}</strong><small>{exchangeModal.ownerEmail || '—'}</small></div></div><div className="detail-block"><span>Offer / message</span><p>{exchangeModal.offer || 'No message provided.'}</p></div><div className="admin-modal-actions"><button className="admin-secondary-button" onClick={() => setExchangeModal(null)}>Close</button><select className="admin-action-select" value={exchangeModal.status || 'pending'} onChange={async (e) => { const status=e.target.value; await changeExchangeStatus(exchangeModal,status); setExchangeModal({...exchangeModal,status}); }}><option value="pending">Pending</option><option value="accepted">Accepted</option><option value="rejected">Rejected</option><option value="completed">Completed</option></select></div></section></div>}
       {reportModal && <div className="admin-modal-backdrop" onMouseDown={(e) => { if (e.target === e.currentTarget) setReportModal(null); }}><section className="admin-modal compact-modal"><div className="admin-modal-head"><div><span className="admin-eyebrow">REPORT REVIEW</span><h2>Moderation case</h2></div><button className="admin-modal-close" onClick={() => setReportModal(null)}><X size={18}/></button></div><div className="detail-hero report-hero"><span className="detail-icon"><FileText size={22}/></span><div><strong>{reportModal.reason || 'Report'}</strong><small>{reportModal.createdAt ? new Date(reportModal.createdAt).toLocaleString() : 'Date unavailable'}</small></div><span className={reportModal.status === 'resolved' ? 'pill success' : reportModal.status === 'dismissed' ? 'pill muted' : 'pill warning'}>{reportModal.status}</span></div><div className="detail-meta"><div><small>Reported user</small><strong>{reportModal.reportedEmail || '—'}</strong></div><div><small>Reporter</small><strong>{reportModal.reporterEmail || '—'}</strong></div></div><div className="detail-block"><span>Case details</span><p>{reportModal.details || 'No additional details were submitted.'}</p></div><div className="admin-modal-actions"><button className="admin-secondary-button" onClick={() => setReportModal(null)}>Close</button>{reportModal.status !== 'resolved' && <button className="admin-primary-button modal-save" onClick={async () => { await resolveReport(reportModal,'resolved'); setReportModal(null); }}>Resolve case</button>}<button className="admin-secondary-button" onClick={async () => { await resolveReport(reportModal,'dismissed'); setReportModal(null); }}>Dismiss</button></div></section></div>}
       {userModal && <div className="admin-modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setUserModal(null); }}>
-        <section className="admin-modal" role="dialog" aria-modal="true">
-          <div className="admin-modal-head"><div><span className="admin-eyebrow">USER MANAGEMENT</span><h2>Edit profile</h2></div><button className="admin-modal-close" onClick={() => setUserModal(null)}><X size={18} /></button></div>
-          <div className="admin-profile-hero"><span className="admin-avatar large">{(userModal.name || 'U').slice(0,2).toUpperCase()}</span><div><strong>{userModal.name || 'Unnamed'}</strong><small>{userModal.email}</small></div><span className={userModal.emailVerified || userModal.verified ? 'pill success' : 'pill warning'}>{userModal.emailVerified || userModal.verified ? 'Verified' : 'Pending'}</span></div>
+        <section className="admin-modal admin-user-detail-modal" role="dialog" aria-modal="true">
+          <div className="admin-modal-head"><div><span className="admin-eyebrow">USER MANAGEMENT</span><h2>User details</h2></div><button className="admin-modal-close" onClick={() => setUserModal(null)}><X size={18} /></button></div>
+          <div className="admin-profile-hero"><span className="admin-avatar large">{(userModal.name || 'U').slice(0,2).toUpperCase()}</span><div><strong>{userModal.name || 'Unnamed'}</strong><small>{userModal.email}</small></div><div className="user-status-stack"><span className={userModal.accountBlocked ? 'pill danger' : 'pill success'}>{userModal.accountBlocked ? 'Blocked' : 'Active'}</span><span className={userModal.suspendedUntil && new Date(userModal.suspendedUntil).getTime() > Date.now() ? 'pill warning' : 'pill'}>{userModal.suspendedUntil && new Date(userModal.suspendedUntil).getTime() > Date.now() ? `Suspended until ${new Date(userModal.suspendedUntil).toLocaleDateString()}` : 'Not suspended'}</span></div></div>
+          <div className="admin-user-status-actions">
+            <button className={userModal.accountBlocked ? 'admin-secondary-button' : 'admin-danger-button'} onClick={async () => { await toggleUserBlocked(userModal); setUserModal({...userModal, accountBlocked: !userModal.accountBlocked, profileVisible: userModal.accountBlocked ? userModal.profileVisible : false}); }}>{userModal.accountBlocked ? 'Unblock account' : 'Block account'}</button>
+            <select className="admin-action-select" value="" onChange={async (e) => { const days = Number(e.target.value); if (!Number.isNaN(days)) { await setUserSuspension(userModal, days); setUserModal({...userModal, suspendedUntil: days ? new Date(Date.now() + days * 86400000).toISOString() : null}); } }}><option value="">Suspend account…</option><option value="1">1 day</option><option value="7">7 days</option><option value="30">30 days</option><option value="0">Remove suspension</option></select>
+          </div>
+          <div className="admin-detail-section"><div className="admin-detail-tabs"><span className="active">Profile & controls</span><span>Activity history</span></div>
           <div className="admin-form-grid">
             <label>Name<input value={userModal.name || ''} onChange={(e) => setUserModal({...userModal,name:e.target.value})} /></label>
             <label>Location<div className="admin-input-icon"><MapPin size={14}/><input value={userModal.location || ''} onChange={(e) => setUserModal({...userModal,location:e.target.value})} /></div></label>
@@ -359,7 +392,9 @@ export default function AdminApp() {
             <label><span><MessageSquare size={15}/> Direct messages</span><input type="checkbox" checked={userModal.allowMessages !== false} onChange={(e) => setUserModal({...userModal,allowMessages:e.target.checked})}/></label>
             <label><span><UserCheck size={15}/> Mark verified</span><input type="checkbox" checked={Boolean(userModal.emailVerified || userModal.verified)} onChange={(e) => setUserModal({...userModal,verified:e.target.checked,emailVerified:e.target.checked})}/></label>
           </div>
-          <div className="admin-modal-actions"><button className="admin-secondary-button" onClick={() => setUserModal(null)}>Cancel</button><button className="admin-primary-button modal-save" onClick={saveUser} disabled={savingUser}>{savingUser ? 'Saving…' : 'Save changes'}</button></div>
+          <div className="admin-modal-actions"><button className="admin-secondary-button" onClick={() => setUserModal(null)}>Close</button><button className="admin-primary-button modal-save" onClick={saveUser} disabled={savingUser}>{savingUser ? 'Saving…' : 'Save changes'}</button><button className="admin-danger-button" onClick={() => deleteUser(userModal)}><Trash2 size={14}/> Delete</button></div>
+          <div className="admin-activity-panel"><div className="admin-card-head"><div><span className="admin-eyebrow">ACTIVITY HISTORY</span><h3>Recent account activity</h3></div><span className="data-chip">{userActivity.length} events</span></div>{activityLoading ? <div className="admin-empty">Loading activity…</div> : userActivity.length ? <div className="admin-activity-list">{userActivity.map((event) => <div className="admin-activity-item" key={`${event.type}-${event.id}`}><span className="activity-dot"><Activity size={14}/></span><div><strong>{event.title}</strong><small>{event.detail}</small></div><time>{event.createdAt ? new Date(event.createdAt).toLocaleString() : 'Date unavailable'}</time></div>)}</div> : <div className="admin-empty">No recent activity recorded.</div>}</div>
+          </div>
         </section>
       </div>}
     </main>
