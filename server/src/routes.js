@@ -702,6 +702,104 @@ router.get('/admin/overview', async (request, response) => {
   });
 });
 
+
+router.get('/admin/analytics', async (request, response) => {
+  if (!requireAdmin(request, response)) return;
+
+  const profiles = process.env.MONGODB_URI
+    ? await Profile.find({}).select('email createdAt').lean()
+    : readProfiles().map(({ email, createdAt }) => ({ email, createdAt }));
+  const skills = process.env.MONGODB_URI
+    ? await Skill.find({}).select('createdAt').lean()
+    : localSkills.map(({ createdAt }) => ({ createdAt }));
+  const exchanges = readCollection('exchanges.json');
+  const reports = readCollection('reports.json');
+  const messages = readMessages();
+
+  const now = new Date();
+  const startOfDay = (date) => {
+    const value = new Date(date);
+    value.setHours(0, 0, 0, 0);
+    return value;
+  };
+  const dayKey = (date) => startOfDay(date).toISOString().slice(0, 10);
+  const weekStart = (date) => {
+    const value = startOfDay(date);
+    const day = value.getDay();
+    value.setDate(value.getDate() - day);
+    return value;
+  };
+  const weekKey = (date) => weekStart(date).toISOString().slice(0, 10);
+  const monthKey = (date) => {
+    const value = new Date(date);
+    return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}`;
+  };
+  const validDate = (value) => {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? null : date;
+  };
+  const countBetween = (items, from, to) => items.reduce((count, item) => {
+    const date = validDate(item.createdAt);
+    return count + (date && date >= from && date < to ? 1 : 0);
+  }, 0);
+  const lastDays = (count) => Array.from({ length: count }, (_, index) => {
+    const date = startOfDay(now);
+    date.setDate(date.getDate() - (count - 1 - index));
+    return date;
+  });
+  const lastWeeks = (count) => Array.from({ length: count }, (_, index) => {
+    const date = weekStart(now);
+    date.setDate(date.getDate() - 7 * (count - 1 - index));
+    return date;
+  });
+  const lastMonths = (count) => Array.from({ length: count }, (_, index) => {
+    const date = new Date(now.getFullYear(), now.getMonth() - (count - 1 - index), 1);
+    return date;
+  });
+
+  const buildSeries = (starts, keyFn, labelFn) => starts.map((start, index) => {
+    const end = new Date(start);
+    if (keyFn === dayKey) end.setDate(end.getDate() + 1);
+    else if (keyFn === weekKey) end.setDate(end.getDate() + 7);
+    else end.setMonth(end.getMonth() + 1);
+    return {
+      key: keyFn(start),
+      label: labelFn(start),
+      users: countBetween(profiles, start, end),
+      skills: countBetween(skills, start, end),
+      exchanges: countBetween(exchanges, start, end),
+      reports: countBetween(reports, start, end),
+      growth: profiles.filter((item) => {
+        const date = validDate(item.createdAt);
+        return date && date < end;
+      }).length
+    };
+  });
+
+  const daily = buildSeries(lastDays(30), dayKey, (date) => date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+  const weekly = buildSeries(lastWeeks(12), weekKey, (date) => `Week of ${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`);
+  const monthly = buildSeries(lastMonths(12), monthKey, (date) => date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }));
+
+  const activeSince = new Date(now);
+  activeSince.setDate(activeSince.getDate() - 30);
+  const activeEmails = new Set();
+  [...exchanges, ...messages].forEach((item) => {
+    const date = validDate(item.createdAt);
+    if (!date || date < activeSince) return;
+    ['requesterEmail', 'ownerEmail', 'senderEmail', 'recipientEmail'].forEach((field) => {
+      if (item[field]) activeEmails.add(String(item[field]).toLowerCase());
+    });
+  });
+
+  return response.json({
+    generatedAt: now.toISOString(),
+    activeUsers: activeEmails.size,
+    daily,
+    weekly,
+    monthly
+  });
+});
+
 router.get('/admin/skills', async (request, response) => {
   if (!requireAdmin(request, response)) return;
   if (process.env.MONGODB_URI) return response.json(await Skill.find({}).sort({ createdAt: -1 }).lean());
