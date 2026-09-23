@@ -39,6 +39,7 @@ export async function sendAdminVerification(adminKey, id) {
   return readResponse(response, 'Could not send verification');
 }
 
+export async function getAdminUserActivity(adminKey, id) { const response = await fetch(`${API_URL}/admin/users/${encodeURIComponent(id)}/activity`, { headers: { 'x-admin-key': adminKey || '' } }); return readResponse(response, 'Could not load user activity'); }
 export async function deleteAdminUser(adminKey, id) {
   const response = await fetch(`${API_URL}/admin/users/${encodeURIComponent(id)}`, {
     method: 'DELETE',
