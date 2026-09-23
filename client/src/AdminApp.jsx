@@ -35,7 +35,6 @@ function AdminLogin({ onLogin }) {
     setError('');
     try {
       await getAdminOverview(key.trim());
-      localStorage.setItem('skillswap-admin-key', key.trim());
       onLogin(key.trim());
     } catch (err) {
       setError(err.message || 'Invalid admin key.');
@@ -59,7 +58,7 @@ function AdminLogin({ onLogin }) {
 }
 
 export default function AdminApp() {
-  const [adminKey, setAdminKey] = useState(() => localStorage.getItem('skillswap-admin-key') || '');
+  const [adminKey, setAdminKey] = useState('');
   const [authenticated, setAuthenticated] = useState(false);
   const [section, setSection] = useState('overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -116,7 +115,8 @@ export default function AdminApp() {
   };
 
   useEffect(() => {
-    if (adminKey) loadAll(adminKey);
+    // Admin access is intentionally memory-only: every page load/refresh requires the key again.
+    localStorage.removeItem('skillswap-admin-key');
   }, []);
 
   const filteredUsers = useMemo(() => {
