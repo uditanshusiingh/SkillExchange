@@ -34,8 +34,8 @@ function AdminLogin({ onLogin }) {
     setLoading(true);
     setError('');
     try {
-      await adminLogin(key.trim());
-      onLogin(key.trim());
+      const result = await adminLogin(key.trim());
+      onLogin(result.sessionToken);
     } catch (err) {
       setError(err.message || 'Invalid admin key.');
     } finally {
@@ -215,7 +215,7 @@ export default function AdminApp() {
       const matchesQuery = !q || [r.reason, r.reportedEmail, r.reporterEmail, r.details, r.status, r.priority, r.category, r.assignedTo].filter(Boolean).join(' ').toLowerCase().includes(q);
       return matchesQuery && (reportFilter === 'all' || r.status === reportFilter) && (reportPriorityFilter === 'all' || (r.priority || 'medium') === reportPriorityFilter) && (reportCategoryFilter === 'all' || (r.category || 'Other') === reportCategoryFilter);
     });
-  }, [reports, query, reportFilter]);
+  }, [reports, query, reportFilter, reportPriorityFilter, reportCategoryFilter]);
 
   useEffect(() => {
     const seconds = Number(adminSettings.dashboard?.refreshInterval || 0);
