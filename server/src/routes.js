@@ -2,6 +2,7 @@ import express from 'express';
 import bcrypt from 'bcryptjs';
 import mongoose from 'mongoose';
 import nodemailer from 'nodemailer';
+import { randomBytes } from 'node:crypto';
 import Skill from './models/Skill.js';
 import Profile from './models/Profile.js';
 import Exchange from './models/Exchange.js';
@@ -14,7 +15,8 @@ import { readMessages, writeMessages } from './data/localMessages.js';
 import { readCollection, writeCollection } from './data/localCollections.js';
 
 const router = express.Router();
-let activeAdminKey = process.env.ADMIN_KEY || 'owner-secret';
+const adminSessions = new Map();
+const ADMIN_SESSION_TTL_MS = 8 * 60 * 60 * 1000;
 
 function readAdminSetting(key, fallback = null) {
   const item = readCollection('adminSettings.json').find((entry) => entry.key === key);
@@ -44,7 +46,7 @@ async function setAdminSetting(key, value) {
 
 // Admin API enabled: deployed route group for SkillSwap control center.
 // Analytics endpoint is part of the deployed admin API.
-let localSkills = seedSkills;
+let localSkills = seedSkills.map((skill) => ({ ...skill, moderationStatus: 'approved', featured: false, moderationNote: '', moderatedAt: null, createdAt: new Date(0).toISOString() }));
 
 const mailer = process.env.SMTP_HOST ? nodemailer.createTransport({ host: process.env.SMTP_HOST, port: Number(process.env.SMTP_PORT || 587), secure: process.env.SMTP_SECURE === 'true', family: 4, auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }, connectionTimeout: 10000, greetingTimeout: 10000, socketTimeout: 10000 }) : null;
 const brevoApiKey = process.env.BREVO_API_KEY;
@@ -92,6 +94,100 @@ function createVerificationToken(email) {
   const tokens = readCollection('resetTokens.json').filter((item) => item.type !== 'verify' || item.expiresAt > Date.now());
   writeCollection('resetTokens.json', [{ token, type: 'verify', email: email.trim().toLowerCase(), expiresAt: Date.now() + 24 * 60 * 60 * 1000 }, ...tokens]);
   return token;
+}
+
+
+async function syncProfileSkills(profile) {
+  const email = String(profile?.email || '').trim().toLowerCase();
+  if (!email) return;
+  const teaches = [...new Set((profile.teaches || []).map((item) => String(item).trim()).filter(Boolean))];
+  const baseTeacher = {
+    name: profile.name || 'Community member',
+    role: teaches[0] || 'Community member',
+    avatar: profile.avatar || String(profile.name || 'U').slice(0, 2).toUpperCase(),
+    location: profile.location || 'Location not shared',
+    rating: profile.rating || 0,
+    exchanges: profile.exchanges || 0,
+    email
+  };
+  if (process.env.MONGODB_URI) {
+    await Skill.deleteMany({ 'teacher.email': email, title: { $nin: teaches } });
+    for (const title of teaches) {
+      await Skill.findOneAndUpdate(
+        { 'teacher.email': email, title },
+        {
+          $set: {
+            category: 'Community skills',
+            level: 'All levels',
+            format: 'Flexible',
+            description: profile.bio || (profile.name + ' is open to sharing ' + title + '.'),
+            teacher: { ...baseTeacher, role: teaches[0] || 'Community member' },
+            wants: profile.wants?.length ? ('I want to learn ' + profile.wants.join(', ')) : 'Open to a useful skill exchange'
+          },
+          $setOnInsert: { moderationStatus: 'pending', featured: false, moderationNote: '', moderatedAt: null }
+        },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      );
+    }
+    return;
+  }
+  localSkills = localSkills.filter((skill) => String(skill.teacher?.email || '').toLowerCase() !== email || teaches.includes(String(skill.title || '')));
+  const now = new Date().toISOString();
+  teaches.forEach((title) => {
+    const existing = localSkills.find((skill) => String(skill.teacher?.email || '').toLowerCase() === email && skill.title === title);
+    if (existing) {
+      Object.assign(existing, {
+        category: existing.category || 'Community skills',
+        description: profile.bio || (profile.name + ' is open to sharing ' + title + '.'),
+        teacher: { ...baseTeacher, role: teaches[0] || 'Community member' },
+        wants: profile.wants?.length ? ('I want to learn ' + profile.wants.join(', ')) : 'Open to a useful skill exchange',
+        updatedAt: now
+      });
+      return;
+    }
+    localSkills.unshift({
+      _id: 'profile-skill-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8),
+      title,
+      category: 'Community skills',
+      level: 'All levels',
+      format: 'Flexible',
+      description: profile.bio || (profile.name + ' is open to sharing ' + title + '.'),
+      teacher: { ...baseTeacher, role: teaches[0] || 'Community member' },
+      wants: profile.wants?.length ? ('I want to learn ' + profile.wants.join(', ')) : 'Open to a useful skill exchange',
+      color: '#dbe8de',
+      availability: 'Flexible',
+      moderationStatus: 'pending',
+      featured: false,
+      moderationNote: '',
+      moderatedAt: null,
+      createdAt: now,
+      updatedAt: now
+    });
+  });
+}
+
+async function syncAllProfileSkills() {
+  if (!process.env.MONGODB_URI) {
+    const profiles = readProfiles();
+    for (const profile of profiles) await syncProfileSkills(profile);
+    return;
+  }
+  const profiles = await Profile.find({}).select('name email avatar location teaches wants bio rating').lean();
+  for (const profile of profiles) await syncProfileSkills(profile);
+  await Skill.updateMany(
+    { moderationStatus: { $exists: false } },
+    { $set: { moderationStatus: 'approved', featured: false, moderationNote: '', moderatedAt: null } }
+  );
+}
+
+async function getPublicSkills() {
+  await syncAllProfileSkills();
+  if (process.env.MONGODB_URI) {
+    return Skill.find({ moderationStatus: 'approved' }).sort({ featured: -1, createdAt: -1 }).lean();
+  }
+  return localSkills
+    .filter((skill) => !skill.moderationStatus || skill.moderationStatus === 'approved')
+    .sort((a, b) => Number(b.featured) - Number(a.featured));
 }
 
 function databaseRequired(response) {
@@ -192,61 +288,42 @@ router.get('/profiles', async (request, response) => {
   return response.json(profiles.map(publicProfile));
 });
 
-function profileSkills(profiles) {
-  return profiles.flatMap((profile) => (profile.teaches || []).filter(Boolean).map((title, index) => ({
-    _id: `profile-skill-${profile._id || profile.email}-${index}`,
-    title,
-    category: 'Community skills',
-    level: 'All levels',
-    format: 'Flexible',
-    description: profile.bio || `${profile.name} is open to sharing ${title}.`,
-    teacher: { name: profile.name, email: profile.email, role: 'Community member', avatar: profile.avatar || profile.name.slice(0, 2).toUpperCase(), location: profile.location || 'Location not shared', rating: profile.rating || 0, exchanges: profile.exchanges || 0 },
-    wants: profile.wants?.length ? `I want to learn ${profile.wants.join(', ')}` : 'Open to a useful skill exchange',
-    color: ['#dbe8de', '#efe1c5', '#d9e5ed'][index % 3],
-    availability: 'Flexible'
-  })));
-}
 
 router.get('/skills', async (request, response) => {
   const { category, search, teach, wants, location, format, level, availability, page = 1, limit = 8, sort = 'newest' } = request.query;
   const pageNumber = Math.max(1, Number(page));
   const pageSize = Math.min(24, Math.max(1, Number(limit)));
-  const genuineProfiles = process.env.MONGODB_URI
-    ? await Profile.find(discoverableProfileQuery()).select('-passwordHash').limit(500)
-    : readProfiles().filter(isDiscoverableProfile);
-  const availableSkills = profileSkills(genuineProfiles);
-  if (!process.env.MONGODB_URI) {
-    const filtered = availableSkills.filter((skill) => {
-      const matchesCategory = !category || category === 'All' || skill.category === category;
-      const wantsMatch = !search || skill.wants.toLowerCase().includes(search.toLowerCase()) || skill.title.toLowerCase().includes(search.toLowerCase()) || skill.teacher.name.toLowerCase().includes(search.toLowerCase()) || skill.teacher.role.toLowerCase().includes(search.toLowerCase()) || skill.category.toLowerCase().includes(search.toLowerCase());
-      const teachMatch = !teach || skill.title.toLowerCase().includes(teach.toLowerCase()) || skill.description.toLowerCase().includes(teach.toLowerCase());
-      const wantsFieldMatch = !wants || skill.wants.toLowerCase().includes(wants.toLowerCase());
-      const locationMatch = !location || skill.teacher.location.toLowerCase().includes(location.toLowerCase());
-      const formatMatch = !format || skill.format.toLowerCase().includes(format.toLowerCase());
-      const levelMatch = !level || skill.level === level;
-      const availabilityMatch = !availability || (skill.availability || 'Flexible') === availability;
-      return matchesCategory && wantsMatch && teachMatch && wantsFieldMatch && locationMatch && formatMatch && levelMatch && availabilityMatch;
-    });
-    const sorted = [...filtered].sort((first, second) => sort === 'rating' ? second.teacher.rating - first.teacher.rating : sort === 'newest' ? String(second._id).localeCompare(String(first._id)) : 0);
-    return response.json({ items: sorted.slice((pageNumber - 1) * pageSize, pageNumber * pageSize), page: pageNumber, limit: pageSize, total: sorted.length, hasMore: pageNumber * pageSize < sorted.length });
-  }
+  const availableSkills = await getPublicSkills();
+  const discoverable = await discoverableEmails();
   const filtered = availableSkills.filter((skill) => {
-    const text = `${skill.title} ${skill.description} ${skill.teacher.name} ${skill.wants} ${skill.category}`.toLowerCase();
-    return (!category || category === 'All' || skill.category === category || category === 'Community skills') && (!search || text.includes(search.toLowerCase())) && (!teach || skill.title.toLowerCase().includes(teach.toLowerCase())) && (!wants || skill.wants.toLowerCase().includes(wants.toLowerCase())) && (!location || skill.teacher.location.toLowerCase().includes(location.toLowerCase())) && (!format || skill.format.toLowerCase().includes(format.toLowerCase())) && (!level || skill.level === level);
+    const text = [skill.title, skill.description, skill.teacher?.name, skill.wants, skill.category].filter(Boolean).join(' ').toLowerCase();
+    const matchesCategory = !category || category === 'All' || String(skill.category || '').toLowerCase() === String(category).toLowerCase();
+    const wantsMatch = !search || text.includes(String(search).toLowerCase());
+    const teachMatch = !teach || String(skill.title || '').toLowerCase().includes(String(teach).toLowerCase()) || String(skill.description || '').toLowerCase().includes(String(teach).toLowerCase());
+    const wantsFieldMatch = !wants || String(skill.wants || '').toLowerCase().includes(String(wants).toLowerCase());
+    const locationMatch = !location || String(skill.teacher?.location || '').toLowerCase().includes(String(location).toLowerCase());
+    const formatMatch = !format || String(skill.format || '').toLowerCase().includes(String(format).toLowerCase());
+    const levelMatch = !level || String(skill.level || '').toLowerCase().includes(String(level).toLowerCase());
+    const availabilityMatch = !availability || String(skill.availability || 'Flexible').toLowerCase() === String(availability).toLowerCase();
+    const discoverableTeacher = !skill.teacher?.email || discoverable.has(String(skill.teacher.email).toLowerCase());
+    return matchesCategory && wantsMatch && teachMatch && wantsFieldMatch && locationMatch && formatMatch && levelMatch && availabilityMatch && discoverableTeacher;
   });
-  const sorted = [...filtered].sort((first, second) => sort === 'rating' ? second.teacher.rating - first.teacher.rating : sort === 'newest' ? String(second._id).localeCompare(String(first._id)) : 0);
+  const sorted = [...filtered].sort((first, second) => sort === 'rating'
+    ? Number(second.teacher?.rating || 0) - Number(first.teacher?.rating || 0)
+    : String(second.createdAt || second._id).localeCompare(String(first.createdAt || first._id)));
   return response.json({ items: sorted.slice((pageNumber - 1) * pageSize, pageNumber * pageSize), page: pageNumber, limit: pageSize, total: sorted.length, hasMore: pageNumber * pageSize < sorted.length });
 });
-
-router.get('/recommendations/:email', (request, response) => {
+router.get('/recommendations/:email', async (request, response) => {
   const email = decodeURIComponent(request.params.email).toLowerCase();
-  const profile = readProfiles().find((item) => item.email === email);
+  const profile = process.env.MONGODB_URI ? await Profile.findOne({ email }).lean() : readProfiles().find((item) => item.email === email);
   const interests = profile?.wants?.join(' ').toLowerCase() || '';
-  const profiles = readProfiles().filter(isDiscoverableProfile);
-  const recommendations = profileSkills(profiles).filter((skill) => interests && `${skill.title} ${skill.category} ${skill.wants}`.toLowerCase().split(' ').some((word) => word.length > 3 && interests.includes(word))).slice(0, 6);
+  const discoverable = await discoverableEmails();
+  const skills = (await getPublicSkills()).filter((skill) => !skill.teacher?.email || discoverable.has(String(skill.teacher.email).toLowerCase()));
+  const recommendations = skills
+    .filter((skill) => interests && [skill.title, skill.category, skill.wants].join(' ').toLowerCase().split(' ').some((word) => word.length > 3 && interests.includes(word)))
+    .slice(0, 6);
   return response.json(recommendations);
 });
-
 router.get('/profiles/:email/similar', (request, response) => {
   const email = decodeURIComponent(request.params.email).toLowerCase();
   const profile = readProfiles().find((item) => item.email === email);
@@ -255,16 +332,21 @@ router.get('/profiles/:email/similar', (request, response) => {
   return response.json(similar);
 });
 
-router.get('/matching/:email', (request, response) => {
+router.get('/matching/:email', async (request, response) => {
   const email = decodeURIComponent(request.params.email).toLowerCase();
-  const profile = readProfiles().find((item) => item.email === email);
+  const profile = process.env.MONGODB_URI ? await Profile.findOne({ email }).lean() : readProfiles().find((item) => item.email === email);
   const wants = (profile?.wants || []).map((item) => item.toLowerCase());
   const teaches = (profile?.teaches || []).map((item) => item.toLowerCase());
-  const profiles = readProfiles().filter(isDiscoverableProfile);
-  const matches = profileSkills(profiles).map((skill) => { const text = `${skill.title} ${skill.category} ${skill.wants}`.toLowerCase(); const teachScore = teaches.filter((item) => text.includes(item)).length; const learnScore = wants.filter((item) => text.includes(item)).length; return { skill, matchScore: Math.min(99, 45 + (teachScore * 15) + (learnScore * 20)) }; }).filter((item) => item.matchScore > 45).sort((first, second) => second.matchScore - first.matchScore).slice(0, 8);
+  const discoverable = await discoverableEmails();
+  const skills = (await getPublicSkills()).filter((skill) => !skill.teacher?.email || discoverable.has(String(skill.teacher.email).toLowerCase()));
+  const matches = skills.map((skill) => {
+    const text = [skill.title, skill.category, skill.wants].join(' ').toLowerCase();
+    const teachScore = teaches.filter((item) => text.includes(item)).length;
+    const learnScore = wants.filter((item) => text.includes(item)).length;
+    return { skill, matchScore: Math.min(99, 45 + (teachScore * 15) + (learnScore * 20)) };
+  }).filter((item) => item.matchScore > 45).sort((first, second) => second.matchScore - first.matchScore).slice(0, 8);
   return response.json(matches);
 });
-
 router.put('/profiles/:id/portfolio', (request, response) => {
   const { portfolioUrl = '', resumeName = '', certificates = [] } = request.body;
   const profiles = readProfiles();
@@ -290,11 +372,11 @@ router.post('/video-rooms', (request, response) => { const room = `skillswap-${D
 router.post('/skills', async (request, response) => {
   const skill = request.body;
   if (!process.env.MONGODB_URI) {
-    const created = { ...skill, _id: `local-${Date.now()}`, teacher: { ...skill.teacher, exchanges: 0, rating: 5 } };
+    const created = { ...skill, _id: `local-${Date.now()}`, teacher: { ...skill.teacher, exchanges: 0, rating: 5 }, moderationStatus: 'pending', featured: false, moderationNote: '', moderatedAt: null, createdAt: new Date().toISOString() };
     localSkills = [created, ...localSkills];
     return response.status(201).json(created);
   }
-  return response.status(201).json(await Skill.create(skill));
+  return response.status(201).json(await Skill.create({ ...skill, moderationStatus: 'pending', featured: false }));
 });
 
 router.get('/platform/status', async (_request, response) => {
@@ -331,11 +413,13 @@ router.post('/profiles', async (request, response) => {
       return response.status(503).json({ message: error.message || 'Email service is unavailable. Please try again later.' });
     }
     writeProfiles([created, ...profiles]);
+    await syncProfileSkills(created);
     return response.status(201).json({ message: 'Account created. Check your email to verify it.', verificationRequired: true, email: created.email, developmentToken: mailer ? undefined : token });
   }
 
   try {
     const created = await Profile.create(profileData);
+    await syncProfileSkills(created.toObject());
     const token = createVerificationToken(normalizedEmail);
     try {
       await sendVerificationEmail(normalizedEmail, token);
@@ -379,7 +463,7 @@ router.post('/blocks', (request, response) => {
 });
 
 router.get('/admin/reports', (request, response) => {
-  if (!requireAdmin(request, response)) return;
+  if (!await requireAdmin(request, response)) return;
   const reports = readCollection('reports.json');
   return response.json(reports.map((report) => ({
     ...report,
@@ -392,7 +476,7 @@ router.get('/admin/reports', (request, response) => {
 });
 
 router.get('/admin/stats', async (request, response) => {
-  if (!requireAdmin(request, response)) return;
+  if (!await requireAdmin(request, response)) return;
   if (process.env.MONGODB_URI) {
     const [total, verified, discoverable] = await Promise.all([
       Profile.countDocuments(),
@@ -410,7 +494,7 @@ router.get('/admin/stats', async (request, response) => {
 });
 
 router.get('/admin/users', async (request, response) => {
-  if (!requireAdmin(request, response)) return;
+  if (!await requireAdmin(request, response)) return;
   if (process.env.MONGODB_URI) {
     const profiles = await Profile.find({}).select('-passwordHash').sort({ createdAt: -1 }).lean();
     return response.json(profiles);
@@ -420,7 +504,7 @@ router.get('/admin/users', async (request, response) => {
 });
 
 router.post('/admin/users/:id/send-verification', async (request, response) => {
-  if (!requireAdmin(request, response)) return;
+  if (!await requireAdmin(request, response)) return;
   const lookup = decodeURIComponent(request.params.id);
   let profile;
   if (process.env.MONGODB_URI) {
@@ -441,7 +525,7 @@ router.post('/admin/users/:id/send-verification', async (request, response) => {
 });
 
 router.put('/admin/users/:id', async (request, response) => {
-  if (!requireAdmin(request, response)) return;
+  if (!await requireAdmin(request, response)) return;
   const lookup = decodeURIComponent(request.params.id);
   const { name, email, location = '', bio = '', teaches = [], wants = [], profileVisible, allowMessages, verified, blockedEmails = [], accountBlocked, suspendedUntil } = request.body;
   const safeProfile = {
@@ -466,18 +550,20 @@ router.put('/admin/users/:id', async (request, response) => {
     const updated = { ...profiles[index], ...safeProfile, updatedAt: new Date().toISOString() };
     await recordAdminLog(request, { action: 'user_updated', targetType: 'user', targetId: updated._id || updated.email, details: 'User profile or moderation settings updated.' });
     const nextProfiles = [...profiles]; nextProfiles[index] = updated; writeProfiles(nextProfiles);
+    await syncProfileSkills(updated);
     return response.json(updated);
   }
 
   const query = mongoose.isValidObjectId(lookup) ? { _id: lookup } : { email: lookup };
   const updated = await Profile.findOneAndUpdate(query, { ...safeProfile, updatedAt: new Date() }, { new: true, runValidators: true });
   if (!updated) return response.status(404).json({ message: 'Profile not found.' });
+  await syncProfileSkills(updated.toObject());
   await recordAdminLog(request, { action: 'user_updated', targetType: 'user', targetId: updated._id || updated.email, details: 'User profile or moderation settings updated.' });
   return response.json(updated);
 });
 
 router.get('/admin/users/:id/activity', async (request, response) => {
-  if (!requireAdmin(request, response)) return;
+  if (!await requireAdmin(request, response)) return;
   const lookup = decodeURIComponent(request.params.id);
   let profile;
   if (process.env.MONGODB_URI) profile = await Profile.findOne(mongoose.isValidObjectId(lookup) ? { _id: lookup } : { email: lookup }).select('email').lean();
@@ -499,7 +585,7 @@ router.get('/admin/users/:id/activity', async (request, response) => {
 });
 
 router.delete('/admin/users/:id', async (request, response) => {
-  if (!requireAdmin(request, response)) return;
+  if (!await requireAdmin(request, response)) return;
   const lookup = decodeURIComponent(request.params.id);
 
   if (!process.env.MONGODB_URI) {
@@ -615,6 +701,7 @@ router.put('/profiles/:id', async (request, response) => {
     if (index === -1) return response.status(404).json({ message: 'Profile not found.' });
     const updated = { ...profiles[index], ...profileData };
     writeProfiles(profiles.toSpliced(index, 1, updated));
+    await syncProfileSkills(updated);
     return response.json(publicProfile(updated));
   }
 
@@ -622,6 +709,7 @@ router.put('/profiles/:id', async (request, response) => {
   const query = mongoose.isValidObjectId(lookup) ? { _id: lookup } : { email: lookup };
   const updated = await Profile.findOneAndUpdate(query, profileData, { new: true, runValidators: true });
   if (!updated) return response.status(404).json({ message: 'Profile not found.' });
+  await syncProfileSkills(updated.toObject());
   return response.json(publicProfile(updated));
 });
 
@@ -738,7 +826,7 @@ router.patch('/notifications/:email/read', (request, response) => {
 
 router.post('/contact', (request, response) => response.status(201).json({ message: 'Thanks, we will be in touch soon.', ...request.body }));
 
-const adminIdentity = (request) => request.headers['x-admin-name'] || process.env.ADMIN_NAME || 'Admin';
+const adminIdentity = (request) => request.adminSession?.admin || request.headers['x-admin-name'] || process.env.ADMIN_NAME || 'Admin';
 
 async function recordAdminLog(request, { action, targetType = '', targetId = '', details = '', success = true } = {}) {
   const entry = { action, admin: adminIdentity(request), targetType, targetId: String(targetId || ''), details, success, createdAt: new Date().toISOString() };
@@ -751,43 +839,57 @@ async function recordAdminLog(request, { action, targetType = '', targetId = '',
   return entry;
 }
 
-const requireAdmin = (request, response) => {
-  const providedKey = String(request.headers['x-admin-key'] || '');
-  if (providedKey !== activeAdminKey && providedKey !== (process.env.ADMIN_KEY || 'owner-secret')) {
-    response.status(403).json({ message: 'Admin access required.' });
+function createAdminSession(adminName) {
+  const token = randomBytes(32).toString('hex');
+  adminSessions.set(token, { admin: adminName || 'Admin', createdAt: Date.now() });
+  return token;
+}
+
+async function requireAdmin(request, response) {
+  const token = String(request.headers['x-admin-session'] || '');
+  const session = adminSessions.get(token);
+  if (!session) {
+    response.status(403).json({ message: 'Admin session required. Please sign in again.' });
     return false;
   }
+  if (Date.now() - session.createdAt > ADMIN_SESSION_TTL_MS) {
+    adminSessions.delete(token);
+    response.status(403).json({ message: 'Admin session expired. Please sign in again.' });
+    return false;
+  }
+  request.adminSession = session;
   return true;
-};
+}
 
 router.post('/admin/auth', async (request, response) => {
   const providedKey = String(request.headers['x-admin-key'] || '');
-  const bootstrapKey = process.env.ADMIN_KEY || 'owner-secret';
-  let valid = providedKey === activeAdminKey || providedKey === bootstrapKey;
-  if (!valid && process.env.MONGODB_URI) {
-    const storedHash = await AdminSetting.findOne({ key: 'adminKeyHash' }).lean();
-    valid = Boolean(storedHash?.value && await bcrypt.compare(providedKey, storedHash.value));
-  }
-  if (!valid && !process.env.MONGODB_URI) {
-    const storedHash = readAdminSetting('adminKeyHash', '');
-    valid = Boolean(storedHash && await bcrypt.compare(providedKey, storedHash));
+  const storedHash = await getAdminSetting('adminKeyHash', '');
+  let valid = Boolean(storedHash && providedKey && await bcrypt.compare(providedKey, storedHash));
+  if (!storedHash) {
+    const bootstrapKey = process.env.ADMIN_KEY || 'owner-secret';
+    valid = providedKey === bootstrapKey;
   }
   if (!valid) {
     await recordAdminLog(request, { action: 'admin_login_failed', details: 'Invalid admin key.', success: false });
     return response.status(403).json({ message: 'Admin access required.' });
   }
-  activeAdminKey = providedKey || bootstrapKey;
+  const profile = await getAdminSetting('adminProfile', { name: process.env.ADMIN_NAME || 'Admin' });
+  const sessionToken = createAdminSession(profile?.name || process.env.ADMIN_NAME || 'Admin');
+  request.adminSession = adminSessions.get(sessionToken);
   await recordAdminLog(request, { action: 'admin_login', details: 'Admin authenticated successfully.' });
-  return response.json({ ok: true, message: 'Admin authenticated.' });
+  return response.json({ ok: true, message: 'Admin authenticated.', sessionToken, expiresIn: ADMIN_SESSION_TTL_MS });
 });
+
 router.post('/admin/logout', async (request, response) => {
-  if (!requireAdmin(request, response)) return;
+  if (!await requireAdmin(request, response)) return;
+  const token = String(request.headers['x-admin-session'] || '');
   await recordAdminLog(request, { action: 'admin_logout', details: 'Admin session ended.' });
+  adminSessions.delete(token);
   return response.json({ ok: true });
 });
 
 router.get('/admin/logs', async (request, response) => {
-  if (!requireAdmin(request, response)) return;
+  if (!await requireAdmin(request, response)) return;
   if (process.env.MONGODB_URI) {
     return response.json(await AdminLog.find({}).sort({ createdAt: -1 }).limit(500).lean());
   }
@@ -795,7 +897,7 @@ router.get('/admin/logs', async (request, response) => {
 });
 
 router.get('/admin/notifications', async (request, response) => {
-  if (!requireAdmin(request, response)) return;
+  if (!await requireAdmin(request, response)) return;
 
   const notifications = [];
   const add = (type, title, detail, createdAt, targetId = '') => {
@@ -832,7 +934,7 @@ router.get('/admin/notifications', async (request, response) => {
 });
 
 router.get('/admin/settings', async (request, response) => {
-  if (!requireAdmin(request, response)) return;
+  if (!await requireAdmin(request, response)) return;
   return response.json({
     profile: await getAdminSetting('adminProfile', { name: 'SkillSwap Admin', email: '' }),
     dashboard: await getAdminSetting('dashboardPreferences', { compactMode: false, defaultSection: 'overview', refreshInterval: 0 }),
@@ -844,26 +946,34 @@ router.get('/admin/settings', async (request, response) => {
 });
 
 router.patch('/admin/settings', async (request, response) => {
-  if (!requireAdmin(request, response)) return;
+  if (!await requireAdmin(request, response)) return;
   const body = request.body || {};
   if (body.profile) await setAdminSetting('adminProfile', { name: String(body.profile.name || '').trim() || 'SkillSwap Admin', email: String(body.profile.email || '').trim() });
   if (body.dashboard) await setAdminSetting('dashboardPreferences', { compactMode: Boolean(body.dashboard.compactMode), defaultSection: String(body.dashboard.defaultSection || 'overview'), refreshInterval: Number(body.dashboard.refreshInterval || 0) });
   if (body.maintenanceMode !== undefined) await setAdminSetting('maintenanceMode', Boolean(body.maintenanceMode));
   if (body.registrationEnabled !== undefined) await setAdminSetting('registrationEnabled', Boolean(body.registrationEnabled));
   if (body.announcement) await setAdminSetting('announcement', { enabled: Boolean(body.announcement.enabled), title: String(body.announcement.title || '').trim(), message: String(body.announcement.message || '').trim(), updatedAt: new Date().toISOString() });
+  let replacementSessionToken = null;
   if (body.newAdminKey) {
     const newKey = String(body.newAdminKey).trim();
     if (newKey.length < 8) return response.status(400).json({ message: 'Admin key must be at least 8 characters.' });
     await setAdminSetting('adminKeyHash', await bcrypt.hash(newKey, 12));
-    activeAdminKey = newKey;
-    await recordAdminLog(request, { action: 'admin_key_changed', details: 'Admin key was changed.' });
+    const currentToken = String(request.headers['x-admin-session'] || '');
+    for (const token of adminSessions.keys()) {
+      if (token !== currentToken) adminSessions.delete(token);
+    }
+    const profile = await getAdminSetting('adminProfile', { name: process.env.ADMIN_NAME || 'Admin' });
+    replacementSessionToken = createAdminSession(profile?.name || process.env.ADMIN_NAME || 'Admin');
+    adminSessions.delete(currentToken);
+    request.adminSession = adminSessions.get(replacementSessionToken);
+    await recordAdminLog(request, { action: 'admin_key_changed', details: 'Admin key was changed; active admin session rotated.' });
   }
   await recordAdminLog(request, { action: 'admin_settings_updated', details: 'Admin settings updated.' });
-  return response.json({ ok: true, message: 'Admin settings saved.' });
+  return response.json({ ok: true, message: 'Admin settings saved.', ...(replacementSessionToken ? { sessionToken: replacementSessionToken, expiresIn: ADMIN_SESSION_TTL_MS } : {}) });
 });
 
 router.get('/admin/overview', async (request, response) => {
-  if (!requireAdmin(request, response)) return;
+  if (!await requireAdmin(request, response)) return;
   const reports = readCollection('reports.json');
   const exchanges = readCollection('exchanges.json');
   let totalUsers = 0;
@@ -897,7 +1007,7 @@ router.get('/admin/overview', async (request, response) => {
 
 
 router.get('/admin/analytics', async (request, response) => {
-  if (!requireAdmin(request, response)) return;
+  if (!await requireAdmin(request, response)) return;
 
   const profiles = process.env.MONGODB_URI
     ? await Profile.find({}).select('email createdAt').lean()
@@ -994,7 +1104,7 @@ router.get('/admin/analytics', async (request, response) => {
 });
 
 router.get('/admin/skills', async (request, response) => {
-  if (!requireAdmin(request, response)) return;
+  if (!await requireAdmin(request, response)) return;
   let skills = process.env.MONGODB_URI ? await Skill.find({}).sort({ createdAt: -1 }).lean() : localSkills;
   const normalized = skills.map((skill) => ({ ...skill, moderationStatus: skill.moderationStatus || 'pending', featured: Boolean(skill.featured) }));
   const duplicateKeys = new Map();
@@ -1013,7 +1123,7 @@ router.get('/admin/skills', async (request, response) => {
 });
 
 router.patch('/admin/skills/:id/moderation', async (request, response) => {
-  if (!requireAdmin(request, response)) return;
+  if (!await requireAdmin(request, response)) return;
   const { status, featured = false, moderationNote = '' } = request.body;
   if (!['pending', 'approved', 'rejected'].includes(status)) return response.status(400).json({ message: 'Invalid moderation status.' });
   const lookup = decodeURIComponent(request.params.id);
@@ -1031,13 +1141,13 @@ router.patch('/admin/skills/:id/moderation', async (request, response) => {
 });
 
 router.get('/admin/skill-categories', async (request, response) => {
-  if (!requireAdmin(request, response)) return;
+  if (!await requireAdmin(request, response)) return;
   const categories = readCollection('skillCategories.json');
   return response.json(categories.length ? categories : ['Programming', 'Design', 'Languages', 'Business', 'Marketing', 'Music', 'Academic', 'Other']);
 });
 
 router.post('/admin/skill-categories', async (request, response) => {
-  if (!requireAdmin(request, response)) return;
+  if (!await requireAdmin(request, response)) return;
   const name = String(request.body.name || '').trim();
   if (!name) return response.status(400).json({ message: 'Category name is required.' });
   const categories = readCollection('skillCategories.json');
@@ -1048,7 +1158,7 @@ router.post('/admin/skill-categories', async (request, response) => {
 });
 
 router.delete('/admin/skill-categories/:name', async (request, response) => {
-  if (!requireAdmin(request, response)) return;
+  if (!await requireAdmin(request, response)) return;
   const name = decodeURIComponent(request.params.name);
   const categories = readCollection('skillCategories.json');
   const next = categories.filter((item) => String(item).toLowerCase() !== name.toLowerCase());
@@ -1059,7 +1169,7 @@ router.delete('/admin/skill-categories/:name', async (request, response) => {
 });
 
 router.get('/admin/skill-statistics', async (request, response) => {
-  if (!requireAdmin(request, response)) return;
+  if (!await requireAdmin(request, response)) return;
   const skills = process.env.MONGODB_URI ? await Skill.find({}).lean() : localSkills;
   const stats = {
     total: skills.length,
@@ -1075,7 +1185,7 @@ router.get('/admin/skill-statistics', async (request, response) => {
 });
 
 router.delete('/admin/skills/:id', async (request, response) => {
-  if (!requireAdmin(request, response)) return;
+  if (!await requireAdmin(request, response)) return;
   const lookup = decodeURIComponent(request.params.id);
   if (process.env.MONGODB_URI) {
     const deleted = await Skill.findByIdAndDelete(lookup);
@@ -1092,7 +1202,7 @@ router.delete('/admin/skills/:id', async (request, response) => {
 });
 
 router.get('/admin/exchanges', async (request, response) => {
-  if (!requireAdmin(request, response)) return;
+  if (!await requireAdmin(request, response)) return;
   const exchanges = readCollection('exchanges.json');
   const emails = [...new Set(exchanges.flatMap((item) => [item.requesterEmail, item.ownerEmail]).filter(Boolean))];
   let profiles = [];
@@ -1112,7 +1222,7 @@ router.get('/admin/exchanges', async (request, response) => {
 });
 
 router.patch('/admin/exchanges/:id', async (request, response) => {
-  if (!requireAdmin(request, response)) return;
+  if (!await requireAdmin(request, response)) return;
   const exchanges = readCollection('exchanges.json');
   const index = exchanges.findIndex((item) => item._id === request.params.id);
   if (index === -1) return response.status(404).json({ message: 'Exchange not found.' });
@@ -1129,7 +1239,7 @@ router.patch('/admin/exchanges/:id', async (request, response) => {
 });
 
 router.patch('/admin/reports/:id', async (request, response) => {
-  if (!requireAdmin(request, response)) return;
+  if (!await requireAdmin(request, response)) return;
   const reports = readCollection('reports.json');
   const index = reports.findIndex((item) => item._id === request.params.id);
   if (index === -1) return response.status(404).json({ message: 'Report not found.' });
