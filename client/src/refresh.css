@@ -769,6 +769,8 @@ html[data-theme='dark'] .notification-clear:hover { color: #d9ed67; }
 .admin-summary-card strong { font-size: 24px; letter-spacing: -.04em; }
 .admin-key-row { margin-bottom: 14px; }
 .admin-refresh-button { white-space: nowrap; }
+.admin-notice { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 14px; padding: 11px 13px; border: 1px solid #b8cbb9; border-radius: 7px; background: #e5eee2; color: var(--forest); font-size: 11px; line-height: 1.45; }
+.admin-notice button { display: grid; place-items: center; flex: 0 0 auto; padding: 3px; color: currentColor; }
 .admin-user-list { display: grid; gap: 14px; overflow-y: auto; padding-right: 6px; }
 .admin-user-card { border: 1px solid #d7ddd4; border-radius: 12px; background: #fffdf9; padding: 15px; box-shadow: 0 6px 18px rgba(25,53,42,.04); }
 .admin-user-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
@@ -1241,6 +1243,7 @@ html[data-theme='dark'] .modal-panel.admin-panel .admin-user-card { box-shadow: 
 html[data-theme='dark'] .modal-panel.admin-panel .admin-user-actions .button-light { background: #294438; border-color: #547361; color: #eef4ed; }
 html[data-theme='dark'] .modal-panel.admin-panel .admin-user-actions .button-light:hover { background: #d9ed67; border-color: #d9ed67; color: #19352a; }
 html[data-theme='dark'] .modal-panel.admin-panel .admin-user-actions .danger-button { background: rgba(157,73,55,.18); color: #f8b6a2; border-color: rgba(248,182,162,.35); }
+html[data-theme='dark'] .modal-panel.admin-panel .admin-notice { background: #294438; border-color: #547361; color: #eef4ed; }
 html[data-theme='dark'] .modal-panel.community-panel { background: #182c24; border-color: #466050; color: #eef4ed; }
 html[data-theme='dark'] .modal-panel.community-panel h2 { color: #eef4ed; }
 html[data-theme='dark'] .modal-panel.community-panel > p,
