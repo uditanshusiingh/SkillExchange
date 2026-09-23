@@ -97,8 +97,13 @@ function createVerificationToken(email) {
 }
 
 
-async function syncProfileSkills(profile) {
+async function syncProfileSkills(profile, previousEmail = '') {
   const email = String(profile?.email || '').trim().toLowerCase();
+  const oldEmail = String(previousEmail || '').trim().toLowerCase();
+  if (oldEmail && oldEmail !== email) {
+    if (process.env.MONGODB_URI) await Skill.deleteMany({ 'teacher.email': oldEmail });
+    else localSkills = localSkills.filter((skill) => String(skill.teacher?.email || '').toLowerCase() !== oldEmail);
+  }
   if (!email) return;
   const teaches = [...new Set((profile.teaches || []).map((item) => String(item).trim()).filter(Boolean))];
   const baseTeacher = {
@@ -419,7 +424,6 @@ router.post('/profiles', async (request, response) => {
 
   try {
     const created = await Profile.create(profileData);
-    await syncProfileSkills(created.toObject());
     const token = createVerificationToken(normalizedEmail);
     try {
       await sendVerificationEmail(normalizedEmail, token);
@@ -427,6 +431,7 @@ router.post('/profiles', async (request, response) => {
       await Profile.deleteOne({ _id: created._id });
       return response.status(503).json({ message: error.message || 'Email service is unavailable. Please try again later.' });
     }
+    await syncProfileSkills(created.toObject());
     return response.status(201).json({ message: 'Account created. Check your email to verify it.', verificationRequired: true, email: created.email });
   } catch (error) {
     if (error.code === 11000) return response.status(409).json({ message: 'An account with this email already exists.' });
@@ -547,17 +552,20 @@ router.put('/admin/users/:id', async (request, response) => {
     const profiles = readProfiles();
     const index = profiles.findIndex((profile) => profile._id === lookup || profile.email === lookup);
     if (index === -1) return response.status(404).json({ message: 'Profile not found.' });
+    const previousEmail = profiles[index].email;
     const updated = { ...profiles[index], ...safeProfile, updatedAt: new Date().toISOString() };
     await recordAdminLog(request, { action: 'user_updated', targetType: 'user', targetId: updated._id || updated.email, details: 'User profile or moderation settings updated.' });
     const nextProfiles = [...profiles]; nextProfiles[index] = updated; writeProfiles(nextProfiles);
-    await syncProfileSkills(updated);
+    await syncProfileSkills(updated, previousEmail);
     return response.json(updated);
   }
 
   const query = mongoose.isValidObjectId(lookup) ? { _id: lookup } : { email: lookup };
+  const existing = await Profile.findOne(query).select('email').lean();
+  if (!existing) return response.status(404).json({ message: 'Profile not found.' });
   const updated = await Profile.findOneAndUpdate(query, { ...safeProfile, updatedAt: new Date() }, { new: true, runValidators: true });
   if (!updated) return response.status(404).json({ message: 'Profile not found.' });
-  await syncProfileSkills(updated.toObject());
+  await syncProfileSkills(updated.toObject(), existing.email);
   await recordAdminLog(request, { action: 'user_updated', targetType: 'user', targetId: updated._id || updated.email, details: 'User profile or moderation settings updated.' });
   return response.json(updated);
 });
@@ -590,16 +598,19 @@ router.delete('/admin/users/:id', async (request, response) => {
 
   if (!process.env.MONGODB_URI) {
     const profiles = readProfiles();
+    const deleted = profiles.find((profile) => profile._id === lookup || profile.email === lookup);
     const next = profiles.filter((profile) => profile._id !== lookup && profile.email !== lookup);
-    if (next.length === profiles.length) return response.status(404).json({ message: 'Profile not found.' });
+    if (!deleted) return response.status(404).json({ message: 'Profile not found.' });
     writeProfiles(next);
+    localSkills = localSkills.filter((skill) => String(skill.teacher?.email || '').toLowerCase() !== String(deleted.email || '').toLowerCase());
     await recordAdminLog(request, { action: 'user_deleted', targetType: 'user', targetId: lookup, details: 'User permanently deleted.' });
     return response.json({ message: 'User deleted successfully.' });
   }
 
   const query = mongoose.isValidObjectId(lookup) ? { _id: lookup } : { email: lookup };
-  const result = await Profile.deleteOne(query);
-  if (!result.deletedCount) return response.status(404).json({ message: 'Profile not found.' });
+  const deleted = await Profile.findOneAndDelete(query).lean();
+  if (!deleted) return response.status(404).json({ message: 'Profile not found.' });
+  await Skill.deleteMany({ 'teacher.email': String(deleted.email || '').toLowerCase() });
   await recordAdminLog(request, { action: 'user_deleted', targetType: 'user', targetId: lookup, details: 'User permanently deleted.' });
   return response.json({ message: 'User deleted successfully.' });
 });
@@ -699,17 +710,20 @@ router.put('/profiles/:id', async (request, response) => {
     const lookup = decodeURIComponent(request.params.id);
     const index = profiles.findIndex((profile) => profile._id === lookup || profile.email === lookup);
     if (index === -1) return response.status(404).json({ message: 'Profile not found.' });
+    const previousEmail = profiles[index].email;
     const updated = { ...profiles[index], ...profileData };
     writeProfiles(profiles.toSpliced(index, 1, updated));
-    await syncProfileSkills(updated);
+    await syncProfileSkills(updated, previousEmail);
     return response.json(publicProfile(updated));
   }
 
   const lookup = decodeURIComponent(request.params.id);
   const query = mongoose.isValidObjectId(lookup) ? { _id: lookup } : { email: lookup };
+  const existing = await Profile.findOne(query).select('email').lean();
+  if (!existing) return response.status(404).json({ message: 'Profile not found.' });
   const updated = await Profile.findOneAndUpdate(query, profileData, { new: true, runValidators: true });
   if (!updated) return response.status(404).json({ message: 'Profile not found.' });
-  await syncProfileSkills(updated.toObject());
+  await syncProfileSkills(updated.toObject(), existing.email);
   return response.json(publicProfile(updated));
 });
 
