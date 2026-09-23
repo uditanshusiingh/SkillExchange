@@ -8,6 +8,7 @@ const skillSchema = new mongoose.Schema({
   description: { type: String, required: true },
   teacher: {
     name: String,
+    email: String,
     role: String,
     avatar: String,
     location: String,
