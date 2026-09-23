@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import {
   deleteAdminSkill, deleteAdminUser, getAdminExchanges, getAdminReports,
-  getAdminSkills, getAdminStats, getAdminUsers, updateAdminExchange,
+  getAdminSkills, getAdminOverview, getAdminUsers, updateAdminExchange,
   updateAdminReport, updateAdminUser
 } from './api';
 import './admin.css';
@@ -34,7 +34,7 @@ function AdminLogin({ onLogin }) {
     setLoading(true);
     setError('');
     try {
-      await getAdminStats(key.trim());
+      await getAdminOverview(key.trim());
       localStorage.setItem('skillswap-admin-key', key.trim());
       onLogin(key.trim());
     } catch (err) {
@@ -84,10 +84,10 @@ export default function AdminApp() {
     setError('');
     try {
       const [nextStats, nextUsers, nextSkills, nextExchanges, nextReports] = await Promise.all([
-        getAdminStats(key), getAdminUsers(key), getAdminSkills(key),
+        getAdminOverview(key), getAdminUsers(key), getAdminSkills(key),
         getAdminExchanges(key), getAdminReports(key)
       ]);
-      setStats(nextStats);
+      setStats({ total: nextStats.totalUsers, verified: nextStats.verifiedUsers, discoverable: nextStats.visibleUsers, skills: nextStats.skills, exchanges: nextStats.exchanges, reports: nextStats.openReports });
       setUsers(nextUsers);
       setSkills(nextSkills);
       setExchanges(nextExchanges);
