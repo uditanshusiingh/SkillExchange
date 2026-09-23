@@ -158,8 +158,9 @@ export async function getAdminReports(adminKey) {
   const response = await fetch(`${API_URL}/admin/reports`, { headers: { 'x-admin-key': adminKey || '' } });
   return readResponse(response, 'Could not load reports');
 }
-export async function updateAdminReport(adminKey, id, status) {
-  const response = await fetch(`${API_URL}/admin/reports/${encodeURIComponent(id)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey || '' }, body: JSON.stringify({ status }) });
+export async function updateAdminReport(adminKey, id, payload) {
+  const body = typeof payload === 'string' ? { status: payload } : payload;
+  const response = await fetch(`${API_URL}/admin/reports/${encodeURIComponent(id)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey || '' }, body: JSON.stringify(body) });
   return readResponse(response, 'Could not update report');
 }
 export async function getAdminExchanges(adminKey) {
