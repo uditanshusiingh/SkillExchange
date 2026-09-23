@@ -80,7 +80,9 @@ export default function AdminApp() {
   const [reportFilter, setReportFilter] = useState('all');
   const [skillModal, setSkillModal] = useState(null);
   const [exchangeModal, setExchangeModal] = useState(null);
-  const [reportModal, setReportModal] = useState(null);\n  const [analytics, setAnalytics] = useState(null);\n  const [analyticsPeriod, setAnalyticsPeriod] = useState('daily');
+  const [reportModal, setReportModal] = useState(null);
+  const [analytics, setAnalytics] = useState(null);
+  const [analyticsPeriod, setAnalyticsPeriod] = useState('daily');
 
   const logout = () => {
     localStorage.removeItem('skillswap-admin-key');
@@ -96,7 +98,8 @@ export default function AdminApp() {
         getAdminOverview(key), getAdminUsers(key), getAdminSkills(key), getAdminAnalytics(key),
         getAdminExchanges(key), getAdminReports(key)
       ]);
-      setStats({ total: nextStats.totalUsers, verified: nextStats.verifiedUsers, discoverable: nextStats.visibleUsers, skills: nextStats.skills, exchanges: nextStats.exchanges, reports: nextStats.openReports });\n      setAnalytics(nextAnalytics);
+      setStats({ total: nextStats.totalUsers, verified: nextStats.verifiedUsers, discoverable: nextStats.visibleUsers, skills: nextStats.skills, exchanges: nextStats.exchanges, reports: nextStats.openReports });
+      setAnalytics(nextAnalytics);
       setUsers(nextUsers);
       setSkills(nextSkills);
       setExchanges(nextExchanges);
@@ -226,7 +229,8 @@ export default function AdminApp() {
   if (!authenticated) return <AdminLogin onLogin={(key) => { setAdminKey(key); setAuthenticated(true); loadAll(key); }} />;
 
   const nav = [
-    ['overview', LayoutDashboard, 'Overview'],\n    ['analytics', BarChart3, 'Analytics'],
+    ['overview', LayoutDashboard, 'Overview'],
+    ['analytics', BarChart3, 'Analytics'],
     ['users', Users, 'Users'],
     ['skills', BarChart3, 'Skills'],
     ['exchanges', Activity, 'Exchanges'],
