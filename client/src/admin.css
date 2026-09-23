@@ -82,3 +82,25 @@
   .admin-activity-item{grid-template-columns:28px 1fr}
   .admin-activity-item time{grid-column:2}
 }
+
+
+/* Security & audit logs */
+.admin-security-grid{display:grid;grid-template-columns:minmax(280px,.8fr) minmax(0,1.7fr);gap:18px}
+.admin-security-summary{align-self:start}
+.admin-security-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}
+.admin-security-stats>div{padding:16px;border:1px solid var(--admin-border,#e5e7eb);border-radius:14px;background:var(--admin-surface,#f7f8f8)}
+.admin-security-stats strong{display:block;font-size:24px}
+.admin-security-stats span{display:block;color:#737b77;font-size:11px;margin-top:4px}
+.admin-log-card{min-width:0}
+.admin-log-list{max-height:620px;overflow:auto}
+.admin-log-row{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:11px;align-items:center;padding:13px 4px;border-bottom:1px solid var(--admin-border,#eef0ef)}
+.admin-log-row:last-child{border-bottom:0}
+.admin-log-icon{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:#eaf6df;color:#47702d}
+.admin-log-icon.failed{background:#fde8e8;color:#b42318}
+.admin-log-row strong{display:block;text-transform:capitalize;font-size:13px}
+.admin-log-row small{display:block;color:#7b827f;font-size:11px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:520px}
+.admin-log-meta{display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+.admin-log-meta b{font-size:11px}
+.admin-log-meta time{font-size:10px;color:#89908d;white-space:nowrap}
+@media(max-width:900px){.admin-security-grid{grid-template-columns:1fr}}
+@media(max-width:620px){.admin-log-row{grid-template-columns:32px minmax(0,1fr)}.admin-log-meta{grid-column:2;align-items:flex-start}.admin-log-row small{max-width:100%}}
