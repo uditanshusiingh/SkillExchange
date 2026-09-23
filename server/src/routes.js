@@ -78,11 +78,11 @@ function publicProfile(profile) {
 }
 
 function isDiscoverableProfile(profile) {
-  return profile.email !== 'demo@gmail.com' && profile.profileVisible !== false;
+  return profile.email !== 'demo@gmail.com' && profile.profileVisible !== false && profile.accountBlocked !== true && !(profile.suspendedUntil && new Date(profile.suspendedUntil).getTime() > Date.now());
 }
 
 function discoverableProfileQuery() {
-  return { profileVisible: { $ne: false }, email: { $ne: 'demo@gmail.com' } };
+  return { profileVisible: { $ne: false }, email: { $ne: 'demo@gmail.com' }, accountBlocked: { $ne: true }, $or: [{ suspendedUntil: null }, { suspendedUntil: { $lte: new Date() } }, { suspendedUntil: { $exists: false } }] };
 }
 
 async function discoverableEmails() {
@@ -397,7 +397,7 @@ router.put('/admin/users/:id', async (request, response) => {
   const adminKey = process.env.ADMIN_KEY || 'owner-secret';
   if (request.headers['x-admin-key'] !== adminKey) return response.status(403).json({ message: 'Admin access required.' });
   const lookup = decodeURIComponent(request.params.id);
-  const { name, email, location = '', bio = '', teaches = [], wants = [], profileVisible, allowMessages, verified, blockedEmails = [] } = request.body;
+  const { name, email, location = '', bio = '', teaches = [], wants = [], profileVisible, allowMessages, verified, blockedEmails = [], accountBlocked, suspendedUntil } = request.body;
   const safeProfile = {
     ...(name !== undefined && { name: String(name).trim() }),
     ...(email !== undefined && { email: String(email).trim().toLowerCase() }),
@@ -408,7 +408,9 @@ router.put('/admin/users/:id', async (request, response) => {
     ...(profileVisible !== undefined && { profileVisible: Boolean(profileVisible) }),
     ...(allowMessages !== undefined && { allowMessages: Boolean(allowMessages) }),
     ...(verified !== undefined && { verified: Boolean(verified), emailVerified: true }),
-    ...(blockedEmails !== undefined && { blockedEmails: Array.isArray(blockedEmails) ? blockedEmails.map((item) => String(item).trim().toLowerCase()).filter(Boolean) : [] })
+    ...(blockedEmails !== undefined && { blockedEmails: Array.isArray(blockedEmails) ? blockedEmails.map((item) => String(item).trim().toLowerCase()).filter(Boolean) : [] }),
+    ...(accountBlocked !== undefined && { accountBlocked: Boolean(accountBlocked) }),
+    ...(suspendedUntil !== undefined && { suspendedUntil: suspendedUntil ? new Date(suspendedUntil) : null })
   };
 
   if (!process.env.MONGODB_URI) {
@@ -424,6 +426,28 @@ router.put('/admin/users/:id', async (request, response) => {
   const updated = await Profile.findOneAndUpdate(query, safeProfile, { new: true, runValidators: true });
   if (!updated) return response.status(404).json({ message: 'Profile not found.' });
   return response.json(updated);
+});
+
+router.get('/admin/users/:id/activity', async (request, response) => {
+  if (!requireAdmin(request, response)) return;
+  const lookup = decodeURIComponent(request.params.id);
+  let profile;
+  if (process.env.MONGODB_URI) profile = await Profile.findOne(mongoose.isValidObjectId(lookup) ? { _id: lookup } : { email: lookup }).select('email').lean();
+  else profile = readProfiles().find((item) => item._id === lookup || item.email === lookup);
+  if (!profile) return response.status(404).json({ message: 'Profile not found.' });
+  const email = String(profile.email).toLowerCase();
+  const events = [];
+  const exchanges = readCollection('exchanges.json');
+  exchanges.filter((item) => [item.requesterEmail, item.ownerEmail].some((value) => String(value || '').toLowerCase() === email)).forEach((item) => events.push({ type: 'exchange', title: item.skillTitle || 'Skill exchange', detail: `${item.status || 'pending'} exchange`, createdAt: item.createdAt, id: item._id }));
+  readMessages().filter((item) => [item.senderEmail, item.recipientEmail].some((value) => String(value || '').toLowerCase() === email)).forEach((item) => events.push({ type: 'message', title: 'Message activity', detail: item.message || 'Message sent', createdAt: item.createdAt, id: item._id }));
+  readCollection('reports.json').filter((item) => [item.reporterEmail, item.reportedEmail].some((value) => String(value || '').toLowerCase() === email)).forEach((item) => events.push({ type: 'report', title: item.reason || 'Report', detail: item.status || 'open', createdAt: item.createdAt, id: item._id }));
+  readCollection('reviews.json').filter((item) => [item.reviewerEmail, item.recipientEmail].some((value) => String(value || '').toLowerCase() === email)).forEach((item) => events.push({ type: 'review', title: 'Review activity', detail: item.text || `${item.rating || 0}/5 rating`, createdAt: item.createdAt, id: item._id }));
+  const skills = process.env.MONGODB_URI
+    ? await Skill.find({ $or: [{ 'teacher.email': email }, { teacher: { $exists: true } }] }).select('title category createdAt teacher').lean()
+    : localSkills;
+  skills.filter((item) => String(item.teacher?.email || '').toLowerCase() === email || String(item.teacher?.name || '').toLowerCase() === String(profile.name || '').toLowerCase()).forEach((item) => events.push({ type: 'skill', title: item.title || 'Skill', detail: item.category || 'Skill listed', createdAt: item.createdAt, id: item._id }));
+  events.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+  return response.json(events.slice(0, 100));
 });
 
 router.delete('/admin/users/:id', async (request, response) => {
@@ -456,6 +480,8 @@ router.post('/auth/login', async (request, response) => {
     if (!profile || !(await bcrypt.compare(password, profile.passwordHash))) {
       return response.status(401).json({ message: 'Invalid email or password.' });
     }
+    if (profile.accountBlocked) return response.status(403).json({ message: 'This account has been blocked by an administrator.' });
+    if (profile.suspendedUntil && new Date(profile.suspendedUntil).getTime() > Date.now()) return response.status(403).json({ message: `This account is suspended until ${new Date(profile.suspendedUntil).toLocaleString()}.` });
     if (!profile.emailVerified) return response.status(403).json({ message: 'Please verify your email before logging in.' });
     return response.json({ message: 'Login successful.', profile: publicProfile(profile) });
   }
@@ -464,6 +490,8 @@ router.post('/auth/login', async (request, response) => {
   if (!profile || !(await bcrypt.compare(password, profile.passwordHash))) {
     return response.status(401).json({ message: 'Invalid email or password.' });
   }
+  if (profile.accountBlocked) return response.status(403).json({ message: 'This account has been blocked by an administrator.' });
+  if (profile.suspendedUntil && new Date(profile.suspendedUntil).getTime() > Date.now()) return response.status(403).json({ message: `This account is suspended until ${new Date(profile.suspendedUntil).toLocaleString()}.` });
   if (!profile.emailVerified) return response.status(403).json({ message: 'Please verify your email before logging in.' });
   return response.json({ message: 'Login successful.', profile: publicProfile(profile) });
 });
