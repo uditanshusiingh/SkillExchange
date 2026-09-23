@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Activity, ArrowLeft, BarChart3, CheckCircle2, ChevronRight, CircleAlert,
   Bell, Clock3, Database, Edit3, Eye, EyeOff, FileText, LayoutDashboard, LogOut, MapPin, Menu, MessageSquare, RefreshCw, Search,
@@ -58,7 +58,7 @@ function AdminLogin({ onLogin }) {
 }
 
 export default function AdminApp() {
-  const [adminKey, setAdminKey] = useState('');
+  const [adminSession, setAdminSession] = useState('');
   const [authenticated, setAuthenticated] = useState(false);
   const [section, setSection] = useState('overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -95,21 +95,22 @@ export default function AdminApp() {
   const [adminSettings, setAdminSettings] = useState({ profile: { name: 'SkillSwap Admin', email: '' }, dashboard: { compactMode: false, defaultSection: 'overview', refreshInterval: 0 }, maintenanceMode: false, registrationEnabled: true, announcement: { enabled: false, title: '', message: '' }, keyConfigured: false });
   const [newAdminKey, setNewAdminKey] = useState('');
   const [settingsSaving, setSettingsSaving] = useState(false);
+  const defaultSectionApplied = useRef(false);
 
   const logout = () => {
-    adminLogout(adminKey).catch(() => {});
-    localStorage.removeItem('skillswap-admin-key');
-    setAdminKey('');
+    if (adminSession) adminLogout(adminSession).catch(() => {});
+    setAdminSession('');
     setAuthenticated(false);
+    defaultSectionApplied.current = false;
   };
 
-  const loadAll = async (key = adminKey) => {
+  const loadAll = async (session = adminSession, applyDefaultSection = false) => {
     setLoading(true);
     setError('');
     try {
       const [nextStats, nextUsers, nextSkills, nextAnalytics, nextExchanges, nextReports, nextLogs, nextCategories, nextSkillStats, nextNotifications, nextSettings] = await Promise.all([
-        getAdminOverview(key), getAdminUsers(key), getAdminSkills(key), getAdminAnalytics(key),
-        getAdminExchanges(key), getAdminReports(key), getAdminLogs(key), getAdminSkillCategories(key), getAdminSkillStatistics(key), getAdminNotifications(key), getAdminSettings(key)
+        getAdminOverview(session), getAdminUsers(session), getAdminSkills(session), getAdminAnalytics(session),
+        getAdminExchanges(session), getAdminReports(session), getAdminLogs(session), getAdminSkillCategories(session), getAdminSkillStatistics(session), getAdminNotifications(session), getAdminSettings(session)
       ]);
       setStats({ total: nextStats.totalUsers, verified: nextStats.verifiedUsers, discoverable: nextStats.visibleUsers, skills: nextStats.skills, exchanges: nextStats.exchanges, reports: nextStats.openReports });
       setAnalytics(nextAnalytics);
@@ -122,6 +123,12 @@ export default function AdminApp() {
       setSkillStats(nextSkillStats);
       setNotifications(nextNotifications);
       setAdminSettings(nextSettings);
+      if (applyDefaultSection && !defaultSectionApplied.current) {
+        const allowedSections = ['overview', 'analytics', 'security', 'notifications', 'settings', 'users', 'skills', 'exchanges', 'reports'];
+        const preferredSection = allowedSections.includes(nextSettings.dashboard?.defaultSection) ? nextSettings.dashboard.defaultSection : 'overview';
+        setSection(preferredSection);
+        defaultSectionApplied.current = true;
+      }
       setAuthenticated(true);
     } catch (err) {
       if (/admin access|403|401/i.test(err.message || '')) logout();
@@ -153,7 +160,7 @@ export default function AdminApp() {
     setUserActivity([]);
     setActivityLoading(true);
     try {
-      const activity = await getAdminUserActivity(adminKey, user._id || user.email);
+      const activity = await getAdminUserActivity(adminSession, user._id || user.email);
       setUserActivity(activity);
     } catch (err) {
       setError(err.message);
@@ -176,7 +183,7 @@ export default function AdminApp() {
         allowMessages: userModal.allowMessages !== false,
         verified: Boolean(userModal.emailVerified || userModal.verified)
       };
-      const updated = await updateAdminUser(adminKey, userModal._id || userModal.email, payload);
+      const updated = await updateAdminUser(adminSession, userModal._id || userModal.email, payload);
       setUsers((items) => items.map((item) => (item._id || item.email) === (userModal._id || userModal.email) ? updated : item));
       setUserModal(null);
       setNotice('User profile updated successfully.');
@@ -210,12 +217,19 @@ export default function AdminApp() {
     });
   }, [reports, query, reportFilter]);
 
-  const refresh = () => loadAll();
+  useEffect(() => {
+    const seconds = Number(adminSettings.dashboard?.refreshInterval || 0);
+    if (!authenticated || !adminSession || !seconds) return undefined;
+    const timerId = window.setInterval(() => { loadAll(adminSession); }, seconds * 1000);
+    return () => window.clearInterval(timerId);
+  }, [authenticated, adminSession, adminSettings.dashboard?.refreshInterval]);
+
+  const refresh = () => loadAll(adminSession);
 
   const userAction = async (user, updates) => {
     try {
       const id = user._id || user.email;
-      const updated = await updateAdminUser(adminKey, id, updates);
+      const updated = await updateAdminUser(adminSession, id, updates);
       setUsers((items) => items.map((item) => (item._id || item.email) === id ? updated : item));
       setNotice('User updated successfully.');
       await refresh();
@@ -226,7 +240,7 @@ export default function AdminApp() {
     const typed = window.prompt(`Type DELETE to permanently delete ${user.name || user.email}.`);
     if (typed !== 'DELETE') return;
     try {
-      await deleteAdminUser(adminKey, user._id || user.email);
+      await deleteAdminUser(adminSession, user._id || user.email);
       setUserModal(null);
       setNotice('User deleted permanently.');
       await refresh();
@@ -248,9 +262,9 @@ export default function AdminApp() {
 
   const moderateSkill = async (skill, status, featured = skill.featured) => {
     try {
-      const updated = await updateAdminSkillModeration(adminKey, skill._id, { status, featured, moderationNote: skill.moderationNote || '' });
+      const updated = await updateAdminSkillModeration(adminSession, skill._id, { status, featured, moderationNote: skill.moderationNote || '' });
       setSkills((items) => items.map((item) => item._id === skill._id ? { ...item, ...updated } : item));
-      setSkillStats(await getAdminSkillStatistics(adminKey));
+      setSkillStats(await getAdminSkillStatistics(adminSession));
       setNotice('Skill ' + status + '.');
     } catch (err) { setError(err.message); }
   };
@@ -263,7 +277,7 @@ export default function AdminApp() {
     const name = categoryName.trim();
     if (!name) return;
     try {
-      const created = await addAdminSkillCategory(adminKey, name);
+      const created = await addAdminSkillCategory(adminSession, name);
       setSkillCategories((items) => [...items, created]);
       setCategoryName('');
       setNotice('Skill category added.');
@@ -273,7 +287,7 @@ export default function AdminApp() {
   const removeSkillCategory = async (name) => {
     if (!window.confirm('Delete the "' + name + '" category?')) return;
     try {
-      await deleteAdminSkillCategory(adminKey, name);
+      await deleteAdminSkillCategory(adminSession, name);
       setSkillCategories((items) => items.filter((item) => item !== name));
       setNotice('Skill category deleted.');
     } catch (err) { setError(err.message); }
@@ -282,7 +296,7 @@ export default function AdminApp() {
   const deleteSkill = async (skill) => {
     if (!window.confirm(`Delete skill "${skill.title}"?`)) return;
     try {
-      await deleteAdminSkill(adminKey, skill._id);
+      await deleteAdminSkill(adminSession, skill._id);
       setNotice('Skill deleted.');
       await refresh();
     } catch (err) { setError(err.message); }
@@ -290,7 +304,7 @@ export default function AdminApp() {
 
   const changeExchangeStatus = async (exchange, status) => {
     try {
-      await updateAdminExchange(adminKey, exchange._id, status);
+      await updateAdminExchange(adminSession, exchange._id, status);
       setNotice('Exchange status updated.');
       await refresh();
     } catch (err) { setError(err.message); }
@@ -298,7 +312,7 @@ export default function AdminApp() {
 
   const updateReportCase = async (report, payload) => {
     try {
-      const updated = await updateAdminReport(adminKey, report._id, payload);
+      const updated = await updateAdminReport(adminSession, report._id, payload);
       setReports((items) => items.map((item) => item._id === report._id ? updated : item));
       setReportModal(updated);
       setNotice('Report updated successfully.');
@@ -309,7 +323,7 @@ export default function AdminApp() {
     return updateReportCase(report, { status });
   };
 
-  if (!authenticated) return <AdminLogin onLogin={(key) => { setAdminKey(key); setAuthenticated(true); loadAll(key); }} />;
+  if (!authenticated) return <AdminLogin onLogin={(session) => { setAdminSession(session); setAuthenticated(true); loadAll(session, true); }} />;
 
   const nav = [
     ['overview', LayoutDashboard, 'Overview'],
@@ -370,10 +384,10 @@ export default function AdminApp() {
           <div className="admin-card admin-settings-card"><div className="admin-card-head"><div><span className="admin-eyebrow">ADMIN PROFILE</span><h2>Administrator profile</h2></div></div><div className="admin-form-grid"><label>Display name<input value={adminSettings.profile?.name || ''} onChange={(e)=>setAdminSettings({...adminSettings,profile:{...adminSettings.profile,name:e.target.value}})}/></label><label>Admin email<input type="email" value={adminSettings.profile?.email || ''} onChange={(e)=>setAdminSettings({...adminSettings,profile:{...adminSettings.profile,email:e.target.value}})}/></label></div></div>
           <div className="admin-card admin-settings-card"><div className="admin-card-head"><div><span className="admin-eyebrow">ACCESS SECURITY</span><h2>Change admin key</h2></div></div><label>New admin key<input type="password" value={newAdminKey} onChange={(e)=>setNewAdminKey(e.target.value)} placeholder="Minimum 8 characters"/></label><small className="admin-help-text">The new key is stored hashed on the API server.</small></div>
           <div className="admin-card admin-settings-card"><div className="admin-card-head"><div><span className="admin-eyebrow">PLATFORM CONTROL</span><h2>Availability</h2></div></div><div className="admin-setting-toggle"><div><strong>Maintenance mode</strong><small>Temporarily disable new registrations while maintenance is active.</small></div><button className={adminSettings.maintenanceMode ? 'toggle on':'toggle'} onClick={()=>setAdminSettings({...adminSettings,maintenanceMode:!adminSettings.maintenanceMode})}><span/></button></div><div className="admin-setting-toggle"><div><strong>Registration</strong><small>Allow visitors to create new accounts.</small></div><button className={adminSettings.registrationEnabled ? 'toggle on':'toggle'} onClick={()=>setAdminSettings({...adminSettings,registrationEnabled:!adminSettings.registrationEnabled})}><span/></button></div></div>
-          <div className="admin-card admin-settings-card"><div className="admin-card-head"><div><span className="admin-eyebrow">DASHBOARD</span><h2>Preferences</h2></div></div><label>Default section<select value={adminSettings.dashboard?.defaultSection || 'overview'} onChange={(e)=>setAdminSettings({...adminSettings,dashboard:{...adminSettings.dashboard,defaultSection:e.target.value}})}><option value="overview">Overview</option><option value="analytics">Analytics</option><option value="notifications">Notifications</option><option value="security">Security & Logs</option></select></label><div className="admin-setting-toggle"><div><strong>Compact mode</strong><small>Reduce spacing in the admin interface.</small></div><button className={adminSettings.dashboard?.compactMode ? 'toggle on':'toggle'} onClick={()=>setAdminSettings({...adminSettings,dashboard:{...adminSettings.dashboard,compactMode:!adminSettings.dashboard?.compactMode}})}><span/></button></div></div>
+          <div className="admin-card admin-settings-card"><div className="admin-card-head"><div><span className="admin-eyebrow">DASHBOARD</span><h2>Preferences</h2></div></div><label>Default section<select value={adminSettings.dashboard?.defaultSection || 'overview'} onChange={(e)=>setAdminSettings({...adminSettings,dashboard:{...adminSettings.dashboard,defaultSection:e.target.value}})}><option value="overview">Overview</option><option value="analytics">Analytics</option><option value="security">Security & Logs</option><option value="notifications">Notifications</option><option value="settings">Admin Settings</option><option value="users">Users</option><option value="skills">Skills</option><option value="exchanges">Exchanges</option><option value="reports">Reports</option></select></label><label>Auto-refresh<select value={adminSettings.dashboard?.refreshInterval || 0} onChange={(e)=>setAdminSettings({...adminSettings,dashboard:{...adminSettings.dashboard,refreshInterval:Number(e.target.value)}})}><option value="0">Off</option><option value="30">Every 30 seconds</option><option value="60">Every 1 minute</option><option value="300">Every 5 minutes</option></select></label><div className="admin-setting-toggle"><div><strong>Compact mode</strong><small>Reduce spacing in the admin interface.</small></div><button className={adminSettings.dashboard?.compactMode ? 'toggle on':'toggle'} onClick={()=>setAdminSettings({...adminSettings,dashboard:{...adminSettings.dashboard,compactMode:!adminSettings.dashboard?.compactMode}})}><span/></button></div></div>
           <div className="admin-card admin-settings-card admin-settings-wide"><div className="admin-card-head"><div><span className="admin-eyebrow">PLATFORM ANNOUNCEMENT</span><h2>Announcement banner</h2></div></div><div className="admin-form-grid"><label>Enable banner<select value={adminSettings.announcement?.enabled?'yes':'no'} onChange={(e)=>setAdminSettings({...adminSettings,announcement:{...adminSettings.announcement,enabled:e.target.value==='yes'}})}><option value="no">Disabled</option><option value="yes">Enabled</option></select></label><label>Title<input value={adminSettings.announcement?.title || ''} onChange={(e)=>setAdminSettings({...adminSettings,announcement:{...adminSettings.announcement,title:e.target.value}})} placeholder="Platform update"/></label></div><label>Message<textarea value={adminSettings.announcement?.message || ''} onChange={(e)=>setAdminSettings({...adminSettings,announcement:{...adminSettings.announcement,message:e.target.value}})} placeholder="Write an announcement for SkillSwap users…"/></label></div>
         </div>
-        <div className="admin-settings-actions"><button className="admin-primary-button" disabled={settingsSaving} onClick={async()=>{setSettingsSaving(true);try{const keyToUse=newAdminKey.trim();await updateAdminSettings(adminKey,{profile:adminSettings.profile,dashboard:adminSettings.dashboard,maintenanceMode:adminSettings.maintenanceMode,registrationEnabled:adminSettings.registrationEnabled,announcement:adminSettings.announcement,...(keyToUse?{newAdminKey:keyToUse}:{})});if(keyToUse){setAdminKey(keyToUse);setNewAdminKey('');await loadAll(keyToUse);}else await loadAll(adminKey);setNotice('Admin settings saved successfully.');}catch(err){setError(err.message);}finally{setSettingsSaving(false);}}}>{settingsSaving?'Saving…':'Save settings'}</button></div>
+        <div className="admin-settings-actions"><button className="admin-primary-button" disabled={settingsSaving} onClick={async()=>{setSettingsSaving(true);try{const keyToUse=newAdminKey.trim();const result=await updateAdminSettings(adminSession,{profile:adminSettings.profile,dashboard:adminSettings.dashboard,maintenanceMode:adminSettings.maintenanceMode,registrationEnabled:adminSettings.registrationEnabled,announcement:adminSettings.announcement,...(keyToUse?{newAdminKey:keyToUse}:{})});const nextSession=result.sessionToken || adminSession;if(result.sessionToken) setAdminSession(nextSession);if(keyToUse) setNewAdminKey('');await loadAll(nextSession,false);setNotice('Admin settings saved successfully.');}catch(err){setError(err.message);}finally{setSettingsSaving(false);}}}>{settingsSaving?'Saving…':'Save settings'}</button></div>
       </section>}
 
       {section === 'overview' && <section>
