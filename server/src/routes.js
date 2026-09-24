@@ -335,7 +335,18 @@ router.get('/profiles', async (request, response) => {
     }).map(publicProfile));
   }
   const query = discoverableProfileQuery();
-  if (normalizedSearch) query.$or = [{ name: { $regex: normalizedSearch, $options: 'i' } }, { bio: { $regex: normalizedSearch, $options: 'i' } }, { teaches: { $regex: normalizedSearch, $options: 'i' } }, { wants: { $regex: normalizedSearch, $options: 'i' } }];
+  if (normalizedSearch) {
+    const searchTokens = normalizedSearch.split(/\s+/).filter(Boolean);
+    const searchConditions = searchTokens.flatMap((token) => [
+      { name: { $regex: token, $options: 'i' } },
+      { bio: { $regex: token, $options: 'i' } },
+      { teaches: { $regex: token, $options: 'i' } },
+      { wants: { $regex: token, $options: 'i' } }
+    ]);
+    // Keep the discoverability constraints from discoverableProfileQuery().
+    // Search terms are OR-matched without replacing its existing $or condition.
+    if (searchConditions.length) query.$and = [{ $or: searchConditions }];
+  }
   if (normalizedLocation) query.location = { $regex: normalizedLocation, $options: 'i' };
   const profiles = await Profile.find(query).select('-passwordHash').sort({ createdAt: -1 }).limit(100);
   return response.json(profiles.map(publicProfile));
