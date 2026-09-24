@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import mongoose from 'mongoose';
 import nodemailer from 'nodemailer';
 import { randomBytes } from 'node:crypto';
+import { createSessionToken, verifySessionToken } from './auth.js';
 import Skill from './models/Skill.js';
 import Profile from './models/Profile.js';
 import Exchange from './models/Exchange.js';
@@ -90,7 +91,7 @@ async function sendResetEmail(email, token) {
 }
 
 function createVerificationToken(email) {
-  const token = `verify-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  const token = `verify-${randomBytes(32).toString('hex')}`;
   const tokens = readCollection('resetTokens.json').filter((item) => item.type !== 'verify' || item.expiresAt > Date.now());
   writeCollection('resetTokens.json', [{ token, type: 'verify', email: email.trim().toLowerCase(), expiresAt: Date.now() + 24 * 60 * 60 * 1000 }, ...tokens]);
   return token;
@@ -201,6 +202,43 @@ function databaseRequired(response) {
     return true;
   }
   return false;
+}
+
+async function findProfileForAuth(email) {
+  const normalizedEmail = String(email || '').trim().toLowerCase();
+  if (!normalizedEmail) return null;
+  if (process.env.MONGODB_URI) return Profile.findOne({ email: normalizedEmail }).select('+passwordHash');
+  return readProfiles().find((profile) => String(profile.email || '').toLowerCase() === normalizedEmail) || null;
+}
+
+async function requireAuth(request, response) {
+  const authorization = String(request.headers.authorization || '');
+  const token = authorization.startsWith('Bearer ') ? authorization.slice(7).trim() : String(request.headers['x-session-token'] || '').trim();
+  const session = verifySessionToken(token);
+  if (!session) {
+    response.status(401).json({ message: 'Authentication required. Please log in again.' });
+    return false;
+  }
+  const profile = await findProfileForAuth(session.email);
+  if (!profile) {
+    response.status(401).json({ message: 'Your account no longer exists. Please log in again.' });
+    return false;
+  }
+  if (profile.accountBlocked) {
+    response.status(403).json({ message: 'This account has been blocked by an administrator.' });
+    return false;
+  }
+  if (profile.suspendedUntil && new Date(profile.suspendedUntil).getTime() > Date.now()) {
+    response.status(403).json({ message: 'This account is currently suspended.' });
+    return false;
+  }
+  request.user = publicProfile(profile);
+  request.user.email = String(request.user.email).toLowerCase();
+  return true;
+}
+
+function sameUser(request, email) {
+  return String(request.user?.email || '').toLowerCase() === String(email || '').trim().toLowerCase();
 }
 
 function publicProfile(profile) {
@@ -439,8 +477,16 @@ router.post('/profiles', async (request, response) => {
   }
 });
 
-router.delete('/profiles/:email', (request, response) => {
+router.delete('/profiles/:email', async (request, response) => {
+  if (!await requireAuth(request, response)) return;
   const email = decodeURIComponent(request.params.email).toLowerCase();
+  if (!sameUser(request, email)) return response.status(403).json({ message: 'You can only delete your own account.' });
+  if (process.env.MONGODB_URI) {
+    const deleted = await Profile.findOneAndDelete({ email }).lean();
+    if (!deleted) return response.status(404).json({ message: 'Profile not found.' });
+    await Skill.deleteMany({ 'teacher.email': email });
+    return response.json({ message: 'Account deleted successfully.' });
+  }
   const profiles = readProfiles();
   const next = profiles.filter((profile) => profile.email !== email);
   if (next.length === profiles.length) return response.status(404).json({ message: 'Profile not found.' });
@@ -630,7 +676,7 @@ router.post('/auth/login', async (request, response) => {
     if (profile.accountBlocked) return response.status(403).json({ message: 'This account has been blocked by an administrator.' });
     if (profile.suspendedUntil && new Date(profile.suspendedUntil).getTime() > Date.now()) return response.status(403).json({ message: `This account is suspended until ${new Date(profile.suspendedUntil).toLocaleString()}.` });
     if (!profile.emailVerified) return response.status(403).json({ message: 'Please verify your email before logging in.' });
-    return response.json({ message: 'Login successful.', profile: publicProfile(profile) });
+    return response.json({ message: 'Login successful.', profile: publicProfile(profile), sessionToken: createSessionToken(profile.email) });
   }
 
   const profile = await Profile.findOne({ email: normalizedEmail }).select('+passwordHash');
@@ -644,9 +690,10 @@ router.post('/auth/login', async (request, response) => {
 });
 
 router.post('/auth/change-password', async (request, response) => {
-  const { email, currentPassword, newPassword } = request.body;
-  if (!email || !currentPassword || !newPassword || newPassword.length < 8) return response.status(400).json({ message: 'Email, current password and a new password of 8+ characters are required.' });
-  const normalizedEmail = email.trim().toLowerCase();
+  if (!await requireAuth(request, response)) return;
+  const { currentPassword, newPassword } = request.body;
+  if (!currentPassword || !newPassword || newPassword.length < 8) return response.status(400).json({ message: 'Current password and a new password of 8+ characters are required.' });
+  const normalizedEmail = request.user.email;
   if (!process.env.MONGODB_URI) {
     const profiles = readProfiles();
     const index = profiles.findIndex((profile) => profile.email === normalizedEmail);
@@ -666,7 +713,7 @@ router.post('/auth/forgot-password', async (request, response) => {
   const { email } = request.body;
   if (!email) return response.status(400).json({ message: 'Email is required.' });
   try {
-    const token = `reset-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const token = `reset-${randomBytes(32).toString('hex')}`;
     const tokens = readCollection('resetTokens.json').filter((item) => item.expiresAt > Date.now());
     writeCollection('resetTokens.json', [{ token, email: email.trim().toLowerCase(), expiresAt: Date.now() + 15 * 60 * 1000 }, ...tokens]);
     if (process.env.MONGODB_URI) {
@@ -702,66 +749,105 @@ router.post('/auth/reset-password', async (request, response) => {
 });
 
 router.put('/profiles/:id', async (request, response) => {
+  if (!await requireAuth(request, response)) return;
   const { name, email, avatar = '', location = '', bio = '', teaches = [], wants = [], profileVisible = true, allowMessages = true } = request.body;
   if (!name || !email) return response.status(400).json({ message: 'Name and email are required.' });
-  const profileData = { name: name.trim(), email: email.trim().toLowerCase(), avatar, location, bio, teaches, wants, profileVisible, allowMessages };
+  const lookup = decodeURIComponent(request.params.id);
+  if (!sameUser(request, lookup)) return response.status(403).json({ message: 'You can only update your own profile.' });
+  const normalizedEmail = email.trim().toLowerCase();
+  if (!Array.isArray(teaches) || !Array.isArray(wants)) return response.status(400).json({ message: 'Teaches and wants must be arrays.' });
+  const profileData = { name: name.trim(), email: normalizedEmail, avatar, location, bio, teaches, wants, profileVisible: Boolean(profileVisible), allowMessages: Boolean(allowMessages) };
 
   if (!process.env.MONGODB_URI) {
     const profiles = readProfiles();
-    const lookup = decodeURIComponent(request.params.id);
-    const index = profiles.findIndex((profile) => profile._id === lookup || profile.email === lookup);
+    const index = profiles.findIndex((profile) => profile.email === request.user.email);
     if (index === -1) return response.status(404).json({ message: 'Profile not found.' });
+    if (profiles.some((profile, profileIndex) => profileIndex !== index && profile.email === normalizedEmail)) return response.status(409).json({ message: 'An account with this email already exists.' });
     const previousEmail = profiles[index].email;
-    const updated = { ...profiles[index], ...profileData };
+    const updated = { ...profiles[index], ...profileData, updatedAt: new Date().toISOString() };
     writeProfiles(profiles.toSpliced(index, 1, updated));
     await syncProfileSkills(updated, previousEmail);
-    return response.json(publicProfile(updated));
+    return response.json({ ...publicProfile(updated), sessionToken: createSessionToken(normalizedEmail) });
   }
 
-  const lookup = decodeURIComponent(request.params.id);
-  const query = mongoose.isValidObjectId(lookup) ? { _id: lookup } : { email: lookup };
-  const existing = await Profile.findOne(query).select('email').lean();
-  if (!existing) return response.status(404).json({ message: 'Profile not found.' });
-  const updated = await Profile.findOneAndUpdate(query, profileData, { new: true, runValidators: true });
+  if (normalizedEmail !== request.user.email) {
+    const duplicate = await Profile.findOne({ email: normalizedEmail }).select('_id').lean();
+    if (duplicate) return response.status(409).json({ message: 'An account with this email already exists.' });
+  }
+  const updated = await Profile.findOneAndUpdate({ email: request.user.email }, profileData, { new: true, runValidators: true });
   if (!updated) return response.status(404).json({ message: 'Profile not found.' });
-  await syncProfileSkills(updated.toObject(), existing.email);
-  return response.json(publicProfile(updated));
+  await syncProfileSkills(updated.toObject(), request.user.email);
+  return response.json({ ...publicProfile(updated), sessionToken: createSessionToken(normalizedEmail) });
 });
 
 router.post('/exchanges', async (request, response) => {
+  if (!await requireAuth(request, response)) return;
+  const requesterEmail = request.user.email;
+  const ownerEmail = String(request.body.ownerEmail || '').trim().toLowerCase();
+  if (!ownerEmail || ownerEmail === requesterEmail) return response.status(400).json({ message: 'A different exchange partner is required.' });
   const emails = await discoverableEmails();
-  if (!hasDiscoverableParticipants(request.body, emails, ['requesterEmail', 'ownerEmail'])) return response.status(403).json({ message: 'Exchanges are available only between verified community members.' });
+  if (!emails.has(requesterEmail) || !emails.has(ownerEmail)) return response.status(403).json({ message: 'Exchanges are available only between verified community members.' });
   const now = new Date().toISOString();
-  const exchange = { _id: `exchange-${Date.now()}`, ...request.body, status: 'pending', createdAt: now, updatedAt: now, statusHistory: [{ status: 'pending', at: now, source: 'system' }] };
+  const exchange = {
+    _id: `exchange-${Date.now()}-${randomBytes(6).toString('hex')}`,
+    ...request.body,
+    requesterEmail,
+    ownerEmail,
+    status: 'pending',
+    createdAt: now,
+    updatedAt: now,
+    statusHistory: [{ status: 'pending', at: now, source: 'system' }]
+  };
   const exchanges = readCollection('exchanges.json');
   writeCollection('exchanges.json', [exchange, ...exchanges]);
   return response.status(201).json(exchange);
 });
 
 router.get('/exchanges/:email', async (request, response) => {
+  if (!await requireAuth(request, response)) return;
   const email = decodeURIComponent(request.params.email).toLowerCase();
+  if (!sameUser(request, email)) return response.status(403).json({ message: 'You can only view your own exchanges.' });
   const emails = await discoverableEmails();
   return response.json(readCollection('exchanges.json').filter((item) => (item.requesterEmail === email || item.ownerEmail === email) && hasDiscoverableParticipants(item, emails, ['requesterEmail', 'ownerEmail'])));
 });
 
 router.patch('/exchanges/:id', async (request, response) => {
+  if (!await requireAuth(request, response)) return;
   const exchanges = readCollection('exchanges.json');
   const index = exchanges.findIndex((item) => item._id === request.params.id);
   if (index === -1) return response.status(404).json({ message: 'Exchange not found.' });
+  const exchange = exchanges[index];
+  const actor = request.user.email;
+  if (![String(exchange.requesterEmail || '').toLowerCase(), String(exchange.ownerEmail || '').toLowerCase()].includes(actor)) return response.status(403).json({ message: 'You are not a participant in this exchange.' });
+  const allowedTransitions = {
+    pending: ['accepted', 'rejected'],
+    accepted: ['completed', 'rejected'],
+    rejected: [],
+    completed: []
+  };
+  const nextStatus = String(request.body.status || '').toLowerCase();
+  const previous = String(exchange.status || 'pending').toLowerCase();
+  if (!allowedTransitions[previous]?.includes(nextStatus)) return response.status(400).json({ message: `Invalid exchange status transition from ${previous} to ${nextStatus}.` });
   const now = new Date().toISOString();
-  const previous = exchanges[index].status || 'pending';
-  const history = Array.isArray(exchanges[index].statusHistory) ? exchanges[index].statusHistory : [{ status: previous, at: exchanges[index].createdAt || now, source: 'legacy' }];
-  if (previous !== request.body.status) history.push({ status: request.body.status, at: now, source: 'participant' });
-  exchanges[index] = { ...exchanges[index], status: request.body.status, updatedAt: now, statusHistory: history };
+  const history = Array.isArray(exchange.statusHistory) ? exchange.statusHistory : [{ status: previous, at: exchange.createdAt || now, source: 'legacy' }];
+  history.push({ status: nextStatus, at: now, source: 'participant', actor });
+  exchanges[index] = { ...exchange, status: nextStatus, updatedAt: now, statusHistory: history };
   writeCollection('exchanges.json', exchanges);
   return response.json(exchanges[index]);
 });
 
-router.patch('/exchanges/:id/schedule', (request, response) => {
+router.patch('/exchanges/:id/schedule', async (request, response) => {
+  if (!await requireAuth(request, response)) return;
   const exchanges = readCollection('exchanges.json');
   const index = exchanges.findIndex((item) => item._id === request.params.id);
   if (index === -1) return response.status(404).json({ message: 'Exchange not found.' });
-  exchanges[index] = { ...exchanges[index], scheduledAt: request.body.scheduledAt, meetingLink: request.body.meetingLink || '' };
+  const exchange = exchanges[index];
+  const actor = request.user.email;
+  if (![String(exchange.requesterEmail || '').toLowerCase(), String(exchange.ownerEmail || '').toLowerCase()].includes(actor)) return response.status(403).json({ message: 'You are not a participant in this exchange.' });
+  if (!['pending', 'accepted'].includes(String(exchange.status || 'pending').toLowerCase())) return response.status(400).json({ message: 'Only pending or accepted exchanges can be scheduled.' });
+  const meetingLink = String(request.body.meetingLink || '').trim();
+  if (meetingLink && !/^https:\/\//i.test(meetingLink)) return response.status(400).json({ message: 'Meeting link must use HTTPS.' });
+  exchanges[index] = { ...exchange, scheduledAt: request.body.scheduledAt || '', meetingLink };
   writeCollection('exchanges.json', exchanges);
   return response.json(exchanges[index]);
 });
@@ -784,32 +870,38 @@ router.get('/reviews/:email', async (request, response) => {
 });
 
 router.post('/messages', async (request, response) => {
-  const { senderName, senderEmail, recipientName, recipientEmail = '', message } = request.body;
-  if (!senderName || !senderEmail || !recipientName || !message?.trim()) {
-    return response.status(400).json({ message: 'Sender, recipient and message are required.' });
+  if (!await requireAuth(request, response)) return;
+  const { recipientName, recipientEmail = '', message } = request.body;
+  const senderEmail = request.user.email;
+  const senderName = request.user.name;
+  const normalizedRecipient = String(recipientEmail || '').trim().toLowerCase();
+  if (!senderName || !normalizedRecipient || !message?.trim()) {
+    return response.status(400).json({ message: 'Recipient and message are required.' });
   }
   const emails = await discoverableEmails();
-  if (!hasDiscoverableParticipants({ senderEmail, recipientEmail }, emails, ['senderEmail', 'recipientEmail'])) {
+  if (!hasDiscoverableParticipants({ senderEmail, recipientEmail: normalizedRecipient }, emails, ['senderEmail', 'recipientEmail'])) {
     return response.status(403).json({ message: 'Messaging is available only between verified community members.' });
   }
-  const recipientProfile = recipientEmail ? readProfiles().find((profile) => profile.email === recipientEmail.toLowerCase()) : null;
+  const recipientProfile = process.env.MONGODB_URI
+    ? await Profile.findOne({ email: normalizedRecipient }).select('email name allowMessages').lean()
+    : readProfiles().find((profile) => profile.email === normalizedRecipient);
   if (recipientProfile?.allowMessages === false) return response.status(403).json({ message: 'This user has disabled direct messages.' });
   const blocks = readCollection('blocks.json');
-  if (blocks.some((block) => block.blockerEmail === recipientEmail.toLowerCase() && block.blockedEmail === senderEmail.toLowerCase())) return response.status(403).json({ message: 'You cannot message this user.' });
+  if (blocks.some((block) => block.blockerEmail === normalizedRecipient && block.blockedEmail === senderEmail)) return response.status(403).json({ message: 'You cannot message this user.' });
   if (message.trim().length > 2000) return response.status(413).json({ message: 'Message is too long.' });
-  const created = { _id: `message-${Date.now()}`, senderName, senderEmail, recipientName, recipientEmail, message: message.trim(), status: 'sent', read: false, createdAt: new Date().toISOString() };
+  const created = { _id: `message-${Date.now()}-${randomBytes(6).toString('hex')}`, senderName, senderEmail, recipientName: recipientProfile?.name || recipientName || 'SkillSwap member', recipientEmail: normalizedRecipient, message: message.trim(), status: 'sent', read: false, createdAt: new Date().toISOString() };
   const messages = readMessages();
   if (messages.some((item) => item.senderEmail === senderEmail && item.message === message.trim() && Date.now() - Date.parse(item.createdAt) < 30000)) return response.status(429).json({ message: 'Please wait before sending the same message again.' });
   writeMessages([created, ...messages]);
-  if (recipientEmail) {
-    const notifications = readCollection('notifications.json');
-    writeCollection('notifications.json', [{ _id: `notification-${Date.now()}`, email: recipientEmail.toLowerCase(), type: 'message', senderName, senderEmail: senderEmail.toLowerCase(), title: `${senderName} sent you a message`, read: false, createdAt: new Date().toISOString() }, ...notifications]);
-  }
+  const notifications = readCollection('notifications.json');
+  writeCollection('notifications.json', [{ _id: `notification-${Date.now()}-${randomBytes(6).toString('hex')}`, email: normalizedRecipient, type: 'message', senderName, senderEmail, title: `${senderName} sent you a message`, read: false, createdAt: new Date().toISOString() }, ...notifications]);
   return response.status(201).json(created);
 });
 
 router.get('/messages/:email', async (request, response) => {
+  if (!await requireAuth(request, response)) return;
   const email = decodeURIComponent(request.params.email).toLowerCase();
+  if (!sameUser(request, email)) return response.status(403).json({ message: 'You can only view your own messages.' });
   const emails = await discoverableEmails();
   const profiles = process.env.MONGODB_URI
     ? new Map((await Profile.find({ email: { $in: [...emails] } }).select('email avatar').lean()).map((profile) => [profile.email, profile.avatar || '']))
@@ -817,23 +909,29 @@ router.get('/messages/:email', async (request, response) => {
   return response.json(readMessages().filter((message) => (message.senderEmail === email || message.recipientEmail === email) && hasDiscoverableParticipants(message, emails, ['senderEmail', 'recipientEmail'])).map((message) => ({ ...message, senderAvatar: profiles.get(message.senderEmail) || '', recipientAvatar: profiles.get(message.recipientEmail) || '' })));
 });
 
-router.patch('/messages/:id/read', (request, response) => {
+router.patch('/messages/:id/read', async (request, response) => {
+  if (!await requireAuth(request, response)) return;
   const messages = readMessages();
   const index = messages.findIndex((message) => message._id === request.params.id);
   if (index === -1) return response.status(404).json({ message: 'Message not found.' });
+  if (String(messages[index].recipientEmail || '').toLowerCase() !== request.user.email) return response.status(403).json({ message: 'You can only update messages sent to you.' });
   messages[index].read = true;
   writeMessages(messages);
   return response.json(messages[index]);
 });
 
 router.get('/notifications/:email', async (request, response) => {
+  if (!await requireAuth(request, response)) return;
   const email = decodeURIComponent(request.params.email).toLowerCase();
+  if (!sameUser(request, email)) return response.status(403).json({ message: 'You can only view your own notifications.' });
   const emails = await discoverableEmails();
   return response.json(readCollection('notifications.json').filter((notification) => notification.email === email && emails.has(notification.email)));
 });
 
-router.patch('/notifications/:email/read', (request, response) => {
+router.patch('/notifications/:email/read', async (request, response) => {
+  if (!await requireAuth(request, response)) return;
   const email = decodeURIComponent(request.params.email).toLowerCase();
+  if (!sameUser(request, email)) return response.status(403).json({ message: 'You can only update your own notifications.' });
   const notifications = readCollection('notifications.json').map((notification) => notification.email === email ? { ...notification, read: true } : notification);
   writeCollection('notifications.json', notifications);
   return response.json({ ok: true });
