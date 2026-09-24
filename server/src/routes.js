@@ -202,7 +202,21 @@ function matchesSearchText(text, query) {
   if (!normalizedQuery) return true;
   const haystack = String(text || '').toLowerCase();
   const tokens = normalizedQuery.split(/\s+/).filter(Boolean);
-  return tokens.some((token) => haystack.includes(token));
+  if (tokens.some((token) => haystack.includes(token))) return true;
+
+  // Support searches split across words/typos such as "ku hh" -> "kuchh".
+  const compactQuery = normalizedQuery.replace(/[^a-z0-9]+/g, '');
+  const compactHaystack = haystack.replace(/[^a-z0-9]+/g, '');
+  if (!compactQuery) return false;
+  if (compactHaystack.includes(compactQuery)) return true;
+
+  // Small typo tolerance: query characters may appear in order with gaps.
+  let queryIndex = 0;
+  for (const character of compactHaystack) {
+    if (character === compactQuery[queryIndex]) queryIndex += 1;
+    if (queryIndex === compactQuery.length) return true;
+  }
+  return false;
 }
 
 function databaseRequired(response) {
@@ -337,12 +351,21 @@ router.get('/profiles', async (request, response) => {
   const query = discoverableProfileQuery();
   if (normalizedSearch) {
     const searchTokens = normalizedSearch.split(/\s+/).filter(Boolean);
-    const searchConditions = searchTokens.flatMap((token) => [
+    const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\    const searchConditions = searchTokens.flatMap((token) => [
       { name: { $regex: token, $options: 'i' } },
       { bio: { $regex: token, $options: 'i' } },
       { teaches: { $regex: token, $options: 'i' } },
       { wants: { $regex: token, $options: 'i' } }
-    ]);
+    ]);');
+    const searchConditions = searchTokens.flatMap((token) => {
+      const safeToken = escapeRegex(token);
+      return [
+        { name: { $regex: safeToken, $options: 'i' } },
+        { bio: { $regex: safeToken, $options: 'i' } },
+        { teaches: { $regex: safeToken, $options: 'i' } },
+        { wants: { $regex: safeToken, $options: 'i' } }
+      ];
+    });
     // Keep the discoverability constraints from discoverableProfileQuery().
     // Search terms are OR-matched without replacing its existing $or condition.
     if (searchConditions.length) query.$and = [{ $or: searchConditions }];
