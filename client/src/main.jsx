@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './styles.css';
 import './refresh.css';
+import './mobile.css';
 import App from './App.jsx';
 import AdminApp from './AdminApp.jsx';
 
