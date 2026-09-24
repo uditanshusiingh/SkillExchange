@@ -1226,3 +1226,32 @@ button, input, select, textarea {
     min-width: 0;
   }
 }
+
+/* Mobile drawers: stop both panels at the same compact lower boundary */
+@media (max-width: 760px) {
+  .main-nav.open {
+    top: 66px;
+    bottom: 20vh;
+    height: auto;
+    max-height: none;
+    overflow-y: auto;
+  }
+
+  .main-nav.open .user-dropdown {
+    top: 66px;
+    bottom: 20vh;
+    height: auto;
+    max-height: none;
+    overflow-y: auto;
+  }
+}
+
+@media (max-width: 430px) {
+  .main-nav.open {
+    bottom: 18vh;
+  }
+
+  .main-nav.open .user-dropdown {
+    bottom: 18vh;
+  }
+}
