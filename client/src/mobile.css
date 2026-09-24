@@ -1710,3 +1710,91 @@ button, input, select, textarea {
     border-radius: 17px;
   }
 }
+
+
+/* Explore search: member matches shown below skill results on mobile. */
+@media (max-width: 760px) {
+  .explore-member-matches {
+    margin-top: 28px;
+    padding: 20px 0 8px;
+    border-top: 1px solid rgba(70,96,80,.55);
+  }
+
+  .explore-member-heading {
+    display: grid;
+    gap: 5px;
+    margin-bottom: 14px;
+    padding: 0 2px;
+  }
+
+  .explore-member-heading small {
+    font-size: 11px;
+    line-height: 1.45;
+    opacity: .7;
+  }
+
+  .explore-member-grid {
+    display: grid;
+    gap: 10px;
+  }
+
+  .explore-member-card {
+    display: grid;
+    grid-template-columns: 42px minmax(0,1fr);
+    gap: 11px;
+    align-items: center;
+    padding: 13px;
+    border: 1px solid rgba(70,96,80,.7);
+    border-radius: 13px;
+    background: rgba(27,55,43,.48);
+  }
+
+  .explore-member-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    background: #dbe8de;
+    color: #102019;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .explore-member-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .explore-member-card > div {
+    min-width: 0;
+    display: grid;
+    gap: 3px;
+  }
+
+  .explore-member-card strong {
+    font-size: 14px;
+  }
+
+  .explore-member-card small,
+  .explore-member-card span {
+    font-size: 10px;
+    opacity: .72;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .explore-member-card button {
+    grid-column: 2;
+    justify-self: start;
+    padding: 7px 10px;
+    border: 1px solid rgba(70,96,80,.8);
+    border-radius: 999px;
+    background: transparent;
+    color: inherit;
+    font-size: 10px;
+  }
+}
