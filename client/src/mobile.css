@@ -1,0 +1,675 @@
+/* Mobile-first responsive hardening */
+html, body, #root {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+*, *::before, *::after {
+  min-width: 0;
+}
+
+img, video, iframe, svg {
+  max-width: 100%;
+}
+
+button, input, select, textarea {
+  max-width: 100%;
+}
+
+@media (max-width: 760px) {
+  .app-shell {
+    min-height: 100dvh;
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  main {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .site-header {
+    width: 100%;
+    height: 64px;
+    min-height: 64px;
+    padding: 0 14px;
+  }
+
+  .brand {
+    min-width: 0;
+    max-width: calc(100% - 52px);
+    font-size: 18px;
+  }
+
+  .brand-mark {
+    flex: 0 0 26px;
+  }
+
+  .menu-toggle {
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+    display: grid;
+    place-items: center;
+    border-radius: 8px;
+  }
+
+  .main-nav {
+    top: 64px;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-height: calc(100dvh - 64px);
+    overflow-y: auto;
+    padding: 12px 14px 18px;
+    gap: 4px;
+    background: var(--paper);
+    box-shadow: 0 12px 30px rgba(30,39,33,.12);
+  }
+
+  .main-nav > button,
+  .main-nav > a {
+    width: 100%;
+    min-height: 44px;
+    padding: 11px 12px;
+    border-radius: 8px;
+  }
+
+  .main-nav .nav-cta {
+    margin-top: 6px;
+  }
+
+  .section-pad {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .hero {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 30px;
+    padding-top: 42px;
+    padding-bottom: 52px;
+  }
+
+  .hero-copy {
+    width: 100%;
+  }
+
+  .hero h1 {
+    max-width: 100%;
+    margin-top: 17px;
+    font-size: clamp(43px, 13vw, 60px);
+    line-height: .96;
+    letter-spacing: -2.8px;
+    overflow-wrap: anywhere;
+  }
+
+  .hero-text {
+    max-width: 100%;
+    font-size: 15px;
+    line-height: 1.55;
+  }
+
+  .hero-actions {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    margin-top: 24px;
+  }
+
+  .hero-actions .button,
+  .hero-actions .text-button {
+    width: 100%;
+    min-height: 46px;
+  }
+
+  .proof {
+    margin-top: 30px;
+    align-items: flex-start;
+  }
+
+  .hero-art {
+    width: 100%;
+    max-width: 100%;
+    height: 340px;
+    min-height: 340px;
+    margin: 0 auto;
+    transform: none;
+    border-radius: 34px;
+  }
+
+  .hero-center {
+    width: 92px;
+    height: 92px;
+    left: 50%;
+    top: 42%;
+    transform: translate(-50%, -50%);
+  }
+
+  .hero-note {
+    max-width: 42%;
+  }
+
+  .note-one { left: 4%; top: 10%; }
+  .note-two { right: 4%; bottom: 10%; }
+
+  .floating-label {
+    display: none;
+  }
+
+  .ticker {
+    width: 100%;
+  }
+
+  .explore-section,
+  .how-section,
+  .story-section,
+  .people-band {
+    width: 100%;
+  }
+
+  .section-heading {
+    gap: 14px;
+  }
+
+  .section-heading h2 {
+    max-width: 100%;
+    font-size: clamp(37px, 11vw, 48px);
+    letter-spacing: -2px;
+  }
+
+  .explore-toolbar {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 18px;
+    margin-top: 34px;
+  }
+
+  .category-tabs {
+    width: 100%;
+    padding-bottom: 5px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .category-tabs::-webkit-scrollbar,
+  .stories-categories::-webkit-scrollbar {
+    display: none;
+  }
+
+  .category-tabs button {
+    flex: 0 0 auto;
+    min-height: 36px;
+  }
+
+  .search-box {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .skill-grid {
+    width: 100%;
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .skill-card {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .card-top {
+    height: 145px;
+  }
+
+  .card-title-row {
+    align-items: flex-start;
+  }
+
+  .card-body h3 {
+    overflow-wrap: anywhere;
+  }
+
+  .card-body p {
+    min-height: 0;
+  }
+
+  .trade-row {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .teacher {
+    flex: 1 1 150px;
+  }
+
+  .wants {
+    flex: 1 1 100px;
+  }
+
+  .people-grid {
+    width: 100%;
+    grid-template-columns: 1fr;
+    gap: 1px;
+  }
+
+  .person-card {
+    width: 100%;
+    padding: 20px 16px;
+  }
+
+  .person-info {
+    min-width: 0;
+    padding-right: 22px;
+  }
+
+  .person-info h3 {
+    overflow-wrap: anywhere;
+  }
+
+  .person-skills {
+    flex-wrap: wrap;
+  }
+
+  .steps {
+    width: 100%;
+    grid-template-columns: 1fr;
+  }
+
+  .step {
+    width: 100%;
+  }
+
+  .story-quote {
+    max-width: 100%;
+    font-size: clamp(36px, 10vw, 47px);
+    overflow-wrap: anywhere;
+  }
+
+  .story-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 18px;
+  }
+
+  .story-count {
+    text-align: left;
+  }
+
+  .footer {
+    width: 100%;
+  }
+
+  /* Dedicated pages */
+  .dedicated-page {
+    width: 100%;
+    min-height: calc(100dvh - 64px);
+    height: auto;
+    padding: 34px 16px 70px;
+    overflow-x: hidden;
+  }
+
+  .dedicated-page-inner {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .dedicated-back {
+    margin-bottom: 28px;
+  }
+
+  .dedicated-page h1 {
+    max-width: 100%;
+    font-size: clamp(40px, 13vw, 58px);
+    letter-spacing: -2px;
+    overflow-wrap: anywhere;
+  }
+
+  .dedicated-intro {
+    max-width: 100%;
+  }
+
+  .dedicated-explore-toolbar,
+  .people-directory-toolbar {
+    width: 100%;
+    grid-template-columns: 1fr;
+  }
+
+  .dedicated-explore-toolbar .category-tabs,
+  .people-directory-toolbar .search-box {
+    grid-column: auto;
+  }
+
+  .dedicated-skill-grid,
+  .people-directory-grid,
+  .stories-grid,
+  .community-groups-grid,
+  .community-feed-grid,
+  .community-events-grid,
+  .dedicated-panels {
+    width: 100%;
+    grid-template-columns: 1fr;
+  }
+
+  .people-directory-toolbar input,
+  .people-directory-toolbar select,
+  .dedicated-explore-toolbar select {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .person-directory-card,
+  .story-card {
+    width: 100%;
+  }
+
+  .person-directory-top {
+    min-width: 0;
+  }
+
+  .person-directory-main {
+    min-width: 0;
+  }
+
+  .person-directory-main h3 {
+    overflow-wrap: anywhere;
+  }
+
+  .person-directory-actions,
+  .story-card-actions,
+  .skill-detail-actions {
+    flex-wrap: wrap;
+  }
+
+  .person-directory-actions button,
+  .story-card-actions button {
+    min-height: 42px;
+  }
+
+  .stories-featured {
+    width: 100%;
+    grid-template-columns: 1fr;
+    padding: 20px;
+  }
+
+  .stories-impact {
+    width: 100%;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .stories-toolbar {
+    width: 100%;
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .stories-categories {
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .stories-toolbar select {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .stories-submit {
+    width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 20px;
+  }
+
+  /* Modals / sheets */
+  .modal-backdrop {
+    padding: 0;
+    align-items: flex-end;
+    overflow: hidden;
+  }
+
+  .modal-panel {
+    width: 100%;
+    max-width: 100%;
+    max-height: 92dvh;
+    overflow-y: auto;
+    padding: 28px 18px 30px;
+    border-radius: 18px 18px 0 0;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .modal-panel h2 {
+    max-width: calc(100% - 28px);
+    font-size: clamp(30px, 9vw, 40px);
+  }
+
+  .modal-panel input,
+  .modal-panel textarea,
+  .modal-panel select {
+    width: 100%;
+    min-height: 44px;
+    font-size: 16px;
+  }
+
+  .modal-panel textarea {
+    min-height: 110px;
+  }
+
+  .skill-detail-panel,
+  .people-profile-panel,
+  .story-detail-panel,
+  .story-submission-panel {
+    width: 100%;
+  }
+
+  .skill-detail-hero,
+  .story-detail-cover {
+    margin: -28px -18px 20px;
+    border-radius: 18px 18px 0 0;
+  }
+
+  .skill-detail-facts,
+  .people-profile-facts,
+  .story-detail-facts,
+  .story-before-after {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* Messaging */
+  .messages-workspace {
+    width: 100%;
+    max-width: 100%;
+    height: calc(100dvh - 80px);
+    max-height: none;
+    overflow: hidden;
+  }
+
+  .messages-sidebar,
+  .chat-pane,
+  .chat-details {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    padding: 16px;
+  }
+
+  .messages-sidebar {
+    max-height: 38dvh;
+    overflow-y: auto;
+  }
+
+  .conversation-list {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .chat-pane {
+    min-height: 0;
+    height: 62dvh;
+    overflow: hidden;
+  }
+
+  .chat-messages {
+    min-width: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .chat-input-row {
+    width: 100%;
+  }
+
+  .chat-input-row input {
+    min-width: 0;
+    font-size: 16px;
+  }
+
+  /* Exchanges / profile */
+  .profile-columns,
+  .exchange-match {
+    width: 100%;
+    grid-template-columns: 1fr;
+  }
+
+  .exchange-match {
+    gap: 10px;
+  }
+
+  .exchange-arrow {
+    transform: rotate(90deg);
+    justify-self: center;
+  }
+
+  .exchange-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .exchange-actions button {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  /* Community */
+  .community-stats {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .community-room-section {
+    width: 100%;
+    padding: 18px;
+  }
+
+  /* Notifications / floating controls */
+  .notification-popover {
+    width: min(360px, calc(100vw - 24px));
+    max-width: calc(100vw - 24px);
+    right: 12px;
+  }
+
+  .back-to-top {
+    right: 12px;
+    bottom: 14px;
+  }
+}
+
+@media (max-width: 430px) {
+  .site-header {
+    padding: 0 12px;
+  }
+
+  .section-pad {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .hero {
+    padding-top: 34px;
+  }
+
+  .hero h1 {
+    font-size: 44px;
+  }
+
+  .hero-art {
+    height: 300px;
+    min-height: 300px;
+  }
+
+  .hero-note {
+    max-width: 46%;
+    padding: 8px 9px;
+  }
+
+  .hero-note strong {
+    font-size: 12px;
+  }
+
+  .dedicated-page {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .stories-impact,
+  .skill-detail-facts,
+  .people-profile-facts,
+  .story-detail-facts,
+  .story-before-after,
+  .community-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-panel {
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+
+  .modal-panel h2 {
+    font-size: 31px;
+  }
+
+  .community-leader {
+    grid-template-columns: 25px 35px 1fr auto;
+  }
+}
+
+/* Hide scrollbars while retaining scrolling. */
+@media (max-width: 760px) {
+  main,
+  .dedicated-page,
+  .main-nav,
+  .modal-panel,
+  .category-tabs,
+  .stories-categories,
+  .messages-sidebar,
+  .chat-messages,
+  .conversation-list {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  main::-webkit-scrollbar,
+  .dedicated-page::-webkit-scrollbar,
+  .main-nav::-webkit-scrollbar,
+  .modal-panel::-webkit-scrollbar,
+  .category-tabs::-webkit-scrollbar,
+  .stories-categories::-webkit-scrollbar,
+  .messages-sidebar::-webkit-scrollbar,
+  .chat-messages::-webkit-scrollbar,
+  .conversation-list::-webkit-scrollbar {
+    display: none;
+  }
+}
