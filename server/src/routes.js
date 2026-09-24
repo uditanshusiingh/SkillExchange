@@ -351,9 +351,9 @@ router.get('/profiles', async (request, response) => {
     const query = discoverableProfileQuery();
   if (normalizedSearch) {
     const searchTokens = normalizedSearch.split(/\s+/).filter(Boolean);
-    const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const searchConditions = searchTokens.flatMap((token) => {
-      const safeToken = escapeRegex(token);
+      const safeToken = token.replace(/[^a-z0-9]/gi, '');
+      if (!safeToken) return [];
       return [
         { name: { $regex: safeToken, $options: 'i' } },
         { bio: { $regex: safeToken, $options: 'i' } },
