@@ -1671,3 +1671,13 @@ button, input, select, textarea {
     margin-top: 0;
   }
 }
+
+
+/* Align mobile notification control with the navigation text inset. */
+@media (max-width: 760px) {
+  .main-nav.open > .notification-button {
+    margin-left: 14px;
+    margin-right: auto;
+    align-self: flex-start;
+  }
+}
