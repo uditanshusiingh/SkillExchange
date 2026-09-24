@@ -10,7 +10,21 @@ function matchesSearchText(text, query) {
   if (!normalizedQuery) return true;
   const haystack = String(text || '').toLowerCase();
   const tokens = normalizedQuery.split(/\s+/).filter(Boolean);
-  return tokens.some((token) => haystack.includes(token));
+  if (tokens.some((token) => haystack.includes(token))) return true;
+
+  // Support searches split across words/typos such as "ku hh" -> "kuchh".
+  const compactQuery = normalizedQuery.replace(/[^a-z0-9]+/g, '');
+  const compactHaystack = haystack.replace(/[^a-z0-9]+/g, '');
+  if (!compactQuery) return false;
+  if (compactHaystack.includes(compactQuery)) return true;
+
+  // Small typo tolerance: query characters may appear in order with gaps.
+  let queryIndex = 0;
+  for (const character of compactHaystack) {
+    if (character === compactQuery[queryIndex]) queryIndex += 1;
+    if (queryIndex === compactQuery.length) return true;
+  }
+  return false;
 }
 
 const people = [];
