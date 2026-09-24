@@ -1599,3 +1599,36 @@ button, input, select, textarea {
     transform: none !important;
   }
 }
+
+
+/* Mobile ticker polish: keep text/star rhythm intact instead of leaving
+   adjacent stars when one text item is hidden. */
+@media (max-width: 640px) {
+  .ticker {
+    height: 56px;
+    min-height: 56px;
+    justify-content: flex-start;
+    gap: 16px;
+    padding: 0 20px;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .ticker div,
+  .ticker span {
+    flex: 0 0 auto;
+  }
+
+  .ticker div {
+    display: block !important;
+    font-size: 9px;
+    line-height: 1;
+  }
+
+  .ticker span {
+    display: block;
+    font-size: 14px;
+    line-height: 1;
+    margin: 0 2px;
+  }
+}
