@@ -4,6 +4,15 @@ import { blockUser, changePassword, createProfile, createVideoRoom, deleteAccoun
 import { connectChat } from './socket';
 
 const categories = ['All', 'Technology', 'Creative', 'Food & home', 'Wellbeing'];
+
+function matchesSearchText(text, query) {
+  const normalizedQuery = String(query || '').toLowerCase().trim();
+  if (!normalizedQuery) return true;
+  const haystack = String(text || '').toLowerCase();
+  const tokens = normalizedQuery.split(/\s+/).filter(Boolean);
+  return tokens.some((token) => haystack.includes(token));
+}
+
 const people = [];
 const persistentPages = ['explore', 'people', 'community', 'advanced'];
 const skillOptions = [...new Set([
@@ -750,7 +759,7 @@ function PeopleDirectory({ people: sourcePeople, currentUser, search, setSearch,
   const normalizedSearch = search.toLowerCase().trim();
   const filtered = sourcePeople.filter((person) => {
     const text = `${person.name} ${person.role} ${person.city} ${person.skills} ${person.wants}`.toLowerCase();
-    return (!normalizedSearch || text.includes(normalizedSearch)) && (!location || person.city.toLowerCase().includes(location.toLowerCase())) && (!format || person.format === format) && (!availability || person.availability === availability) && (!peopleLevel || (person.experience || 'Intermediate') === peopleLevel);
+    return (!normalizedSearch || matchesSearchText(text, normalizedSearch)) && (!location || person.city.toLowerCase().includes(location.toLowerCase())) && (!format || person.format === format) && (!availability || person.availability === availability) && (!peopleLevel || (person.experience || 'Intermediate') === peopleLevel);
   }).map((person) => ({ ...person, matchScore: Math.min(99, 70 + ((currentUser?.teaches || []).some((skill) => person.wants.toLowerCase().includes(skill.toLowerCase())) ? 15 : 0) + ((currentUser?.wants || []).some((skill) => person.skills.toLowerCase().includes(skill.toLowerCase())) ? 15 : 0)) })).sort((first, second) => sort === 'rating' ? second.rating - first.rating : sort === 'newest' ? second.name.localeCompare(first.name) : sort === 'nearby' && location ? Number(second.city.toLowerCase().includes(location.toLowerCase())) - Number(first.city.toLowerCase().includes(location.toLowerCase())) : sort === 'active' ? second.exchanges - first.exchanges : second.matchScore - first.matchScore);
   const pageSize = 9;
   const pageCount = Math.ceil(filtered.length / pageSize);
@@ -865,7 +874,7 @@ function DedicatedPage({ page, currentUser, skills, similarPeople, peopleDirecto
       ...(person.teaches || []),
       ...(person.learning || [])
     ].filter(Boolean).join(' ').toLowerCase();
-    return profileText.includes(normalizedSkillSearch);
+    return matchesSearchText(profileText, normalizedSkillSearch);
   }).slice(0, 8) : [];
   return <section className={`dedicated-page dedicated-page-${page}`} aria-labelledby="dedicated-page-title">
     <div className="dedicated-page-inner">
