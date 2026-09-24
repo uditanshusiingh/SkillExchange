@@ -237,8 +237,9 @@ async function requireAuth(request, response) {
   return true;
 }
 
-function sameUser(request, email) {
-  return String(request.user?.email || '').toLowerCase() === String(email || '').trim().toLowerCase();
+function sameUser(request, identifier) {
+  const value = String(identifier || '').trim().toLowerCase();
+  return String(request.user?.email || '').toLowerCase() === value || String(request.user?._id || '').toLowerCase() === value;
 }
 
 function publicProfile(profile) {
