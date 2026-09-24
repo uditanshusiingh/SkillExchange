@@ -1159,3 +1159,11 @@ button, input, select, textarea {
     align-self: flex-start;
   }
 }
+
+/* Align mobile mode toggle with the navigation text inset */
+@media (max-width: 760px) {
+  .main-nav.open > .theme-toggle {
+    margin-left: 14px;
+    margin-right: auto;
+  }
+}
