@@ -1798,3 +1798,13 @@ button, input, select, textarea {
     font-size: 10px;
   }
 }
+
+
+/* Explore member matches: keep avatar placeholders dark in dark mode. */
+@media (max-width: 760px) {
+  html[data-theme="dark"] .explore-member-avatar {
+    background: #1b372b;
+    color: #eef4ed;
+    border: 1px solid rgba(70,96,80,.9);
+  }
+}
