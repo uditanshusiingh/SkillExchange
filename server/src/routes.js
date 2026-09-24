@@ -196,6 +196,15 @@ async function getPublicSkills() {
     .sort((a, b) => Number(b.featured) - Number(a.featured));
 }
 
+
+function matchesSearchText(text, query) {
+  const normalizedQuery = String(query || '').toLowerCase().trim();
+  if (!normalizedQuery) return true;
+  const haystack = String(text || '').toLowerCase();
+  const tokens = normalizedQuery.split(/\s+/).filter(Boolean);
+  return tokens.some((token) => haystack.includes(token));
+}
+
 function databaseRequired(response) {
   if (process.env.NODE_ENV === 'production' && !process.env.MONGODB_URI) {
     response.status(503).json({ message: 'Account service is not configured with MongoDB yet.' });
@@ -322,7 +331,7 @@ router.get('/profiles', async (request, response) => {
     const profiles = readProfiles().filter(isDiscoverableProfile);
     return response.json(profiles.filter((profile) => {
       const text = `${profile.name} ${profile.bio || ''} ${(profile.teaches || []).join(' ')} ${(profile.wants || []).join(' ')}`.toLowerCase();
-      return (!normalizedSearch || text.includes(normalizedSearch)) && (!normalizedLocation || (profile.location || '').toLowerCase().includes(normalizedLocation));
+      return (!normalizedSearch || matchesSearchText(text, normalizedSearch)) && (!normalizedLocation || (profile.location || '').toLowerCase().includes(normalizedLocation));
     }).map(publicProfile));
   }
   const query = discoverableProfileQuery();
@@ -342,7 +351,7 @@ router.get('/skills', async (request, response) => {
   const filtered = availableSkills.filter((skill) => {
     const text = [skill.title, skill.description, skill.teacher?.name, skill.wants, skill.category].filter(Boolean).join(' ').toLowerCase();
     const matchesCategory = !category || category === 'All' || String(skill.category || '').toLowerCase() === String(category).toLowerCase();
-    const wantsMatch = !search || text.includes(String(search).toLowerCase());
+    const wantsMatch = !search || matchesSearchText(text, search);
     const teachMatch = !teach || String(skill.title || '').toLowerCase().includes(String(teach).toLowerCase()) || String(skill.description || '').toLowerCase().includes(String(teach).toLowerCase());
     const wantsFieldMatch = !wants || String(skill.wants || '').toLowerCase().includes(String(wants).toLowerCase());
     const locationMatch = !location || String(skill.teacher?.location || '').toLowerCase().includes(String(location).toLowerCase());
