@@ -1150,3 +1150,12 @@ button, input, select, textarea {
     max-width: calc(100vw - 38px);
   }
 }
+
+/* Keep mobile theme toggle on the left side of the drawer */
+@media (max-width: 760px) {
+  .main-nav.open > .theme-toggle {
+    margin-left: 0;
+    margin-right: auto;
+    align-self: flex-start;
+  }
+}
