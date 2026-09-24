@@ -1632,3 +1632,42 @@ button, input, select, textarea {
     margin: 0 2px;
   }
 }
+
+
+/* Mobile page must scroll as one document so the footer is not pinned
+   to the viewport by the app-shell/main flex layout. */
+@media (max-width: 760px) {
+  html,
+  body {
+    height: auto !important;
+    min-height: 100%;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+  }
+
+  .app-shell {
+    height: auto !important;
+    min-height: 100dvh;
+    overflow: visible !important;
+    display: block !important;
+  }
+
+  .app-shell > main {
+    height: auto !important;
+    min-height: 0;
+    overflow: visible !important;
+    flex: none !important;
+  }
+
+  .app-shell > footer,
+  .footer {
+    position: static !important;
+    top: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    left: auto !important;
+    flex-shrink: 0 !important;
+    width: 100%;
+    margin-top: 0;
+  }
+}
