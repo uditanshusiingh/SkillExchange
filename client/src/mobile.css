@@ -1273,3 +1273,18 @@ button, input, select, textarea {
     bottom: 12vh;
   }
 }
+
+/* Restore previous drawer height */
+@media (max-width: 760px) {
+  .main-nav.open,
+  .main-nav.open .user-dropdown {
+    bottom: 20vh;
+  }
+}
+
+@media (max-width: 430px) {
+  .main-nav.open,
+  .main-nav.open .user-dropdown {
+    bottom: 18vh;
+  }
+}
