@@ -348,7 +348,10 @@ router.get('/profiles', async (request, response) => {
       return (!normalizedSearch || matchesSearchText(text, normalizedSearch)) && (!normalizedLocation || (profile.location || '').toLowerCase().includes(normalizedLocation));
     }).map(publicProfile));
   }
-  const query = discoverableProfileQuery();
+    const query = discoverableProfileQuery();
+  if (normalizedSearch) {
+    const searchTokens = normalizedSearch.split(/\s+/).filter(Boolean);
+    const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\const query = discoverableProfileQuery();
   if (normalizedSearch) {
     const searchTokens = normalizedSearch.split(/\s+/).filter(Boolean);
     const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\    const searchConditions = searchTokens.flatMap((token) => [
@@ -368,6 +371,19 @@ router.get('/profiles', async (request, response) => {
     });
     // Keep the discoverability constraints from discoverableProfileQuery().
     // Search terms are OR-matched without replacing its existing $or condition.
+    if (searchConditions.length) query.$and = [{ $or: searchConditions }];
+  }
+');
+    const searchConditions = searchTokens.flatMap((token) => {
+      const safeToken = escapeRegex(token);
+      return [
+        { name: { $regex: safeToken, $options: 'i' } },
+        { bio: { $regex: safeToken, $options: 'i' } },
+        { teaches: { $regex: safeToken, $options: 'i' } },
+        { wants: { $regex: safeToken, $options: 'i' } }
+      ];
+    });
+    // Keep discoverability constraints and apply search as an additional OR condition.
     if (searchConditions.length) query.$and = [{ $or: searchConditions }];
   }
   if (normalizedLocation) query.location = { $regex: normalizedLocation, $options: 'i' };
