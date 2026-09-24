@@ -1288,3 +1288,14 @@ button, input, select, textarea {
     bottom: 18vh;
   }
 }
+
+/* Prevent the navigation from leaking into the page when the mobile menu is closed. */
+@media (max-width: 760px) {
+  .main-nav {
+    display: none;
+  }
+
+  .main-nav.open {
+    display: flex;
+  }
+}
