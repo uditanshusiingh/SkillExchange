@@ -1299,3 +1299,31 @@ button, input, select, textarea {
     display: flex;
   }
 }
+
+
+/* Final mobile drawer fix: the header uses backdrop-filter, which can create
+   a containing block for fixed descendants. Use an explicit-height absolute
+   drawer so the full navigation is visible and independently scrollable. */
+@media (max-width: 760px) {
+  .main-nav.open {
+    position: absolute;
+    top: 66px;
+    right: 0;
+    left: auto;
+    bottom: auto;
+    width: min(82vw, 360px);
+    height: calc(100dvh - 66px - 20vh);
+    max-height: calc(100dvh - 66px - 20vh);
+    overflow-y: auto;
+    overflow-x: hidden;
+    z-index: 1990;
+  }
+}
+
+@media (max-width: 430px) {
+  .main-nav.open {
+    width: min(84vw, 340px);
+    height: calc(100dvh - 66px - 18vh);
+    max-height: calc(100dvh - 66px - 18vh);
+  }
+}
