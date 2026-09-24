@@ -1255,3 +1255,21 @@ button, input, select, textarea {
     bottom: 18vh;
   }
 }
+
+/* Fine-tune drawer height: give the mobile panels more vertical space */
+@media (max-width: 760px) {
+  .main-nav.open {
+    bottom: 12vh;
+  }
+
+  .main-nav.open .user-dropdown {
+    bottom: 12vh;
+  }
+}
+
+@media (max-width: 430px) {
+  .main-nav.open,
+  .main-nav.open .user-dropdown {
+    bottom: 12vh;
+  }
+}
