@@ -134,6 +134,21 @@ function App() {
   }, [adminKey]);
 
   useEffect(() => {
+    if (!mobileOpen) return undefined;
+
+    const handleOutsideNavigationClick = (event) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      if (target.closest('.main-nav') || target.closest('.menu-toggle')) return;
+      setMobileOpen(false);
+      setAccountOpen(false);
+    };
+
+    document.addEventListener('click', handleOutsideNavigationClick);
+    return () => document.removeEventListener('click', handleOutsideNavigationClick);
+  }, [mobileOpen]);
+
+  useEffect(() => {
     const nav = document.querySelector('.main-nav');
     if (!nav) return undefined;
     const handleCommunityClick = (event) => {
