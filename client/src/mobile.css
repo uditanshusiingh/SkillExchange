@@ -1585,3 +1585,17 @@ button, input, select, textarea {
     min-height: 44px;
   }
 }
+
+
+/* Footer should stay in normal document flow on mobile, never fixed to viewport bottom. */
+@media (max-width: 760px) {
+  .footer {
+    position: static !important;
+    inset: auto !important;
+    bottom: auto !important;
+    top: auto !important;
+    width: 100%;
+    margin-top: 0;
+    transform: none !important;
+  }
+}
