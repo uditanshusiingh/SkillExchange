@@ -1523,3 +1523,65 @@ button, input, select, textarea {
     max-width: 130px;
   }
 }
+
+
+/* Final mobile messages scroll + search polish */
+@media (max-width: 760px) {
+  .modal-backdrop.messages-backdrop {
+    overflow-y: auto;
+    align-items: flex-start;
+  }
+
+  .modal-backdrop.messages-backdrop > .modal-panel.messages-workspace {
+    height: calc(100dvh - 98px);
+    max-height: calc(100dvh - 98px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .modal-backdrop.messages-backdrop .messages-sidebar {
+    overflow: visible;
+  }
+
+  .modal-backdrop.messages-backdrop .message-search {
+    width: calc(100% - 30px);
+    min-height: 46px;
+    margin: 0 15px;
+    padding: 8px 14px;
+    gap: 9px;
+    border: 1px solid rgba(70,96,80,.9);
+    border-radius: 999px;
+    background: #102019;
+    box-sizing: border-box;
+    box-shadow: 0 3px 14px rgba(0,0,0,.10);
+  }
+
+  .modal-backdrop.messages-backdrop .message-search svg {
+    flex: 0 0 auto;
+  }
+
+  .modal-backdrop.messages-backdrop .message-search input {
+    font-size: 12px;
+    line-height: 1;
+  }
+
+  .modal-backdrop.messages-backdrop .message-filters {
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+
+  .modal-backdrop.messages-backdrop .chat-messages {
+    overflow-y: visible;
+  }
+}
+
+@media (max-width: 430px) {
+  .modal-backdrop.messages-backdrop .message-search {
+    width: calc(100% - 44px);
+    margin-left: 22px;
+    margin-right: 22px;
+    min-height: 44px;
+  }
+}
