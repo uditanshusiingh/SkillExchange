@@ -901,3 +901,111 @@ button, input, select, textarea {
     font-size: 18px;
   }
 }
+
+/* Final mobile navigation correction */
+@media (max-width: 760px) {
+  .site-header {
+    position: relative;
+    z-index: 200;
+  }
+
+  .main-nav.open {
+    position: fixed;
+    top: 64px;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: calc(100dvh - 64px);
+    max-height: calc(100dvh - 64px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    align-items: stretch;
+    padding: 26px 24px 34px;
+    gap: 4px;
+    z-index: 190;
+    box-shadow: none;
+  }
+
+  .main-nav.open > button:not(.theme-toggle):not(.notification-button),
+  .main-nav.open > .user-menu {
+    width: 100%;
+  }
+
+  .main-nav.open > button:not(.theme-toggle):not(.notification-button) {
+    min-height: 56px;
+    padding: 12px 20px;
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  .main-nav.open .theme-toggle {
+    width: 100%;
+    max-width: none;
+    min-height: 54px;
+    height: 54px;
+    margin: 8px 0;
+    padding: 0 18px;
+    justify-content: space-between;
+    border-radius: 13px;
+    box-sizing: border-box;
+  }
+
+  .main-nav.open .notification-button {
+    width: 100%;
+    min-height: 54px;
+    height: 54px;
+    margin: 4px 0;
+    justify-content: center;
+    border-radius: 30px;
+  }
+
+  .main-nav.open .user-menu {
+    position: relative;
+    z-index: 10;
+    margin: 4px 0;
+  }
+
+  .main-nav.open .user-menu-trigger {
+    width: auto;
+    max-width: 100%;
+    min-height: 54px;
+    padding: 7px 14px 7px 10px;
+    border-radius: 30px;
+  }
+
+  .main-nav.open .user-dropdown {
+    position: relative;
+    top: auto;
+    right: auto;
+    left: auto;
+    width: 100%;
+    max-width: 100%;
+    margin-top: 6px;
+    max-height: none;
+    overflow: visible;
+    box-sizing: border-box;
+  }
+
+  .main-nav.open .user-dropdown button {
+    width: 100%;
+    min-height: 46px;
+  }
+
+  .main-nav.open .login-link {
+    width: 100%;
+  }
+
+  body:has(.main-nav.open) {
+    overflow: hidden;
+  }
+}
+
+@media (max-width: 430px) {
+  .main-nav.open {
+    top: 64px;
+    height: calc(100dvh - 64px);
+    max-height: calc(100dvh - 64px);
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
