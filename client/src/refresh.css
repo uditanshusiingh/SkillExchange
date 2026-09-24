@@ -515,7 +515,9 @@ html[data-theme='dark'] .recommendation-section h2 { color: #eef4ed; }
 .discovery-filters input:focus, .discovery-filters select:focus { border-color: var(--forest); box-shadow: 0 0 0 3px rgba(217,237,103,.3); }
 .load-more-button { display: flex; align-items: center; gap: 8px; margin: 28px auto 0; padding: 12px 17px; border: 1px solid var(--forest); border-radius: 4px; color: var(--forest); font-size: 12px; transition: background .2s, color .2s; }
 .load-more-button:hover { background: var(--forest); color: var(--cream); }
-html[data-theme='dark'] .discovery-filters input, html[data-theme='dark'] .discovery-filters select { background: #eff3ed; border-color: #b8cbb9; }
+html[data-theme='dark'] .discovery-filters input, html[data-theme='dark'] .discovery-filters select { background: #162f29; border-color: #466050; color: #eef4ed; }
+html[data-theme='dark'] .discovery-filters input::placeholder { color: #9fb7a5; opacity: 1; }
+html[data-theme='dark'] .discovery-filters select option { background: #162f29; color: #eef4ed; }
 @media (max-width: 640px) {
   .main-nav .nav-cta { align-self: flex-start; width: fit-content; margin: -8px 0 0; padding: 8px 12px; font-size: 11px; }
   .recommendation-grid { grid-template-columns: 1fr; }
