@@ -1681,3 +1681,32 @@ button, input, select, textarea {
     align-self: flex-start;
   }
 }
+
+
+/* Detached mobile navigation drawer: visually separate it from the header. */
+@media (max-width: 760px) {
+  .main-nav.open {
+    top: 76px;
+    right: 10px;
+    width: min(82vw, 350px);
+    height: calc(100dvh - 76px - 20vh);
+    max-height: calc(100dvh - 76px - 20vh);
+    border: 1px solid rgba(70,96,80,.9);
+    border-radius: 18px;
+    box-shadow:
+      -12px 12px 30px rgba(0,0,0,.22),
+      0 8px 24px rgba(0,0,0,.14);
+    overflow-y: auto;
+  }
+}
+
+@media (max-width: 430px) {
+  .main-nav.open {
+    top: 74px;
+    right: 8px;
+    width: min(84vw, 334px);
+    height: calc(100dvh - 74px - 18vh);
+    max-height: calc(100dvh - 74px - 18vh);
+    border-radius: 17px;
+  }
+}
