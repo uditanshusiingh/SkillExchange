@@ -980,7 +980,7 @@ router.post('/admin/auth', async (request, response) => {
   let valid = Boolean(storedHash && providedKey && await bcrypt.compare(providedKey, storedHash));
   if (!storedHash) {
     const bootstrapKey = process.env.ADMIN_KEY || '';
-  if (!bootstrapKey && !adminKeyHash) return response.status(503).json({ message: 'Admin authentication is not configured. Set ADMIN_KEY or configure the admin key hash.' });
+  if (!bootstrapKey) return response.status(503).json({ message: 'Admin authentication is not configured. Set ADMIN_KEY or configure the admin key hash.' });
     valid = providedKey === bootstrapKey;
   }
   if (!valid) {
