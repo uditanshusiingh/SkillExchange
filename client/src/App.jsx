@@ -139,7 +139,7 @@ function App() {
     const handleOutsideNavigationClick = (event) => {
       const target = event.target;
       if (!(target instanceof Element)) return;
-      if (target.closest('.main-nav') || target.closest('.menu-toggle')) return;
+      if (target.closest('.main-nav') || target.closest('.menu-toggle') || target.closest('.notification-popover')) return;
       setMobileOpen(false);
       setAccountOpen(false);
     };
