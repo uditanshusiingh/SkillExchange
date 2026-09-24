@@ -6,7 +6,7 @@ function authHeaders(headers = {}) {
 }
 
 function fetchWithAuth(url, options = {}) {
-  return fetchWithAuth(url, { ...options, headers: authHeaders(options.headers || {}) });
+  return fetch(url, { ...options, headers: authHeaders(options.headers || {}) });
 }
 
 function storeSessionToken(data) {
