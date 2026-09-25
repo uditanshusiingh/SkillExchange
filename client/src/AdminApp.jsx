@@ -21,6 +21,7 @@ function StatCard({ icon: Icon, label, value, tone = '', onClick }) {
     className={`admin-stat-card ${tone}`}
     role={onClick ? 'button' : undefined}
     tabIndex={onClick ? 0 : undefined}
+    style={onClick ? { cursor: 'pointer' } : undefined}
     onClick={onClick}
     onKeyDown={(event) => {
       if (onClick && (event.key === 'Enter' || event.key === ' ')) {
