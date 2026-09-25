@@ -397,23 +397,84 @@ router.get('/recommendations/:email', async (request, response) => {
   if (!await requireAuth(request, response)) return;
   const email = decodeURIComponent(request.params.email).toLowerCase();
   if (!sameUser(request, email)) return response.status(403).json({ message: 'You can only view your own recommendations.' });
-  const profile = process.env.MONGODB_URI ? await Profile.findOne({ email }).lean() : readProfiles().find((item) => item.email === email);
-  const interests = (profile?.wants || []).map((item) => String(item).toLowerCase().trim()).filter(Boolean);
+
+  const profile = process.env.MONGODB_URI
+    ? await Profile.findOne({ email }).lean()
+    : readProfiles().find((item) => String(item.email || '').toLowerCase() === email);
+
+  const interests = (profile?.wants || [])
+    .map((item) => String(item).toLowerCase().trim())
+    .filter(Boolean);
+
+  if (!interests.length) return response.json([]);
+
   const discoverable = await discoverableEmails();
-  const skills = (await getPublicSkills()).filter((skill) => !skill.teacher?.email || discoverable.has(String(skill.teacher.email).toLowerCase()));
-  const recommendations = skills.map((skill) => {
-    const skillText = [skill.title, skill.category, skill.description, skill.wants].filter(Boolean).join(' ').toLowerCase();
-    const score = interests.reduce((total, interest) => {
-      const tokens = interest.split(/\s+/).filter(Boolean);
-      return total + (tokens.some((token) => token.length >= 2 && skillText.includes(token)) ? 1 : 0);
+  const normalize = (value) => String(value || '').toLowerCase().replace(/[^a-z0-9+#.]+/g, ' ').trim();
+  const tokensFor = (value) => normalize(value).split(/\s+/).filter((token) => token.length >= 2);
+
+  const scoreText = (text) => {
+    const haystack = normalize(text);
+    return interests.reduce((score, interest) => {
+      const normalizedInterest = normalize(interest);
+      const interestTokens = tokensFor(interest);
+      if (!normalizedInterest) return score;
+      if (haystack.includes(normalizedInterest)) return score + 4;
+      if (interestTokens.some((token) => haystack.includes(token))) return score + 2;
+      return score;
     }, 0);
-    return { skill, score };
-  })
-    .filter((item) => item.score > 0)
-    .sort((first, second) => second.score - first.score)
-    .slice(0, 6)
-    .map((item) => item.skill);
-  return response.json(recommendations);
+  };
+
+  const recommendations = [];
+  const seen = new Set();
+
+  // 1. Recommend existing published skills.
+  const skills = (await getPublicSkills()).filter((skill) => !skill.teacher?.email || discoverable.has(String(skill.teacher.email).toLowerCase()));
+  for (const skill of skills) {
+    const score = scoreText([skill.title, skill.category, skill.description, skill.wants].filter(Boolean).join(' '));
+    if (score <= 0) continue;
+
+    const key = `skill:${String(skill._id || skill.title).toLowerCase()}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    recommendations.push({ skill, score });
+  }
+
+  // 2. If a skill is not published as a listing, recommend discoverable
+  // members who teach something matching the user's learning goals.
+  const publicProfiles = process.env.MONGODB_URI
+    ? await Profile.find({ ...discoverableProfileQuery(), email: { $ne: email } }).lean()
+    : readProfiles().filter((item) => isDiscoverableProfile(item) && String(item.email || '').toLowerCase() !== email);
+
+  for (const candidate of publicProfiles) {
+    const candidateTeaches = candidate.teaches || [];
+    for (const taughtSkill of candidateTeaches) {
+      const score = scoreText(taughtSkill);
+      if (score <= 0) continue;
+
+      const key = `profile:${String(candidate.email).toLowerCase()}:${normalize(taughtSkill)}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+
+      const safeCandidate = publicProfile(candidate);
+      recommendations.push({
+        skill: {
+          _id: `recommended-${candidate.email}-${normalize(taughtSkill).replace(/\\s+/g, '-')}`,
+          title: String(taughtSkill),
+          category: 'Recommended skill',
+          description: `Taught by ${safeCandidate.name} on SkillSwap.`,
+          teacher: safeCandidate
+        },
+        score: score + 1
+      });
+    }
+  }
+
+  return response.json(
+    recommendations
+      .sort((first, second) => second.score - first.score)
+      .slice(0, 8)
+      .map((item) => item.skill)
+  );
 });
 router.get('/profiles/:email/similar', (request, response) => {
   const email = decodeURIComponent(request.params.email).toLowerCase();
