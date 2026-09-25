@@ -2014,3 +2014,31 @@
     gap: 6px;
   }
 }
+
+
+/* Keep the website footer in normal document flow on mobile.
+   It must scroll away with the page instead of staying pinned to the viewport. */
+@media (max-width: 760px) {
+  html body .app-shell > footer.footer,
+  html body .app-shell > .footer,
+  html body footer.footer {
+    position: relative !important;
+    top: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    left: auto !important;
+    inset: auto !important;
+    z-index: 1 !important;
+    width: 100% !important;
+    margin-top: 0 !important;
+    transform: none !important;
+  }
+
+  html body .app-shell,
+  html body .app-shell > main {
+    position: relative !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+  }
+}
