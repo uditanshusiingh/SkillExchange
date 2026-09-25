@@ -16,8 +16,19 @@ const emptyStats = {
   skills: 0, exchanges: 0, reports: 0
 };
 
-function StatCard({ icon: Icon, label, value, tone = '' }) {
-  return <div className={`admin-stat-card ${tone}`}>
+function StatCard({ icon: Icon, label, value, tone = '', onClick }) {
+  return <div
+    className={`admin-stat-card ${tone}`}
+    role={onClick ? 'button' : undefined}
+    tabIndex={onClick ? 0 : undefined}
+    onClick={onClick}
+    onKeyDown={(event) => {
+      if (onClick && (event.key === 'Enter' || event.key === ' ')) {
+        event.preventDefault();
+        onClick();
+      }
+    }}
+  >
     <div className="admin-stat-icon"><Icon size={19} /></div>
     <div className="admin-stat-copy"><span>{label}</span><strong>{value ?? 0}</strong></div><span className="admin-stat-arrow"><ChevronRight size={14} /></span>
   </div>;
@@ -95,6 +106,7 @@ export default function AdminApp() {
   const [adminSettings, setAdminSettings] = useState({ profile: { name: 'SkillSwap Admin', email: '' }, dashboard: { compactMode: false, defaultSection: 'overview', refreshInterval: 0 }, maintenanceMode: false, registrationEnabled: true, announcement: { enabled: false, title: '', message: '' }, keyConfigured: false });
   const [newAdminKey, setNewAdminKey] = useState('');
   const [settingsSaving, setSettingsSaving] = useState(false);
+  const [statModal, setStatModal] = useState(null);
   const defaultSectionApplied = useRef(false);
 
   const logout = () => {
@@ -392,12 +404,12 @@ export default function AdminApp() {
 
       {section === 'overview' && <section>
         <div className="admin-stats-grid">
-          <StatCard icon={Users} label="Total users" value={stats.total} tone="users" />
-          <StatCard icon={UserCheck} label="Verified users" value={stats.verified} tone="verified" />
-          <StatCard icon={Eye} label="Visible profiles" value={stats.discoverable} tone="visible" />
-          <StatCard icon={BarChart3} label="Skills" value={stats.skills} tone="skills" />
-          <StatCard icon={Activity} label="Exchanges" value={stats.exchanges} tone="exchanges" />
-          <StatCard icon={CircleAlert} label="Open reports" value={stats.reports} tone="reports" />
+          <StatCard icon={Users} label="Total users" value={stats.total} tone="users" onClick={() => setStatModal('users')} />
+          <StatCard icon={UserCheck} label="Verified users" value={stats.verified} tone="verified" onClick={() => setStatModal('verified')} />
+          <StatCard icon={Eye} label="Visible profiles" value={stats.discoverable} tone="visible" onClick={() => setStatModal('visible')} />
+          <StatCard icon={BarChart3} label="Skills" value={stats.skills} tone="skills" onClick={() => setStatModal('skills')} />
+          <StatCard icon={Activity} label="Exchanges" value={stats.exchanges} tone="exchanges" onClick={() => setStatModal('exchanges')} />
+          <StatCard icon={CircleAlert} label="Open reports" value={stats.reports} tone="reports" onClick={() => setStatModal('reports')} />
         </div>
         <div className="admin-overview-grid">
           <div className="admin-card"><div className="admin-card-head"><div><span className="admin-eyebrow">RECENT USERS</span><h2>Latest members</h2></div><button onClick={() => setSection('users')}>View all <ChevronRight size={15} /></button></div>
@@ -522,6 +534,127 @@ export default function AdminApp() {
   {reportModal.internalNotes?.length ? <div className="detail-block"><span>Internal notes history</span>{reportModal.internalNotes.map((note,index) => <div className="report-note-history" key={(note.at || 'note')+'-'+index}><strong>{note.actor || 'Admin'}</strong><small>{note.at ? new Date(note.at).toLocaleString() : '—'}</small><p>{note.note}</p></div>)}</div> : null}
   <div className="admin-modal-actions"><button className="admin-secondary-button" onClick={() => setReportModal(null)}>Close</button><button className="admin-secondary-button" onClick={async () => { const el=document.getElementById('admin-report-note'); if(!el?.value.trim()) return; await updateReportCase(reportModal,{internalNote:el.value.trim()}); el.value=''; }}>Save internal note</button><button className="admin-primary-button modal-save" onClick={() => updateReportCase(reportModal,{status:'resolved'})}>Resolve</button><button className="admin-secondary-button" onClick={() => updateReportCase(reportModal,{status:'dismissed'})}>Dismiss</button></div>
 </section></div>}
+      {statModal && (() => {
+        const hiddenProfiles = Math.max(0, stats.total - stats.discoverable);
+        const blockedUsers = users.filter((user) => user.accountBlocked).length;
+        const pendingUsers = Math.max(0, stats.total - stats.verified);
+        const verificationRate = stats.total ? Math.round((stats.verified / stats.total) * 100) : 0;
+        const exchangeCounts = ['pending', 'accepted', 'rejected', 'completed', 'cancelled'].map((status) => ({
+          label: status,
+          value: exchanges.filter((item) => (item.status || 'pending') === status).length
+        }));
+        const reportCounts = ['open', 'resolved', 'dismissed'].map((status) => ({
+          label: status,
+          value: reports.filter((item) => (item.status || 'open') === status).length
+        }));
+        const detailMap = {
+          users: {
+            title: 'Total users',
+            eyebrow: 'USER OVERVIEW',
+            icon: Users,
+            summary: 'Complete account count currently returned by the admin API.',
+            rows: [
+              ['Total users', stats.total],
+              ['Verified users', stats.verified],
+              ['Pending verification', pendingUsers],
+              ['Visible profiles', stats.discoverable],
+              ['Hidden profiles', hiddenProfiles],
+              ['Blocked accounts', blockedUsers]
+            ],
+            section: 'users'
+          },
+          verified: {
+            title: 'Verified users',
+            eyebrow: 'VERIFICATION OVERVIEW',
+            icon: UserCheck,
+            summary: 'Users whose account is currently marked as verified.',
+            rows: [
+              ['Verified users', stats.verified],
+              ['Pending verification', pendingUsers],
+              ['Verification rate', verificationRate + '%'],
+              ['Total users', stats.total]
+            ],
+            section: 'users'
+          },
+          visible: {
+            title: 'Visible profiles',
+            eyebrow: 'PROFILE VISIBILITY',
+            icon: Eye,
+            summary: 'Profiles currently discoverable through the platform.',
+            rows: [
+              ['Visible profiles', stats.discoverable],
+              ['Hidden profiles', hiddenProfiles],
+              ['Total profiles', stats.total],
+              ['Blocked accounts', blockedUsers]
+            ],
+            section: 'users'
+          },
+          skills: {
+            title: 'Skills',
+            eyebrow: 'SKILL OVERVIEW',
+            icon: BarChart3,
+            summary: 'Skill inventory and moderation status across the platform.',
+            rows: [
+              ['Total skills', skillStats.total ?? stats.skills],
+              ['Approved', skillStats.approved ?? 0],
+              ['Pending', skillStats.pending ?? 0],
+              ['Rejected', skillStats.rejected ?? 0],
+              ['Featured', skillStats.featured ?? 0],
+              ['Categories', skillStats.categories ?? 0],
+              ['Duplicate flags', skillStats.flaggedDuplicates ?? 0],
+              ['Low-quality flags', skillStats.lowQuality ?? 0]
+            ],
+            section: 'skills'
+          },
+          exchanges: {
+            title: 'Exchanges',
+            eyebrow: 'EXCHANGE OVERVIEW',
+            icon: Activity,
+            summary: 'Current exchange volume broken down by workflow status.',
+            rows: [
+              ['Total exchanges', stats.exchanges],
+              ...exchangeCounts.map((item) => [item.label[0].toUpperCase() + item.label.slice(1), item.value])
+            ],
+            section: 'exchanges'
+          },
+          reports: {
+            title: 'Open reports',
+            eyebrow: 'MODERATION OVERVIEW',
+            icon: CircleAlert,
+            summary: 'Moderation reports and their current case status.',
+            rows: [
+              ['Open reports', stats.reports],
+              ...reportCounts.map((item) => [item.label[0].toUpperCase() + item.label.slice(1), item.value]),
+              ['High priority open', reports.filter((item) => (item.status || 'open') === 'open' && (item.priority || 'medium') === 'high').length],
+              ['Medium priority open', reports.filter((item) => (item.status || 'open') === 'open' && (item.priority || 'medium') === 'medium').length],
+              ['Low priority open', reports.filter((item) => (item.status || 'open') === 'open' && (item.priority || 'medium') === 'low').length]
+            ],
+            section: 'reports'
+          }
+        };
+        const detail = detailMap[statModal];
+        if (!detail) return null;
+        const DetailIcon = detail.icon;
+        return <div className="admin-modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setStatModal(null); }}>
+          <section className="admin-modal compact-modal stat-detail-modal" role="dialog" aria-modal="true" aria-labelledby="stat-detail-title">
+            <div className="admin-modal-head">
+              <div><span className="admin-eyebrow">{detail.eyebrow}</span><h2 id="stat-detail-title">{detail.title}</h2></div>
+              <button className="admin-modal-close" onClick={() => setStatModal(null)} aria-label="Close details"><X size={18}/></button>
+            </div>
+            <div className="detail-hero">
+              <span className="detail-icon"><DetailIcon size={22}/></span>
+              <div><strong>{detail.title}</strong><small>{detail.summary}</small></div>
+            </div>
+            <div className="stat-detail-grid">
+              {detail.rows.map(([label, value]) => <div key={label}><small>{label}</small><strong>{value}</strong></div>)}
+            </div>
+            <div className="admin-modal-actions">
+              <button className="admin-secondary-button" onClick={() => setStatModal(null)}>Close</button>
+              <button className="admin-primary-button modal-save" onClick={() => { setStatModal(null); setSection(detail.section); setQuery(''); }}>Open {detail.section}</button>
+            </div>
+          </section>
+        </div>;
+      })()}
       {userModal && <div className="admin-modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setUserModal(null); }}>
         <section className="admin-modal admin-user-detail-modal" role="dialog" aria-modal="true">
           <div className="admin-modal-head"><div><span className="admin-eyebrow">USER MANAGEMENT</span><h2>User details</h2></div><button className="admin-modal-close" onClick={() => setUserModal(null)}><X size={18} /></button></div>
