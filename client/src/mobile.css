@@ -1812,33 +1812,3 @@
 }
 
 
-/* Final mobile navigation: keep the drawer fixed instead of page-scrollable */
-@media (max-width: 760px) {
-  .main-nav.open {
-    position: fixed !important;
-    top: 66px !important;
-    right: 0 !important;
-    left: auto !important;
-    bottom: 20vh !important;
-    width: min(82vw, 360px) !important;
-    height: auto !important;
-    max-height: none !important;
-    overflow: hidden !important;
-    overflow-y: hidden !important;
-    overscroll-behavior: none;
-    touch-action: none;
-  }
-
-  .main-nav.open .user-dropdown {
-    overflow-y: auto;
-    touch-action: pan-y;
-  }
-}
-
-@media (max-width: 430px) {
-  .main-nav.open {
-    top: 66px !important;
-    bottom: 18vh !important;
-    width: min(84vw, 340px) !important;
-  }
-}
