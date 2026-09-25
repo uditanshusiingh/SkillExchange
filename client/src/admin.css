@@ -553,3 +553,129 @@
   .admin-sidebar-brand{position:relative;padding-right:8px}
   .admin-theme-toggle{width:38px;height:38px;flex-basis:38px}
 }
+
+
+/* Complete dark-mode coverage for admin content */
+.admin-shell.admin-theme-dark .admin-main,
+.admin-shell.admin-theme-dark .admin-topbar,
+.admin-shell.admin-theme-dark .admin-card,
+.admin-shell.admin-theme-dark .admin-section-head,
+.admin-shell.admin-theme-dark .admin-settings-page{color:var(--admin-ink)}
+.admin-shell.admin-theme-dark .admin-health,
+.admin-shell.admin-theme-dark .admin-outline-wide,
+.admin-shell.admin-theme-dark .admin-table-card,
+.admin-shell.admin-theme-dark .admin-notification-summary>div,
+.admin-shell.admin-theme-dark .admin-notification-list,
+.admin-shell.admin-theme-dark .admin-notification-item,
+.admin-shell.admin-theme-dark .admin-report,
+.admin-shell.admin-theme-dark .admin-report-priority-strip button,
+.admin-shell.admin-theme-dark .admin-exchange-summary button,
+.admin-shell.admin-theme-dark .admin-category-add input,
+.admin-shell.admin-theme-dark .admin-category-list,
+.admin-shell.admin-theme-dark .detail-block,
+.admin-shell.admin-theme-dark .detail-meta>div{
+  background:#121b17;
+  color:var(--admin-ink);
+  border-color:var(--admin-line);
+}
+.admin-shell.admin-theme-dark .admin-outline-wide:hover,
+.admin-shell.admin-theme-dark .admin-exchange-summary button:hover,
+.admin-shell.admin-theme-dark .admin-exchange-summary button.active,
+.admin-shell.admin-theme-dark .admin-report-priority-strip button:hover,
+.admin-shell.admin-theme-dark .admin-report-priority-strip button.active,
+.admin-shell.admin-theme-dark .admin-notification-item:hover,
+.admin-shell.admin-theme-dark .admin-notification-item.unread{
+  background:#1b2922;
+}
+.admin-shell.admin-theme-dark .admin-report p,
+.admin-shell.admin-theme-dark .detail-block p,
+.admin-shell.admin-theme-dark .report-note-history p,
+.admin-shell.admin-theme-dark .admin-notification-body span,
+.admin-shell.admin-theme-dark .report-card-meta strong{
+  color:#aebbb4;
+}
+.admin-shell.admin-theme-dark .admin-table-wrap th{
+  background:#101814;
+  color:#9eaca5;
+}
+.admin-shell.admin-theme-dark .admin-table-wrap td{color:#e4ece8}
+.admin-shell.admin-theme-dark .table-actions button,
+.admin-shell.admin-theme-dark .admin-table-wrap select,
+.admin-shell.admin-theme-dark .report-actions button,
+.admin-shell.admin-theme-dark .admin-danger-button{
+  background:#17211c;
+  color:#e4ece8;
+  border-color:#34453c;
+}
+.admin-shell.admin-theme-dark .table-actions button:hover,
+.admin-shell.admin-theme-dark .report-actions button:hover{
+  background:#223129;
+}
+.admin-shell.admin-theme-dark .pill{
+  background:#26322d;
+  color:#b9c4be;
+}
+.admin-shell.admin-theme-dark .pill.success{background:#1e3824;color:#a9d995}
+.admin-shell.admin-theme-dark .pill.warning{background:#3b3020;color:#e2bd72}
+.admin-shell.admin-theme-dark .pill.danger{background:#3b2524;color:#efaaa3}
+.admin-shell.admin-theme-dark .pill.muted{background:#252d2a;color:#9eaaa5}
+.admin-shell.admin-theme-dark .data-chip{background:#24302a;color:#b7c2bc}
+.admin-shell.admin-theme-dark .admin-avatar{background:#263a30;color:#e5eee9}
+.admin-shell.admin-theme-dark .admin-detail-tabs span{
+  background:#202c26;
+  color:#aab6af;
+}
+.admin-shell.admin-theme-dark .admin-detail-tabs span.active{
+  background:#294321;
+  color:#b9e59f;
+}
+.admin-shell.admin-theme-dark .activity-dot,
+.admin-shell.admin-theme-dark .admin-log-icon{
+  background:#203623;
+  color:#a9d995;
+}
+.admin-shell.admin-theme-dark .admin-log-icon.failed{
+  background:#3b2524;
+  color:#efaaa3;
+}
+.admin-shell.admin-theme-dark .admin-setting-toggle{border-color:var(--admin-line)}
+.admin-shell.admin-theme-dark .admin-settings-card label,
+.admin-shell.admin-theme-dark .report-control-grid label{color:#aebbb4}
+.admin-shell.admin-theme-dark .report-control-grid input,
+.admin-shell.admin-theme-dark .report-control-grid select,
+.admin-shell.admin-theme-dark .admin-report-note{
+  background:#121b17;
+  color:#edf5f0;
+  border-color:#34453c;
+}
+.admin-shell.admin-theme-dark .admin-notification-body strong{color:#e8efeb}
+.admin-shell.admin-theme-dark .admin-notification-icon.report{background:#3b2524;color:#efaaa3}
+.admin-shell.admin-theme-dark .admin-notification-icon.user{background:#1d2d3e;color:#a8c6e9}
+.admin-shell.admin-theme-dark .admin-notification-icon.skill{background:#3b3020;color:#e1bb6d}
+.admin-shell.admin-theme-dark .admin-notification-icon.exchange{background:#18362f;color:#8ed1bd}
+.admin-shell.admin-theme-dark .admin-primary-button{
+  background:#b9f36b;
+  color:#14201b;
+}
+.admin-shell.admin-theme-dark .admin-primary-button:hover{background:#c7f989}
+.admin-shell.admin-theme-dark .admin-danger-button{
+  background:#351f1e;
+  color:#f0aaa3;
+  border-color:#67332f;
+}
+.admin-shell.admin-theme-dark .admin-action-select{
+  background:#17211c;
+  color:#edf5f0;
+  border-color:#34453c;
+}
+.admin-shell.admin-theme-dark .admin-search{
+  background:#121b17;
+}
+.admin-shell.admin-theme-dark .admin-search input{color:#edf5f0}
+.admin-shell.admin-theme-dark .admin-search svg{color:#91a098}
+.admin-shell.admin-theme-dark .admin-category-list button{color:#9eaca5}
+.admin-shell.admin-theme-dark .admin-health strong,
+.admin-shell.admin-theme-dark .admin-mini-list strong,
+.admin-shell.admin-theme-dark .admin-card-head h2,
+.admin-shell.admin-theme-dark .admin-section-head h2,
+.admin-shell.admin-theme-dark .admin-topbar h1{color:#edf5f0}
