@@ -275,9 +275,22 @@ function App() {
   const similarPeople = peopleDirectory;
 
   const scrollTo = (id) => {
-    setActivePage(null);
     setActiveModal(null);
     setMobileOpen(false);
+
+    if (id === 'top' && activePage) {
+      window.requestAnimationFrame(() => {
+        const dedicatedPage = document.querySelector('.dedicated-page');
+        if (dedicatedPage) {
+          dedicatedPage.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      });
+      return;
+    }
+
+    setActivePage(null);
     window.requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' }));
   };
 
