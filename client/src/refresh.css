@@ -32,7 +32,16 @@
 .skill-detail-expectation small, .skill-detail-reviews p { margin: 0; color: #718076; font-size: 11px; line-height: 1.45; }
 .skill-detail-reviews p { display: flex; align-items: center; gap: 5px; color: #b86e4e; }
 .skill-detail-actions { display: flex; gap: 9px; margin-top: 25px; }
-html[data-theme='dark'] .dedicated-explore-toolbar select { background: #eff3ed; }
+html[data-theme='dark'] .dedicated-explore-toolbar select {
+  background: #162f29 !important;
+  border-color: #466050 !important;
+  color: #eef4ed !important;
+  color-scheme: dark;
+}
+html[data-theme='dark'] .dedicated-explore-toolbar select option {
+  background: #162f29 !important;
+  color: #eef4ed !important;
+}
 html[data-theme='dark'] .skill-detail-facts span { background: #e0e9df; }
 @media (max-width: 760px) {
   .dedicated-explore-toolbar { grid-template-columns: 1fr; }
