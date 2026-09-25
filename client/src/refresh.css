@@ -1640,3 +1640,51 @@ html[data-theme='dark'] .modal-panel.safety-panel .safety-section small { color:
   .verification-resend-panel form input { height: 52px; box-sizing: border-box; }
   .verification-resend-panel form .button { min-height: 52px; }
 }
+
+
+/* Desktop-only login account actions */
+@media (min-width: 641px) {
+  .auth-account-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    margin-top: 12px;
+  }
+
+  .auth-account-actions button {
+    width: 100%;
+    min-height: 42px;
+    box-sizing: border-box;
+    border-radius: 8px;
+    padding: 9px 14px;
+    font: inherit;
+    font-size: 14px;
+    line-height: 1.25;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .auth-account-actions .forgot-password-link {
+    color: var(--forest);
+    background: transparent;
+    border: 1px solid rgba(33, 58, 48, 0.22);
+    text-align: center;
+    text-decoration: none;
+  }
+
+  .auth-account-actions .resend-verification-link {
+    color: var(--forest);
+    background: rgba(33, 58, 48, 0.05);
+    border: 1px solid rgba(33, 58, 48, 0.22);
+    text-align: center;
+    text-decoration: none;
+  }
+
+  .auth-account-actions button:hover,
+  .auth-account-actions button:focus-visible {
+    border-color: var(--forest);
+    background: rgba(33, 58, 48, 0.1);
+  }
+}
