@@ -1,20 +1,22 @@
 /* Mobile-first responsive hardening */
-html, body, #root {
-  width: 100%;
-  max-width: 100%;
-  overflow-x: hidden;
-}
+@media (max-width: 760px) {
+  html, body, #root {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
 
-*, *::before, *::after {
-  min-width: 0;
-}
+  *, *::before, *::after {
+    min-width: 0;
+  }
 
-img, video, iframe, svg {
-  max-width: 100%;
-}
+  img, video, iframe, svg {
+    max-width: 100%;
+  }
 
-button, input, select, textarea {
-  max-width: 100%;
+  button, input, select, textarea {
+    max-width: 100%;
+  }
 }
 
 @media (max-width: 760px) {
