@@ -723,7 +723,7 @@ router.post('/auth/login', async (request, response) => {
   if (profile.accountBlocked) return response.status(403).json({ message: 'This account has been blocked by an administrator.' });
   if (profile.suspendedUntil && new Date(profile.suspendedUntil).getTime() > Date.now()) return response.status(403).json({ message: `This account is suspended until ${new Date(profile.suspendedUntil).toLocaleString()}.` });
   if (!profile.emailVerified) return response.status(403).json({ message: 'Please verify your email before logging in.' });
-  return response.json({ message: 'Login successful.', profile: publicProfile(profile) });
+  return response.json({ message: 'Login successful.', profile: publicProfile(profile), sessionToken: createSessionToken(profile.email) });
 });
 
 router.post('/auth/change-password', async (request, response) => {
