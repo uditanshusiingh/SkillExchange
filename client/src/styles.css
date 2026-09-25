@@ -46,3 +46,37 @@
     transform: none !important;
   }
 }
+
+/* Desktop page flow: keep the footer in the document instead of pinning it
+   to the bottom of the viewport/main scroll container. Mobile rules remain unchanged. */
+@media (min-width: 761px) {
+  html,
+  body {
+    height: auto !important;
+    min-height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .app-shell {
+    height: auto !important;
+    min-height: 100vh;
+    overflow: visible !important;
+    display: block !important;
+  }
+
+  .app-shell > main {
+    height: auto !important;
+    min-height: 0;
+    overflow: visible !important;
+    flex: none !important;
+  }
+
+  .app-shell > footer.footer {
+    position: static !important;
+    inset: auto !important;
+    width: 100% !important;
+    margin-top: 0 !important;
+    transform: none !important;
+  }
+}
