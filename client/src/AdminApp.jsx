@@ -91,6 +91,7 @@ export default function AdminApp() {
   const [userFilter, setUserFilter] = useState('all');
   const [savingUser, setSavingUser] = useState(false);
   const [skillFilter, setSkillFilter] = useState('all');
+  const [skillQuery, setSkillQuery] = useState('');
   const [exchangeFilter, setExchangeFilter] = useState('all');
   const [reportFilter, setReportFilter] = useState('all');
   const [reportPriorityFilter, setReportPriorityFilter] = useState('all');
@@ -206,13 +207,20 @@ export default function AdminApp() {
   };
 
   const filteredSkills = useMemo(() => {
-    const q = query.trim().toLowerCase();
+    const q = skillQuery.trim().toLowerCase();
+    const tokens = q.split(/\s+/).filter(Boolean);
     return skills.filter((s) => {
-      const matchesQuery = !q || [s.title, s.category, s.level, s.teacher?.name, s.description].filter(Boolean).join(' ').toLowerCase().includes(q);
+      const searchableText = [s.title, s.category, s.level, s.teacher?.name, s.teacher?.email, s.description]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+      // Skill search is independent: typing in the search box searches immediately.
+      // The level dropdown only adds a level filter when a level is selected.
+      const matchesSearch = !tokens.length || tokens.every((token) => searchableText.includes(token));
       const matchesFilter = skillFilter === 'all' || String(s.level || '').toLowerCase() === skillFilter;
-      return matchesQuery && matchesFilter;
+      return matchesSearch && matchesFilter;
     });
-  }, [skills, query, skillFilter]);
+  }, [skills, skillQuery, skillFilter]);
 
   const filteredExchanges = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -360,7 +368,7 @@ export default function AdminApp() {
   return <div className={`admin-shell ${adminSettings.dashboard?.compactMode ? 'compact' : ''}`}>
     <aside className={`admin-sidebar ${sidebarOpen ? 'open' : ''}`}>
       <div className="admin-sidebar-brand"><div className="admin-brand-mark small"><Shield size={18} /></div><div><strong>SkillSwap</strong><span>Admin Panel</span></div></div>
-      <nav>{nav.map(([id, Icon, label]) => <button key={id} className={section === id ? 'active' : ''} onClick={() => { setSection(id); setQuery(''); setSidebarOpen(false); }}><Icon size={18} /><span>{label}</span>{id === 'notifications' && notifications.filter((item) => !notificationRead.includes(item.id)).length > 0 && <b className="admin-nav-badge">{notifications.filter((item) => !notificationRead.includes(item.id)).length > 99 ? '99+' : notifications.filter((item) => !notificationRead.includes(item.id)).length}</b>}<ChevronRight size={14} /></button>)}</nav>
+      <nav>{nav.map(([id, Icon, label]) => <button key={id} className={section === id ? 'active' : ''} onClick={() => { setSection(id); setQuery(''); if (id === 'skills') setSkillQuery(''); setSidebarOpen(false); }}><Icon size={18} /><span>{label}</span>{id === 'notifications' && notifications.filter((item) => !notificationRead.includes(item.id)).length > 0 && <b className="admin-nav-badge">{notifications.filter((item) => !notificationRead.includes(item.id)).length > 99 ? '99+' : notifications.filter((item) => !notificationRead.includes(item.id)).length}</b>}<ChevronRight size={14} /></button>)}</nav>
       <div className="admin-sidebar-bottom">
         <a href="/"><ArrowLeft size={17} /> Back to website</a>
         <button onClick={logout}><LogOut size={17} /> Logout</button>
@@ -461,7 +469,7 @@ export default function AdminApp() {
       {section !== 'overview' && <section className="admin-card admin-table-card">
         <div className="admin-card-head">
           <div><span className="admin-eyebrow">MANAGEMENT</span><h2>{nav.find(([id]) => id === section)?.[2]}</h2></div>
-          <div className="admin-table-tools"><label className="admin-search"><Search size={17} /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={"Search " + section + "…"} /></label>
+          <div className="admin-table-tools"><label className="admin-search"><Search size={17} /><input value={section === 'skills' ? skillQuery : query} onChange={(e) => section === 'skills' ? setSkillQuery(e.target.value) : setQuery(e.target.value)} placeholder={section === 'skills' ? 'Search skills by name, category or teacher…' : "Search " + section + "…"} /></label>
           {section === 'users' && <select className="admin-filter" value={userFilter} onChange={(e) => setUserFilter(e.target.value)}><option value="all">All users</option><option value="verified">Verified</option><option value="pending">Pending</option><option value="hidden">Hidden profiles</option></select>}
           {section === 'skills' && <select className="admin-filter" value={skillFilter} onChange={(e) => setSkillFilter(e.target.value)}><option value="all">All levels</option><option value="beginner">Beginner</option><option value="intermediate">Intermediate</option><option value="advanced">Advanced</option></select>}
           {section === 'exchanges' && <select className="admin-filter" value={exchangeFilter} onChange={(e) => setExchangeFilter(e.target.value)}><option value="all">All statuses</option><option value="pending">Pending</option><option value="accepted">Accepted</option><option value="rejected">Rejected</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select>}
