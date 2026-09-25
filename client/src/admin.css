@@ -719,3 +719,24 @@
 .admin-shell.admin-theme-dark .admin-log-meta time{
   color:#899b91;
 }
+
+
+/* Dark-mode icon contrast: keep status icons readable on tinted surfaces */
+.admin-shell.admin-theme-dark .health-icon{
+  background:#dff1d7;
+  color:#24402a;
+}
+.admin-shell.admin-theme-dark .health-icon svg{
+  color:#24402a;
+  stroke:currentColor;
+}
+.admin-shell.admin-theme-dark .health-badge{
+  color:#9bd66f;
+}
+.admin-shell.admin-theme-dark .health-badge .status-dot{
+  background:#63b53f;
+  box-shadow:0 0 0 3px rgba(99,181,63,.16);
+}
+.admin-shell.admin-theme-dark .admin-health-row svg{
+  color:#9eaca5;
+}
