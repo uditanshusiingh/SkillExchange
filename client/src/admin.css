@@ -411,3 +411,145 @@
     white-space:nowrap !important;
   }
 }
+
+
+/* Admin-only light/dark theme */
+.admin-shell{
+  --admin-bg:#f5f7f6;
+  --admin-card:#ffffff;
+  --admin-ink:#14201b;
+  --admin-muted:#6d7772;
+  --admin-line:#e3e8e5;
+  --admin-dark:#18231e;
+  --admin-accent:#b9f36b;
+}
+.admin-shell.admin-theme-dark{
+  --admin-bg:#0d1511;
+  --admin-card:#17211c;
+  --admin-ink:#edf5f0;
+  --admin-muted:#9eaca5;
+  --admin-line:#2d3b34;
+  --admin-dark:#09120e;
+  --admin-accent:#a9ee57;
+}
+.admin-shell.admin-theme-dark .admin-sidebar{background:#09120e}
+.admin-shell.admin-theme-dark .admin-sidebar nav button,
+.admin-shell.admin-theme-dark .admin-sidebar-bottom button,
+.admin-shell.admin-theme-dark .admin-sidebar-bottom a{color:#aebbb4}
+.admin-shell.admin-theme-dark .admin-sidebar nav button:hover,
+.admin-shell.admin-theme-dark .admin-sidebar nav button.active,
+.admin-shell.admin-theme-dark .admin-sidebar-bottom button:hover,
+.admin-shell.admin-theme-dark .admin-sidebar-bottom a:hover{background:#1b2b23;color:#f3f8f5}
+.admin-shell.admin-theme-dark .admin-sidebar-bottom{border-color:#2a3a32}
+.admin-shell.admin-theme-dark .admin-main,
+.admin-shell.admin-theme-dark .admin-topbar{color:var(--admin-ink)}
+.admin-shell.admin-theme-dark .admin-system-status,
+.admin-shell.admin-theme-dark .admin-top-actions button,
+.admin-shell.admin-theme-dark .admin-menu-button,
+.admin-shell.admin-theme-dark .admin-filter,
+.admin-shell.admin-theme-dark .admin-table-tools input,
+.admin-shell.admin-theme-dark .admin-search,
+.admin-shell.admin-theme-dark .admin-settings-card input,
+.admin-shell.admin-theme-dark .admin-settings-card select,
+.admin-shell.admin-theme-dark .admin-settings-card textarea,
+.admin-shell.admin-theme-dark .admin-form-grid input,
+.admin-shell.admin-theme-dark .admin-form-grid textarea,
+.admin-shell.admin-theme-dark .admin-action-select,
+.admin-shell.admin-theme-dark .admin-secondary-button,
+.admin-shell.admin-theme-dark .admin-modal-close{
+  background:#121b17;
+  color:#edf5f0;
+  border-color:#34453c;
+}
+.admin-shell.admin-theme-dark .admin-system-status{color:#b7c3bd}
+.admin-shell.admin-theme-dark .admin-top-actions button,
+.admin-shell.admin-theme-dark .admin-menu-button{color:#d6e0db}
+.admin-shell.admin-theme-dark .admin-card,
+.admin-shell.admin-theme-dark .admin-stat-card,
+.admin-shell.admin-theme-dark .admin-modal{
+  background:var(--admin-card);
+  border-color:var(--admin-line);
+  color:var(--admin-ink);
+  box-shadow:0 12px 30px rgba(0,0,0,.18);
+}
+.admin-shell.admin-theme-dark .admin-stat-card{
+  background:linear-gradient(145deg,#17211c,#131c18);
+}
+.admin-shell.admin-theme-dark .admin-stat-card:after{background:#a9ee5720}
+.admin-shell.admin-theme-dark .admin-stat-card.users .admin-stat-icon{background:#1a2c3c}
+.admin-shell.admin-theme-dark .admin-stat-card.verified .admin-stat-icon{background:#1d3523}
+.admin-shell.admin-theme-dark .admin-stat-card.visible .admin-stat-icon{background:#2a2340}
+.admin-shell.admin-theme-dark .admin-stat-card.skills .admin-stat-icon{background:#3b3020}
+.admin-shell.admin-theme-dark .admin-stat-card.exchanges .admin-stat-icon{background:#17332e}
+.admin-shell.admin-theme-dark .admin-stat-card.reports .admin-stat-icon{background:#3b2523}
+.admin-shell.admin-theme-dark .admin-card-head>button,
+.admin-shell.admin-theme-dark .admin-eyebrow,
+.admin-shell.admin-theme-dark .admin-help-text,
+.admin-shell.admin-theme-dark .admin-settings-card label,
+.admin-shell.admin-theme-dark .admin-form-grid label,
+.admin-shell.admin-theme-dark .admin-stat-card span{color:var(--admin-muted)}
+.admin-shell.admin-theme-dark .admin-table,
+.admin-shell.admin-theme-dark .admin-table th,
+.admin-shell.admin-theme-dark .admin-table td,
+.admin-shell.admin-theme-dark .admin-detail-section,
+.admin-shell.admin-theme-dark .admin-setting-toggle,
+.admin-shell.admin-theme-dark .admin-modal-actions,
+.admin-shell.admin-theme-dark .admin-activity-item,
+.admin-shell.admin-theme-dark .admin-notification-item{
+  border-color:var(--admin-line);
+}
+.admin-shell.admin-theme-dark .admin-table th,
+.admin-shell.admin-theme-dark .admin-table td,
+.admin-shell.admin-theme-dark .admin-mini-list>div,
+.admin-shell.admin-theme-dark .admin-activity-item,
+.admin-shell.admin-theme-dark .admin-notification-item{color:var(--admin-ink)}
+.admin-shell.admin-theme-dark .admin-table th{background:#111a16}
+.admin-shell.admin-theme-dark .admin-table tbody tr:hover{background:#1b2922}
+.admin-shell.admin-theme-dark .admin-health,
+.admin-shell.admin-theme-dark .admin-profile-hero,
+.admin-shell.admin-theme-dark .admin-detail-card,
+.admin-shell.admin-theme-dark .detail-hero,
+.admin-shell.admin-theme-dark .stat-detail-grid>div{
+  background:#121b17;
+  border-color:#2d3b34;
+  color:var(--admin-ink);
+}
+.admin-shell.admin-theme-dark .admin-primary-button,
+.admin-shell.admin-theme-dark .admin-primary-button.modal-save{color:#102016}
+.admin-shell.admin-theme-dark .admin-secondary-button{background:#17211c;color:#e7efeb}
+.admin-shell.admin-theme-dark .admin-secondary-button:hover{background:#202e27}
+.admin-shell.admin-theme-dark .admin-empty{color:#9eaca5}
+.admin-shell.admin-theme-dark .admin-modal-backdrop{background:rgba(0,0,0,.68)}
+.admin-shell.admin-theme-dark .stat-detail-grid strong,
+.admin-shell.admin-theme-dark .stat-detail-modal .admin-modal-head h2{color:var(--admin-ink)}
+.admin-shell.admin-theme-dark .admin-settings-card input::placeholder,
+.admin-shell.admin-theme-dark .admin-form-grid input::placeholder,
+.admin-shell.admin-theme-dark .admin-form-grid textarea::placeholder{color:#74837b}
+.admin-theme-toggle{
+  width:38px;
+  height:38px;
+  flex:0 0 38px;
+  margin-left:auto;
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:12px;
+  display:grid;
+  place-items:center;
+  background:#1d2d25;
+  color:#dbe6df;
+  cursor:pointer;
+  transition:background .18s,transform .18s,border-color .18s;
+}
+.admin-theme-toggle:hover{
+  background:#294035;
+  border-color:rgba(185,243,107,.5);
+  transform:translateY(-1px);
+}
+.admin-theme-light .admin-theme-toggle{
+  background:#f0f4ef;
+  color:#24352d;
+  border-color:#d8e1da;
+}
+@media(max-width:760px){
+  .admin-sidebar-brand{position:relative;padding-right:8px}
+  .admin-theme-toggle{width:38px;height:38px;flex-basis:38px}
+}
