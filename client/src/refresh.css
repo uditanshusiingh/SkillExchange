@@ -1688,3 +1688,183 @@ html[data-theme='dark'] .modal-panel.safety-panel .safety-section small { color:
     background: rgba(33, 58, 48, 0.1);
   }
 }
+
+
+/* Desktop-only skill card redesign. Mobile card styles remain unchanged. */
+@media (min-width: 761px) {
+  .skill-grid {
+    gap: 22px;
+    align-items: stretch;
+  }
+
+  .skill-card {
+    position: relative;
+    min-height: 520px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid rgba(119, 150, 132, .38);
+    border-radius: 18px;
+    background: #10251d;
+    box-shadow: 0 10px 28px rgba(5, 15, 10, .14);
+    transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+  }
+
+  .skill-card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(159, 194, 168, .68);
+    box-shadow: 0 18px 38px rgba(5, 15, 10, .22);
+  }
+
+  .skill-card .card-top {
+    position: relative;
+    height: 190px;
+    flex: 0 0 190px;
+    padding: 20px;
+    overflow: hidden;
+    background: linear-gradient(145deg, #315d4b, #214534) !important;
+  }
+
+  .skill-card .card-top::after {
+    content: '';
+    position: absolute;
+    width: 150px;
+    height: 150px;
+    right: -42px;
+    bottom: -72px;
+    border-radius: 50%;
+    background: rgba(222, 242, 210, .12);
+  }
+
+  .skill-card .card-category {
+    position: relative;
+    z-index: 2;
+    font-size: 11px;
+    letter-spacing: .06em;
+  }
+
+  .skill-card .skill-glyph {
+    left: 20px;
+    bottom: 8px;
+    font-size: 92px;
+    line-height: 1;
+    opacity: .13;
+  }
+
+  .skill-card .save-skill-button,
+  .skill-card .round-arrow {
+    z-index: 3;
+    width: 40px;
+    height: 40px;
+    border: 0;
+    border-radius: 50%;
+  }
+
+  .skill-card .round-arrow {
+    right: 20px;
+  }
+
+  .skill-card .save-skill-button {
+    right: 68px;
+  }
+
+  .skill-card .card-body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    padding: 22px 20px 18px;
+    background: #10251d;
+  }
+
+  .skill-card .card-title-row {
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+
+  .skill-card .card-title-row h3 {
+    margin: 0;
+    font-size: 22px;
+    line-height: 1.15;
+    letter-spacing: -.02em;
+  }
+
+  .skill-card .rating {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    font-size: 12px;
+  }
+
+  .skill-card .card-body > p {
+    min-height: 48px;
+    margin: 0 0 18px;
+    color: #b6c4bb;
+    font-size: 14px;
+    line-height: 1.55;
+  }
+
+  .skill-card .card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-bottom: auto;
+  }
+
+  .skill-card .card-meta span {
+    padding: 7px 10px;
+    border-radius: 7px;
+    font-size: 10px;
+  }
+
+  .skill-card .trade-row {
+    min-height: 68px;
+    margin-top: 20px;
+    padding-top: 16px;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .skill-card .teacher {
+    min-width: 0;
+    flex: 1 1 45%;
+  }
+
+  .skill-card .teacher > span:last-child {
+    min-width: 0;
+  }
+
+  .skill-card .teacher strong,
+  .skill-card .teacher small,
+  .skill-card .wants {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .skill-card .trade-icon {
+    flex: 0 0 auto;
+    font-size: 17px;
+    opacity: .7;
+  }
+
+  .skill-card .wants {
+    min-width: 0;
+    flex: 1 1 45%;
+    line-height: 1.35;
+  }
+
+  html[data-theme='dark'] .skill-card {
+    background: #10251d;
+    border-color: #294638;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, .22);
+  }
+
+  html[data-theme='dark'] .skill-card:hover {
+    border-color: #557761;
+    box-shadow: 0 20px 42px rgba(0, 0, 0, .3);
+  }
+
+  html[data-theme='dark'] .skill-card .card-body {
+    background: #10251d;
+  }
+}
