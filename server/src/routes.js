@@ -427,18 +427,70 @@ router.get('/matching/:email', async (request, response) => {
   if (!await requireAuth(request, response)) return;
   const email = decodeURIComponent(request.params.email).toLowerCase();
   if (!sameUser(request, email)) return response.status(403).json({ message: 'You can only view your own skill matches.' });
-  const profile = process.env.MONGODB_URI ? await Profile.findOne({ email }).lean() : readProfiles().find((item) => item.email === email);
-  const wants = (profile?.wants || []).map((item) => item.toLowerCase());
-  const teaches = (profile?.teaches || []).map((item) => item.toLowerCase());
+
+  const profile = process.env.MONGODB_URI
+    ? await Profile.findOne({ email }).lean()
+    : readProfiles().find((item) => String(item.email || '').toLowerCase() === email);
+
+  const wants = (profile?.wants || []).map((item) => String(item).toLowerCase().trim()).filter(Boolean);
+  const teaches = (profile?.teaches || []).map((item) => String(item).toLowerCase().trim()).filter(Boolean);
+
+  if (!wants.length && !teaches.length) return response.json([]);
+
   const discoverable = await discoverableEmails();
+  const publicProfiles = process.env.MONGODB_URI
+    ? await Profile.find({ ...discoverableProfileQuery(), email: { $ne: email } }).lean()
+    : readProfiles().filter((item) => item.email !== email && isDiscoverableProfile(item));
+
+  const profileMatches = [];
+  for (const candidate of publicProfiles) {
+    const candidateTeaches = (candidate.teaches || []).map((item) => String(item).toLowerCase().trim()).filter(Boolean);
+    const candidateWants = (candidate.wants || []).map((item) => String(item).toLowerCase().trim()).filter(Boolean);
+
+    const learnMatches = wants.filter((wanted) => candidateTeaches.some((skill) => skill.includes(wanted) || wanted.includes(skill)));
+    const teachMatches = teaches.filter((offered) => candidateWants.some((wanted) => wanted.includes(offered) || offered.includes(wanted)));
+
+    if (!learnMatches.length && !teachMatches.length) continue;
+
+    const score = Math.min(99, 55 + (learnMatches.length * 20) + (teachMatches.length * 15));
+    const primarySkill = learnMatches[0] || candidateTeaches[0] || 'Skill exchange';
+    const safeCandidate = publicProfile(candidate);
+
+    profileMatches.push({
+      skill: {
+        _id: `profile-match-${candidate.email}-${primarySkill}`,
+        title: primarySkill,
+        category: 'Skill exchange',
+        wants: candidateWants.join(', '),
+        teacher: safeCandidate
+      },
+      matchScore: score,
+      matchedSkills: [...new Set([...learnMatches, ...teachMatches])]
+    });
+  }
+
   const skills = (await getPublicSkills()).filter((skill) => !skill.teacher?.email || discoverable.has(String(skill.teacher.email).toLowerCase()));
-  const matches = skills.map((skill) => {
-    const text = [skill.title, skill.category, skill.wants].join(' ').toLowerCase();
-    const teachScore = teaches.filter((item) => text.includes(item)).length;
-    const learnScore = wants.filter((item) => text.includes(item)).length;
-    return { skill, matchScore: Math.min(99, 45 + (teachScore * 15) + (learnScore * 20)) };
-  }).filter((item) => item.matchScore > 45).sort((first, second) => second.matchScore - first.matchScore).slice(0, 8);
-  return response.json(matches);
+  const skillMatches = skills.map((skill) => {
+    const text = [skill.title, skill.category, skill.description, skill.wants].filter(Boolean).join(' ').toLowerCase();
+    const learnMatches = wants.filter((wanted) => text.includes(wanted));
+    const teachMatches = teaches.filter((offered) => String(skill.wants || '').toLowerCase().includes(offered));
+    if (!learnMatches.length && !teachMatches.length) return null;
+    return {
+      skill,
+      matchScore: Math.min(99, 55 + (learnMatches.length * 20) + (teachMatches.length * 15)),
+      matchedSkills: [...new Set([...learnMatches, ...teachMatches])]
+    };
+  }).filter(Boolean);
+
+  const combined = [...profileMatches, ...skillMatches]
+    .sort((first, second) => second.matchScore - first.matchScore)
+    .filter((item, index, list) => {
+      const key = `${item.skill.teacher?.email || ''}::${String(item.skill.title || '').toLowerCase()}`;
+      return list.findIndex((candidate) => `${candidate.skill.teacher?.email || ''}::${String(candidate.skill.title || '').toLowerCase()}` === key) === index;
+    })
+    .slice(0, 8);
+
+  return response.json(combined);
 });
 router.put('/profiles/:id/portfolio', async (request, response) => {
   if (!await requireAuth(request, response)) return;
