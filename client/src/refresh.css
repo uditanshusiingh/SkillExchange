@@ -1893,3 +1893,82 @@ html[data-theme='dark'] .modal-panel.safety-panel .safety-section small { color:
       0 4px 10px rgba(25, 53, 42, .14) !important;
   }
 }
+
+
+/* Edit profile panel: keep the panel itself scrollable without a visible
+   scrollbar, and keep its surface/text aligned with the active theme. */
+.edit-profile-panel {
+  max-height: min(88vh, 760px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  overscroll-behavior: contain;
+}
+.edit-profile-panel::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+.edit-profile-panel form {
+  min-width: 0;
+}
+.edit-profile-panel input,
+.edit-profile-panel textarea {
+  box-sizing: border-box;
+  width: 100%;
+}
+html[data-theme='dark'] .edit-profile-panel {
+  background: #102019;
+  color: #eef4ed;
+  border-color: #466050;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, .42);
+}
+html[data-theme='dark'] .edit-profile-panel > p {
+  color: #aebdb1;
+}
+html[data-theme='dark'] .edit-profile-panel input,
+html[data-theme='dark'] .edit-profile-panel textarea {
+  background: #162f29 !important;
+  color: #eef4ed !important;
+  border-color: #466050 !important;
+}
+html[data-theme='dark'] .edit-profile-panel input::placeholder,
+html[data-theme='dark'] .edit-profile-panel textarea::placeholder {
+  color: #9fb7a5 !important;
+  opacity: 1;
+}
+html[data-theme='dark'] .edit-profile-panel .avatar-upload {
+  background: #142920;
+  border-color: #466050;
+}
+html[data-theme='dark'] .edit-profile-panel .avatar-upload:hover {
+  background: #1b372b;
+  border-color: #7c9c85;
+}
+html[data-theme='dark'] .edit-profile-panel .avatar-upload small {
+  color: #9fb7a5;
+}
+html[data-theme='dark'] .edit-profile-panel .skill-picker,
+html[data-theme='dark'] .edit-profile-panel .skill-picker-search,
+html[data-theme='dark'] .edit-profile-panel .skill-picker-menu {
+  background: #162f29;
+  color: #eef4ed;
+  border-color: #466050;
+}
+html[data-theme='dark'] .edit-profile-panel .skill-picker-search::placeholder {
+  color: #9fb7a5;
+}
+html[data-theme='dark'] .edit-profile-panel .skill-picker-option:hover,
+html[data-theme='dark'] .edit-profile-panel .skill-picker-option.active {
+  background: #294638;
+  color: #eef4ed;
+}
+
+/* Preserve the same scrollbar-free behavior on smaller screens. */
+@media (max-width: 760px) {
+  .edit-profile-panel {
+    max-height: calc(100dvh - 32px);
+    overflow-y: auto;
+    scrollbar-width: none;
+  }
+}
