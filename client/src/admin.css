@@ -335,20 +335,27 @@
 /* Floating admin feedback toast */
 .admin-notice,
 .admin-error-bar{
-  position:fixed;
-  left:50%;
-  bottom:24px;
-  transform:translateX(-50%);
-  z-index:250;
-  width:min(520px,calc(100vw - 32px));
-  min-height:48px;
-  box-sizing:border-box;
-  margin:0;
-  padding:12px 42px 12px 15px;
+  position:fixed !important;
+  left:50% !important;
+  bottom:24px !important;
+  top:auto !important;
+  right:auto !important;
+  transform:translateX(-50%) !important;
+  z-index:250 !important;
+  width:min(520px,calc(100vw - 32px)) !important;
+  height:52px !important;
+  min-height:52px !important;
+  max-height:52px !important;
+  box-sizing:border-box !important;
+  margin:0 !important;
+  padding:0 42px 0 15px !important;
   border:1px solid #cfe0c9;
   box-shadow:0 16px 38px rgba(20,32,27,.16);
   backdrop-filter:blur(10px);
   border-radius:14px;
+  display:flex !important;
+  align-items:center !important;
+  overflow:hidden !important;
   animation:adminToastIn .2s ease-out;
 }
 .admin-notice{
@@ -389,8 +396,10 @@
   .admin-error-bar{
     bottom:20px;
     width:calc(100vw - 24px);
-    min-height:52px;
-    padding:12px 42px 12px 14px;
+    height:52px !important;
+    min-height:52px !important;
+    max-height:52px !important;
+    padding:0 42px 0 14px !important;
     font-size:12px;
   }
 }
