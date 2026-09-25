@@ -80,3 +80,23 @@
     transform: none !important;
   }
 }
+
+/* Desktop: hide scrollbar visuals while preserving native scrolling. */
+@media (min-width: 761px) {
+  html,
+  body,
+  main,
+  .dedicated-page {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar,
+  main::-webkit-scrollbar,
+  .dedicated-page::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+  }
+}
