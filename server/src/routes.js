@@ -394,7 +394,9 @@ router.get('/skills', async (request, response) => {
   return response.json({ items: sorted.slice((pageNumber - 1) * pageSize, pageNumber * pageSize), page: pageNumber, limit: pageSize, total: sorted.length, hasMore: pageNumber * pageSize < sorted.length });
 });
 router.get('/recommendations/:email', async (request, response) => {
+  if (!await requireAuth(request, response)) return;
   const email = decodeURIComponent(request.params.email).toLowerCase();
+  if (!sameUser(request, email)) return response.status(403).json({ message: 'You can only view your own recommendations.' });
   const profile = process.env.MONGODB_URI ? await Profile.findOne({ email }).lean() : readProfiles().find((item) => item.email === email);
   const interests = profile?.wants?.join(' ').toLowerCase() || '';
   const discoverable = await discoverableEmails();
@@ -413,7 +415,9 @@ router.get('/profiles/:email/similar', (request, response) => {
 });
 
 router.get('/matching/:email', async (request, response) => {
+  if (!await requireAuth(request, response)) return;
   const email = decodeURIComponent(request.params.email).toLowerCase();
+  if (!sameUser(request, email)) return response.status(403).json({ message: 'You can only view your own skill matches.' });
   const profile = process.env.MONGODB_URI ? await Profile.findOne({ email }).lean() : readProfiles().find((item) => item.email === email);
   const wants = (profile?.wants || []).map((item) => item.toLowerCase());
   const teaches = (profile?.teaches || []).map((item) => item.toLowerCase());
@@ -427,15 +431,36 @@ router.get('/matching/:email', async (request, response) => {
   }).filter((item) => item.matchScore > 45).sort((first, second) => second.matchScore - first.matchScore).slice(0, 8);
   return response.json(matches);
 });
-router.put('/profiles/:id/portfolio', (request, response) => {
+router.put('/profiles/:id/portfolio', async (request, response) => {
+  if (!await requireAuth(request, response)) return;
   const { portfolioUrl = '', resumeName = '', certificates = [] } = request.body;
-  const profiles = readProfiles();
   const lookup = decodeURIComponent(request.params.id);
-  const index = profiles.findIndex((profile) => profile._id === lookup || profile.email === lookup);
+  if (!sameUser(request, lookup)) return response.status(403).json({ message: 'You can only update your own portfolio.' });
+  if (!Array.isArray(certificates)) return response.status(400).json({ message: 'Certificates must be an array.' });
+
+  if (process.env.MONGODB_URI) {
+    const updated = await Profile.findOneAndUpdate(
+      { email: request.user.email },
+      { $set: { portfolioUrl: String(portfolioUrl || '').trim(), resumeName: String(resumeName || '').trim(), certificates } },
+      { new: true, runValidators: true }
+    );
+    if (!updated) return response.status(404).json({ message: 'Profile not found.' });
+    return response.json({ ...publicProfile(updated), sessionToken: createSessionToken(updated.email) });
+  }
+
+  const profiles = readProfiles();
+  const index = profiles.findIndex((profile) => profile.email === request.user.email);
   if (index === -1) return response.status(404).json({ message: 'Profile not found.' });
-  profiles[index] = { ...profiles[index], portfolioUrl, resumeName, certificates };
+  const updated = {
+    ...profiles[index],
+    portfolioUrl: String(portfolioUrl || '').trim(),
+    resumeName: String(resumeName || '').trim(),
+    certificates,
+    updatedAt: new Date().toISOString()
+  };
+  profiles[index] = updated;
   writeProfiles(profiles);
-  return response.json(publicProfile(profiles[index]));
+  return response.json({ ...publicProfile(updated), sessionToken: createSessionToken(updated.email) });
 });
 
 router.get('/leaderboard', (request, response) => {
@@ -447,7 +472,11 @@ router.get('/groups', (_request, response) => response.json(readCollection('grou
 router.post('/groups', (request, response) => { const group = { _id: `group-${Date.now()}`, name: request.body.name, description: request.body.description || '', category: request.body.category || 'General', members: 1 }; const groups = readCollection('groups.json'); writeCollection('groups.json', [group, ...groups]); return response.status(201).json(group); });
 router.post('/groups/:id/join', (request, response) => { const groups = readCollection('groups.json'); const index = groups.findIndex((group) => group._id === request.params.id); if (index === -1) return response.status(404).json({ message: 'Group not found.' }); groups[index].members += 1; writeCollection('groups.json', groups); return response.json(groups[index]); });
 
-router.post('/video-rooms', (request, response) => { const room = `skillswap-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`; return response.status(201).json({ room, url: `https://meet.jit.si/${room}` }); });
+router.post('/video-rooms', async (request, response) => {
+  if (!await requireAuth(request, response)) return;
+  const room = `skillswap-${Date.now()}-${randomBytes(5).toString('hex')}`;
+  return response.status(201).json({ room, url: `https://meet.jit.si/${room}` });
+});
 
 router.post('/skills', async (request, response) => {
   const skill = request.body;
