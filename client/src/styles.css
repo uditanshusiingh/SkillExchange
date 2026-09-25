@@ -4,3 +4,45 @@
 @media(max-width:640px){.site-header{height:66px}.menu-toggle{display:block}.main-nav{display:none;position:absolute;top:65px;left:0;right:0;background:var(--paper);border-bottom:1px solid var(--line);padding:18px 5vw;flex-direction:column;align-items:stretch;gap:18px}.main-nav.open{display:flex}.main-nav button{text-align:left}.nav-cta{justify-content:center;text-align:center!important}.section-pad{padding-left:6vw;padding-right:6vw}.hero{padding-top:58px;padding-bottom:60px}.hero h1{font-size:57px;letter-spacing:-3px}.hero-text{font-size:15px}.hero-actions{align-items:flex-start;flex-direction:column;gap:18px}.proof{margin-top:42px}.hero-art{height:370px;margin-top:35px}.hero-center{width:100px;height:100px;left:37%;font-size:9px}.center-arrow{font-size:28px}.hero-note strong{font-size:14px}.hero-note{padding:10px 12px}.ticker{justify-content:flex-start;gap:26px;padding-left:20px}.ticker div{font-size:9px}.ticker div:nth-of-type(3){display:none}.explore-section,.how-section{padding-top:75px;padding-bottom:78px}.section-heading{align-items:flex-start;flex-direction:column}.section-heading h2{font-size:45px;letter-spacing:-2px}.section-heading>.text-button{margin-top:4px}.explore-toolbar{align-items:stretch;flex-direction:column;margin-top:40px}.search-box{min-width:0}.skill-grid{grid-template-columns:1fr}.card-top{height:175px}.people-band{padding-top:75px;padding-bottom:80px}.people-grid{margin-top:40px}.person-card{min-height:155px}.steps{grid-template-columns:1fr;margin-top:45px}.step,.step:not(:last-child){border-right:0;border-bottom:1px solid var(--line);padding:0 0 28px;margin:0}.step:not(:first-child){padding-top:28px}.step h3{margin:17px 0 9px}.story-section{padding-top:70px;padding-bottom:58px}.story-quote{font-size:43px}.story-footer{margin-top:50px}.footer{align-items:flex-start;gap:25px;flex-direction:column}.footer-links{flex-wrap:wrap}.modal-panel{padding:35px 23px}}
 
 .platform-banner{position:sticky;top:0;z-index:1200;display:flex;align-items:center;justify-content:center;gap:12px;padding:9px 18px;background:#eaf7dd;color:#29441f;border-bottom:1px solid #cfe8bd;font-size:12px;text-align:center}.platform-banner strong{font-weight:800}.platform-banner span{opacity:.9}.platform-banner.maintenance{background:#fff3e8;color:#8a4f20;border-bottom-color:#f0d1ae}@media(max-width:650px){.platform-banner{align-items:flex-start;flex-direction:column;gap:2px;font-size:10px}}
+
+
+/* Desktop: keep the footer in the document flow instead of pinning it
+   inside the app-shell/main scroll container. Mobile behavior is untouched. */
+@media (min-width: 761px) {
+  html,
+  body {
+    height: auto !important;
+    min-height: 100%;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+  }
+
+  .app-shell {
+    height: auto !important;
+    min-height: 100vh;
+    overflow: visible !important;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .app-shell > main {
+    height: auto !important;
+    min-height: 0;
+    overflow: visible !important;
+    flex: 0 0 auto !important;
+  }
+
+  .app-shell > footer.footer {
+    position: relative !important;
+    top: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    left: auto !important;
+    inset: auto !important;
+    z-index: 1 !important;
+    flex-shrink: 0 !important;
+    width: 100% !important;
+    margin-top: 0 !important;
+    transform: none !important;
+  }
+}
