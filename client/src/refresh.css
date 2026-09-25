@@ -2402,3 +2402,19 @@ html[data-theme='dark'] .edit-profile-panel .skill-picker-option.active {
     color: #19352a;
   }
 }
+
+/* Modal panels: keep long content scrollable without showing a scrollbar. */
+@media (min-width: 761px) {
+  .modal-backdrop,
+  .modal-panel {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .modal-backdrop::-webkit-scrollbar,
+  .modal-panel::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+  }
+}
