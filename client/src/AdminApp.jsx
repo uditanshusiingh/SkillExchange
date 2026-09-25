@@ -165,6 +165,18 @@ export default function AdminApp() {
     textarea.style.height = Math.max(95, textarea.scrollHeight) + 'px';
   }, [adminSettings.announcement?.message]);
 
+  useEffect(() => {
+    if (!notice) return undefined;
+    const timer = window.setTimeout(() => setNotice(''), 3000);
+    return () => window.clearTimeout(timer);
+  }, [notice]);
+
+  useEffect(() => {
+    if (!error) return undefined;
+    const timer = window.setTimeout(() => setError(''), 3000);
+    return () => window.clearTimeout(timer);
+  }, [error]);
+
   const filteredUsers = useMemo(() => {
     const q = query.trim().toLowerCase();
     return users.filter((u) => {
