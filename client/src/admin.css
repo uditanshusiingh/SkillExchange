@@ -330,3 +330,67 @@
     width:100%;
   }
 }
+
+
+/* Floating admin feedback toast */
+.admin-notice,
+.admin-error-bar{
+  position:fixed;
+  left:50%;
+  bottom:24px;
+  transform:translateX(-50%);
+  z-index:250;
+  width:min(520px,calc(100vw - 32px));
+  min-height:48px;
+  box-sizing:border-box;
+  margin:0;
+  padding:12px 42px 12px 15px;
+  border:1px solid #cfe0c9;
+  box-shadow:0 16px 38px rgba(20,32,27,.16);
+  backdrop-filter:blur(10px);
+  border-radius:14px;
+  animation:adminToastIn .2s ease-out;
+}
+.admin-notice{
+  background:rgba(234,246,223,.96);
+  color:#29432b;
+}
+.admin-error-bar{
+  background:rgba(255,240,237,.97);
+  border-color:#efcbc4;
+}
+.admin-notice svg,
+.admin-error-bar svg{
+  flex:0 0 auto;
+}
+.admin-notice>button,
+.admin-error-bar>button{
+  position:absolute;
+  right:9px;
+  top:50%;
+  transform:translateY(-50%);
+  width:30px;
+  height:30px;
+  margin:0;
+  border-radius:8px;
+  display:grid;
+  place-items:center;
+}
+.admin-notice>button:hover,
+.admin-error-bar>button:hover{
+  background:rgba(0,0,0,.06);
+}
+@keyframes adminToastIn{
+  from{opacity:0;transform:translate(-50%,10px)}
+  to{opacity:1;transform:translate(-50%,0)}
+}
+@media(max-width:620px){
+  .admin-notice,
+  .admin-error-bar{
+    bottom:20px;
+    width:calc(100vw - 24px);
+    min-height:52px;
+    padding:12px 42px 12px 14px;
+    font-size:12px;
+  }
+}
