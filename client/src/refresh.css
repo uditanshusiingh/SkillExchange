@@ -2481,3 +2481,71 @@ html[data-theme='dark'] .edit-profile-panel .skill-picker-option.active {
     flex-direction: column;
   }
 }
+
+.video-room-permission {
+  margin-top: 14px;
+  padding: 16px;
+  border: 1px solid #cbd9cd;
+  border-radius: 14px;
+  background: #f7faf5;
+  box-shadow: 0 12px 28px rgba(25, 53, 42, .08);
+}
+
+.video-room-permission-icon {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  margin-bottom: 10px;
+  border-radius: 11px;
+  background: #e1edda;
+  color: #315b46;
+}
+
+.video-room-permission > strong {
+  display: block;
+  color: var(--forest);
+  font-size: 14px;
+}
+
+.video-room-permission > p {
+  margin: 6px 0 14px;
+  color: #687a6e;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.video-room-permission-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+html[data-theme='dark'] .video-room-permission {
+  border-color: #466050;
+  background: #162f29;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, .24);
+}
+
+html[data-theme='dark'] .video-room-permission-icon {
+  background: #244536;
+  color: #dce9dc;
+}
+
+html[data-theme='dark'] .video-room-permission > strong {
+  color: #eef4ed;
+}
+
+html[data-theme='dark'] .video-room-permission > p {
+  color: #9fb7a5;
+}
+
+@media (max-width: 760px) {
+  .video-room-permission-actions {
+    flex-direction: column-reverse;
+  }
+
+  .video-room-permission-actions button {
+    width: 100%;
+  }
+}
