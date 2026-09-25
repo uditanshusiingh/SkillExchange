@@ -337,25 +337,30 @@
 .admin-error-bar{
   position:fixed !important;
   left:50% !important;
-  bottom:24px !important;
+  bottom:22px !important;
   top:auto !important;
   right:auto !important;
   transform:translateX(-50%) !important;
   z-index:250 !important;
-  width:min(520px,calc(100vw - 32px)) !important;
-  height:52px !important;
-  min-height:52px !important;
-  max-height:52px !important;
+  width:max-content !important;
+  max-width:calc(100vw - 36px) !important;
+  min-width:0 !important;
+  height:44px !important;
+  min-height:44px !important;
+  max-height:44px !important;
   box-sizing:border-box !important;
   margin:0 !important;
-  padding:0 42px 0 15px !important;
+  padding:0 38px 0 12px !important;
   border:1px solid #cfe0c9;
-  box-shadow:0 16px 38px rgba(20,32,27,.16);
+  box-shadow:0 10px 26px rgba(20,32,27,.13);
   backdrop-filter:blur(10px);
-  border-radius:14px;
+  border-radius:12px;
   display:flex !important;
   align-items:center !important;
+  justify-content:center !important;
+  gap:8px !important;
   overflow:hidden !important;
+  white-space:nowrap !important;
   animation:adminToastIn .2s ease-out;
 }
 .admin-notice{
@@ -373,15 +378,16 @@
 .admin-notice>button,
 .admin-error-bar>button{
   position:absolute;
-  right:9px;
+  right:6px;
   top:50%;
   transform:translateY(-50%);
-  width:30px;
-  height:30px;
+  width:28px;
+  height:28px;
   margin:0;
-  border-radius:8px;
+  border-radius:7px;
   display:grid;
   place-items:center;
+  flex:none;
 }
 .admin-notice>button:hover,
 .admin-error-bar>button:hover{
@@ -395,11 +401,13 @@
   .admin-notice,
   .admin-error-bar{
     bottom:20px;
-    width:calc(100vw - 24px);
-    height:52px !important;
-    min-height:52px !important;
-    max-height:52px !important;
-    padding:0 42px 0 14px !important;
-    font-size:12px;
+    width:max-content !important;
+    max-width:calc(100vw - 24px) !important;
+    height:44px !important;
+    min-height:44px !important;
+    max-height:44px !important;
+    padding:0 36px 0 11px !important;
+    font-size:11px;
+    white-space:nowrap !important;
   }
 }
