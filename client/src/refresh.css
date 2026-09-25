@@ -1981,3 +1981,156 @@ html[data-theme='dark'] .edit-profile-panel .skill-picker-option.active {
     scrollbar-width: none;
   }
 }
+
+/* People directory filter bar: refined desktop control group. */
+@media (min-width: 761px) {
+  .people-directory-toolbar {
+    display: grid;
+    grid-template-columns: minmax(250px, 1.55fr) repeat(4, minmax(145px, 1fr)) minmax(170px, 1.05fr);
+    gap: 10px;
+    align-items: stretch;
+    padding: 10px;
+    margin-top: 30px;
+    border: 1px solid #d9e1d7;
+    border-radius: 16px;
+    background: rgba(255, 253, 249, .72);
+    box-shadow: 0 10px 28px rgba(25, 53, 42, .06);
+  }
+
+  .people-directory-toolbar > input,
+  .people-directory-toolbar > select,
+  .people-directory-toolbar .search-box {
+    height: 54px;
+    min-height: 54px;
+    box-sizing: border-box;
+    border: 1px solid #d5ded3;
+    border-radius: 11px;
+    background: #fbf8f1;
+    color: var(--forest);
+    font-size: 12px;
+    transition: border-color .2s ease, background .2s ease, box-shadow .2s ease, transform .2s ease;
+  }
+
+  .people-directory-toolbar > input,
+  .people-directory-toolbar > select {
+    width: 100%;
+    padding: 0 14px;
+    outline: none;
+  }
+
+  .people-directory-toolbar .search-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-width: 0;
+    padding: 0 14px;
+    box-sizing: border-box;
+  }
+
+  .people-directory-toolbar .search-box svg {
+    flex: 0 0 auto;
+    color: #718076;
+  }
+
+  .people-directory-toolbar .search-box input {
+    min-width: 0;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--forest);
+    font-size: 12px;
+  }
+
+  .people-directory-toolbar > input::placeholder,
+  .people-directory-toolbar .search-box input::placeholder {
+    color: #718076;
+    opacity: 1;
+  }
+
+  .people-directory-toolbar > input:hover,
+  .people-directory-toolbar > select:hover,
+  .people-directory-toolbar .search-box:hover {
+    border-color: #a8bcae;
+    background: #fffdf9;
+  }
+
+  .people-directory-toolbar > input:focus,
+  .people-directory-toolbar > select:focus,
+  .people-directory-toolbar .search-box:focus-within {
+    border-color: #5d7d6a;
+    box-shadow: 0 0 0 3px rgba(93, 125, 106, .12);
+  }
+
+  .people-directory-toolbar > select {
+    appearance: auto;
+    cursor: pointer;
+  }
+
+  html[data-theme='dark'] .people-directory-toolbar {
+    border-color: #2f4a3d;
+    background: rgba(16, 32, 25, .86);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, .18);
+  }
+
+  html[data-theme='dark'] .people-directory-toolbar > input,
+  html[data-theme='dark'] .people-directory-toolbar > select,
+  html[data-theme='dark'] .people-directory-toolbar .search-box {
+    border-color: #466050;
+    background: #162f29;
+    color: #eef4ed;
+  }
+
+  html[data-theme='dark'] .people-directory-toolbar .search-box svg {
+    color: #9fb7a5;
+  }
+
+  html[data-theme='dark'] .people-directory-toolbar .search-box input {
+    color: #eef4ed;
+  }
+
+  html[data-theme='dark'] .people-directory-toolbar > input::placeholder,
+  html[data-theme='dark'] .people-directory-toolbar .search-box input::placeholder {
+    color: #9fb7a5;
+  }
+
+  html[data-theme='dark'] .people-directory-toolbar > input:hover,
+  html[data-theme='dark'] .people-directory-toolbar > select:hover,
+  html[data-theme='dark'] .people-directory-toolbar .search-box:hover {
+    border-color: #668575;
+    background: #1b372b;
+  }
+
+  html[data-theme='dark'] .people-directory-toolbar > input:focus,
+  html[data-theme='dark'] .people-directory-toolbar > select:focus,
+  html[data-theme='dark'] .people-directory-toolbar .search-box:focus-within {
+    border-color: #8aaa96;
+    box-shadow: 0 0 0 3px rgba(138, 170, 150, .14);
+  }
+
+  html[data-theme='dark'] .people-directory-toolbar select option {
+    background: #162f29;
+    color: #eef4ed;
+  }
+
+  html[data-theme='dark'] .people-directory-summary {
+    color: #9fb7a5;
+  }
+}
+
+@media (min-width: 1200px) {
+  .people-directory-toolbar {
+    gap: 12px;
+    padding: 11px;
+  }
+
+  .people-directory-toolbar > input,
+  .people-directory-toolbar > select,
+  .people-directory-toolbar .search-box {
+    height: 56px;
+    min-height: 56px;
+  }
+}
