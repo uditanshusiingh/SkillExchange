@@ -907,8 +907,16 @@
 /* Final mobile navigation correction */
 @media (max-width: 760px) {
   .site-header {
-    position: relative;
-    z-index: 200;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    z-index: 1000;
+  }
+
+  main {
+    padding-top: 64px;
   }
 
   .main-nav.open {
