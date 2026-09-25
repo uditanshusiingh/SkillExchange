@@ -679,3 +679,43 @@
 .admin-shell.admin-theme-dark .admin-card-head h2,
 .admin-shell.admin-theme-dark .admin-section-head h2,
 .admin-shell.admin-theme-dark .admin-topbar h1{color:#edf5f0}
+
+
+/* Dark-mode fixes for analytics and security components */
+.admin-shell{
+  --admin-border:var(--admin-line);
+  --admin-surface:var(--admin-card);
+}
+.admin-shell.admin-theme-dark .admin-period-switcher{
+  background:#121b17;
+  border-color:#34453c;
+}
+.admin-shell.admin-theme-dark .admin-period-switcher button.active{
+  background:#b9f36b;
+  color:#14201b;
+}
+.admin-shell.admin-theme-dark .admin-analytics-kpi,
+.admin-shell.admin-theme-dark .admin-security-stats>div{
+  background:#121b17;
+  color:var(--admin-ink);
+  border-color:var(--admin-line);
+}
+.admin-shell.admin-theme-dark .admin-analytics-kpi span,
+.admin-shell.admin-theme-dark .admin-analytics-kpi small,
+.admin-shell.admin-theme-dark .admin-security-stats span{
+  color:#aebbb4;
+}
+.admin-shell.admin-theme-dark .admin-growth-chart,
+.admin-shell.admin-theme-dark .admin-activity-bars,
+.admin-shell.admin-theme-dark .admin-user-bars{
+  color:#b9f36b;
+}
+.admin-shell.admin-theme-dark .admin-chart-axis,
+.admin-shell.admin-theme-dark .admin-chart-legend,
+.admin-shell.admin-theme-dark .admin-user-bar-wrap span{
+  color:#9eaca5;
+}
+.admin-shell.admin-theme-dark .admin-log-row small,
+.admin-shell.admin-theme-dark .admin-log-meta time{
+  color:#899b91;
+}
