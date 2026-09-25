@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Activity, ArrowLeft, BarChart3, CheckCircle2, ChevronRight, CircleAlert,
+  Activity, ArrowLeft, BarChart3, CheckCircle2, ChevronRight, CircleAlert, Moon, Sun,
   Bell, Clock3, Database, Edit3, Eye, EyeOff, FileText, LayoutDashboard, LogOut, MapPin, Menu, MessageSquare, RefreshCw, Search,
   Shield, ShieldCheck, Tag, Trash2, UserCheck, Users, X
 } from 'lucide-react';
@@ -72,6 +72,9 @@ function AdminLogin({ onLogin }) {
 export default function AdminApp() {
   const [adminSession, setAdminSession] = useState('');
   const [authenticated, setAuthenticated] = useState(false);
+  const [adminTheme, setAdminTheme] = useState(() => {
+    try { return localStorage.getItem('skillswap-admin-theme') || 'light'; } catch { return 'light'; }
+  });
   const [section, setSection] = useState('overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [stats, setStats] = useState(emptyStats);
@@ -152,6 +155,16 @@ export default function AdminApp() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    try { localStorage.setItem('skillswap-admin-theme', adminTheme); } catch {}
+  }, [adminTheme]);
+
+  useEffect(() => {
+    // Admin theme is intentionally independent from the public SkillSwap theme.
+    document.documentElement.dataset.adminTheme = adminTheme;
+    return () => { delete document.documentElement.dataset.adminTheme; };
+  }, [adminTheme]);
 
   useEffect(() => {
     // Admin access is intentionally memory-only: every page load/refresh requires the key again.
@@ -385,9 +398,20 @@ export default function AdminApp() {
   const previousGrowth = analyticsRows[analyticsRows.length - 2]?.growth ?? latestGrowth;
   const growthDelta = latestGrowth - previousGrowth;
 
-  return <div className={`admin-shell ${adminSettings.dashboard?.compactMode ? 'compact' : ''}`}>
+  return <div className={`admin-shell ${adminSettings.dashboard?.compactMode ? 'compact' : ''} admin-theme-${adminTheme}`}>
     <aside className={`admin-sidebar ${sidebarOpen ? 'open' : ''}`}>
-      <div className="admin-sidebar-brand"><div className="admin-brand-mark small"><Shield size={18} /></div><div><strong>SkillSwap</strong><span>Admin Panel</span></div></div>
+      <div className="admin-sidebar-brand">
+        <div className="admin-brand-mark small"><Shield size={18} /></div>
+        <div><strong>SkillSwap</strong><span>Admin Panel</span></div>
+        <button
+          className="admin-theme-toggle"
+          onClick={() => setAdminTheme((theme) => theme === 'dark' ? 'light' : 'dark')}
+          aria-label={adminTheme === 'dark' ? 'Switch admin panel to light mode' : 'Switch admin panel to dark mode'}
+          title={adminTheme === 'dark' ? 'Light mode' : 'Dark mode'}
+        >
+          {adminTheme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
+        </button>
+      </div>
       <nav>{nav.map(([id, Icon, label]) => <button key={id} className={section === id ? 'active' : ''} onClick={() => { setSection(id); setQuery(''); if (id === 'skills') setSkillQuery(''); setSidebarOpen(false); }}><Icon size={18} /><span>{label}</span>{id === 'notifications' && notifications.filter((item) => !notificationRead.includes(item.id)).length > 0 && <b className="admin-nav-badge">{notifications.filter((item) => !notificationRead.includes(item.id)).length > 99 ? '99+' : notifications.filter((item) => !notificationRead.includes(item.id)).length}</b>}<ChevronRight size={14} /></button>)}</nav>
       <div className="admin-sidebar-bottom">
         <a href="/"><ArrowLeft size={17} /> Back to website</a>
