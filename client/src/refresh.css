@@ -1629,3 +1629,14 @@ html[data-theme='dark'] .modal-panel.safety-panel .safety-section small { color:
     font-size: 10px;
   }
 }
+
+@media (max-width: 640px) {
+  .verification-resend-panel {
+    width: calc(100vw - 34px) !important;
+    max-width: 430px !important;
+    box-sizing: border-box;
+  }
+  .verification-resend-panel form { gap: 12px; }
+  .verification-resend-panel form input { height: 52px; box-sizing: border-box; }
+  .verification-resend-panel form .button { min-height: 52px; }
+}
