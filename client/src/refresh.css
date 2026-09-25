@@ -1868,3 +1868,28 @@ html[data-theme='dark'] .modal-panel.safety-panel .safety-section small { color:
     background: #10251d;
   }
 }
+
+
+/* Desktop: make Back to top feel like an elevated floating control.
+   Mobile keeps its existing sizing and placement. */
+@media (min-width: 761px) {
+  .back-to-top {
+    right: 28px !important;
+    bottom: 28px !important;
+    width: 50px !important;
+    height: 50px !important;
+    z-index: 100 !important;
+    border-radius: 50% !important;
+    box-shadow:
+      0 10px 24px rgba(25, 53, 42, .22),
+      0 3px 8px rgba(25, 53, 42, .12) !important;
+    transform: translateZ(0);
+  }
+
+  .back-to-top:hover {
+    transform: translateY(-5px) !important;
+    box-shadow:
+      0 15px 30px rgba(25, 53, 42, .25),
+      0 4px 10px rgba(25, 53, 42, .14) !important;
+  }
+}
