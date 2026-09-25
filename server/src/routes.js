@@ -398,12 +398,21 @@ router.get('/recommendations/:email', async (request, response) => {
   const email = decodeURIComponent(request.params.email).toLowerCase();
   if (!sameUser(request, email)) return response.status(403).json({ message: 'You can only view your own recommendations.' });
   const profile = process.env.MONGODB_URI ? await Profile.findOne({ email }).lean() : readProfiles().find((item) => item.email === email);
-  const interests = profile?.wants?.join(' ').toLowerCase() || '';
+  const interests = (profile?.wants || []).map((item) => String(item).toLowerCase().trim()).filter(Boolean);
   const discoverable = await discoverableEmails();
   const skills = (await getPublicSkills()).filter((skill) => !skill.teacher?.email || discoverable.has(String(skill.teacher.email).toLowerCase()));
-  const recommendations = skills
-    .filter((skill) => interests && [skill.title, skill.category, skill.wants].join(' ').toLowerCase().split(' ').some((word) => word.length > 3 && interests.includes(word)))
-    .slice(0, 6);
+  const recommendations = skills.map((skill) => {
+    const skillText = [skill.title, skill.category, skill.description, skill.wants].filter(Boolean).join(' ').toLowerCase();
+    const score = interests.reduce((total, interest) => {
+      const tokens = interest.split(/\s+/).filter(Boolean);
+      return total + (tokens.some((token) => token.length >= 2 && skillText.includes(token)) ? 1 : 0);
+    }, 0);
+    return { skill, score };
+  })
+    .filter((item) => item.score > 0)
+    .sort((first, second) => second.score - first.score)
+    .slice(0, 6)
+    .map((item) => item.skill);
   return response.json(recommendations);
 });
 router.get('/profiles/:email/similar', (request, response) => {
