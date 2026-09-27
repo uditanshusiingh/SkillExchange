@@ -743,8 +743,8 @@ function CommunityPanel({ user, onClose }) {
               <button
                 onClick={async () => {
                   const updated = await joinGroup(group._id);
-                  setJoined({ ...joined, [group._id]: true });
-                  setGroups(groups.map((item) => item._id === group._id ? updated : item));
+                  setJoined((current) => ({ ...current, [group._id]: true }));
+                  setGroups((current) => current.map((item) => item._id === group._id ? updated : item));
                 }}
               >
                 {joined[group._id] ? 'Joined' : `Join · ${group.members}`}
