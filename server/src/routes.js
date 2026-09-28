@@ -187,7 +187,6 @@ async function syncAllProfileSkills() {
 }
 
 async function getPublicSkills() {
-  await syncAllProfileSkills();
   if (process.env.MONGODB_URI) {
     return Skill.find({ moderationStatus: 'approved' }).sort({ featured: -1, createdAt: -1 }).lean();
   }
