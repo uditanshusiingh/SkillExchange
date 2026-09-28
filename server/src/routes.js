@@ -370,28 +370,93 @@ router.get('/profiles', async (request, response) => {
 
 router.get('/skills', async (request, response) => {
   const { category, search, teach, wants, location, format, level, availability, page = 1, limit = 8, sort = 'newest' } = request.query;
-  const pageNumber = Math.max(1, Number(page));
-  const pageSize = Math.min(24, Math.max(1, Number(limit)));
-  const availableSkills = await getPublicSkills();
+  const pageNumber = Math.max(1, Number(page) || 1);
+  const pageSize = Math.min(24, Math.max(1, Number(limit) || 8));
+
+  if (!process.env.MONGODB_URI) {
+    // Keep the local-development fallback unchanged.
+    const availableSkills = await getPublicSkills();
+    const discoverable = await discoverableEmails();
+    const filtered = availableSkills.filter((skill) => {
+      const text = [skill.title, skill.description, skill.teacher?.name, skill.wants, skill.category].filter(Boolean).join(' ').toLowerCase();
+      const matchesCategory = !category || category === 'All' || String(skill.category || '').toLowerCase() === String(category).toLowerCase();
+      const wantsMatch = !search || matchesSearchText(text, search);
+      const teachMatch = !teach || String(skill.title || '').toLowerCase().includes(String(teach).toLowerCase()) || String(skill.description || '').toLowerCase().includes(String(teach).toLowerCase());
+      const wantsFieldMatch = !wants || String(skill.wants || '').toLowerCase().includes(String(wants).toLowerCase());
+      const locationMatch = !location || String(skill.teacher?.location || '').toLowerCase().includes(String(location).toLowerCase());
+      const formatMatch = !format || String(skill.format || '').toLowerCase().includes(String(format).toLowerCase());
+      const levelMatch = !level || String(skill.level || '').toLowerCase().includes(String(level).toLowerCase());
+      const availabilityMatch = !availability || String(skill.availability || 'Flexible').toLowerCase() === String(availability).toLowerCase();
+      const discoverableTeacher = !skill.teacher?.email || discoverable.has(String(skill.teacher.email).toLowerCase());
+      return matchesCategory && wantsMatch && teachMatch && wantsFieldMatch && locationMatch && formatMatch && levelMatch && availabilityMatch && discoverableTeacher;
+    });
+    const sorted = [...filtered].sort((first, second) => sort === 'rating'
+      ? Number(second.teacher?.rating || 0) - Number(first.teacher?.rating || 0)
+      : String(second.createdAt || second._id).localeCompare(String(first.createdAt || first._id)));
+    const startIndex = (pageNumber - 1) * pageSize;
+    return response.json({ items: sorted.slice(startIndex, startIndex + pageSize), page: pageNumber, limit: pageSize, total: sorted.length, hasMore: startIndex + pageSize < sorted.length });
+  }
+
+  const query = { moderationStatus: 'approved' };
+  const normalizedCategory = String(category || '').trim();
+  if (normalizedCategory && normalizedCategory.toLowerCase() !== 'all') {
+    query.category = { $regex: normalizedCategory.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' };
+  }
+
+  const normalizedSearch = String(search || '').trim();
+  if (normalizedSearch) {
+    const searchTokens = normalizedSearch.split(/\s+/).filter(Boolean).map((token) => token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).filter(Boolean);
+    if (searchTokens.length) {
+      query.$or = searchTokens.flatMap((token) => [
+        { title: { $regex: token, $options: 'i' } },
+        { description: { $regex: token, $options: 'i' } },
+        { 'teacher.name': { $regex: token, $options: 'i' } },
+        { wants: { $regex: token, $options: 'i' } },
+        { category: { $regex: token, $options: 'i' } }
+      ]);
+    }
+  }
+
+  const addRegexFilter = (field, value) => {
+    const normalized = String(value || '').trim();
+    if (normalized) query[field] = { $regex: normalized.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' };
+  };
+  addRegexFilter('title', teach);
+  addRegexFilter('description', teach);
+  addRegexFilter('wants', wants);
+  addRegexFilter('teacher.location', location);
+  addRegexFilter('format', format);
+  addRegexFilter('level', level);
+
+  if (availability) {
+    query.availability = String(availability).trim();
+  }
+
   const discoverable = await discoverableEmails();
-  const filtered = availableSkills.filter((skill) => {
-    const text = [skill.title, skill.description, skill.teacher?.name, skill.wants, skill.category].filter(Boolean).join(' ').toLowerCase();
-    const matchesCategory = !category || category === 'All' || String(skill.category || '').toLowerCase() === String(category).toLowerCase();
-    const wantsMatch = !search || matchesSearchText(text, search);
-    const teachMatch = !teach || String(skill.title || '').toLowerCase().includes(String(teach).toLowerCase()) || String(skill.description || '').toLowerCase().includes(String(teach).toLowerCase());
-    const wantsFieldMatch = !wants || String(skill.wants || '').toLowerCase().includes(String(wants).toLowerCase());
-    const locationMatch = !location || String(skill.teacher?.location || '').toLowerCase().includes(String(location).toLowerCase());
-    const formatMatch = !format || String(skill.format || '').toLowerCase().includes(String(format).toLowerCase());
-    const levelMatch = !level || String(skill.level || '').toLowerCase().includes(String(level).toLowerCase());
-    const availabilityMatch = !availability || String(skill.availability || 'Flexible').toLowerCase() === String(availability).toLowerCase();
-    const discoverableTeacher = !skill.teacher?.email || discoverable.has(String(skill.teacher.email).toLowerCase());
-    return matchesCategory && wantsMatch && teachMatch && wantsFieldMatch && locationMatch && formatMatch && levelMatch && availabilityMatch && discoverableTeacher;
+  query.$and = [
+    ...(query.$and || []),
+    { $or: [{ 'teacher.email': { $exists: false } }, { 'teacher.email': { $in: [...discoverable] } }] }
+  ];
+
+  const sortQuery = sort === 'rating'
+    ? { 'teacher.rating': -1, createdAt: -1 }
+    : { createdAt: -1 };
+
+  const skip = (pageNumber - 1) * pageSize;
+  const [items, total] = await Promise.all([
+    Skill.find(query).sort(sortQuery).skip(skip).limit(pageSize).lean(),
+    Skill.countDocuments(query)
+  ]);
+
+  return response.json({
+    items,
+    page: pageNumber,
+    limit: pageSize,
+    total,
+    hasMore: skip + items.length < total
   });
-  const sorted = [...filtered].sort((first, second) => sort === 'rating'
-    ? Number(second.teacher?.rating || 0) - Number(first.teacher?.rating || 0)
-    : String(second.createdAt || second._id).localeCompare(String(first.createdAt || first._id)));
-  return response.json({ items: sorted.slice((pageNumber - 1) * pageSize, pageNumber * pageSize), page: pageNumber, limit: pageSize, total: sorted.length, hasMore: pageNumber * pageSize < sorted.length });
 });
+
 router.get('/recommendations/:email', async (request, response) => {
   if (!await requireAuth(request, response)) return;
   const email = decodeURIComponent(request.params.email).toLowerCase();
