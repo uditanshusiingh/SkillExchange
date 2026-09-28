@@ -419,10 +419,16 @@ router.get('/skills', async (request, response) => {
 
   const addRegexFilter = (field, value) => {
     const normalized = String(value || '').trim();
-    if (normalized) query[field] = { $regex: normalized.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' };
+    if (normalized) query[field] = { $regex: normalized.replace(/[.*+?^\${}()|[\]\\]/g, '\\\\$&'), $options: 'i' };
   };
-  addRegexFilter('title', teach);
-  addRegexFilter('description', teach);
+  const normalizedTeach = String(teach || '').trim();
+  if (normalizedTeach) {
+    const safeTeach = normalizedTeach.replace(/[.*+?^\${}()|[\]\\]/g, '\\\\$&');
+    query.$and = [
+      ...(query.$and || []),
+      { $or: [{ title: { $regex: safeTeach, $options: 'i' } }, { description: { $regex: safeTeach, $options: 'i' } }] }
+    ];
+  }
   addRegexFilter('wants', wants);
   addRegexFilter('teacher.location', location);
   addRegexFilter('format', format);
